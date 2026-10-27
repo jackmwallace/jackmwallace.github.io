@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hand-Press Printing House</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+DW+Pica&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<style>
+/* Layout: one shop view with four hotspots; each station is its own full-width bench with a notes column. Single candle-lit look, committed on purpose. */
+:root{
+  --wall:#3b352b; --wall-2:#2b261f; --floor:#1c1712; --line:#4d4538;
+  --timber:#8a6338; --timber-d:#5a3d20; --iron:#2a2d30; --lead:#a7adb1; --lead-d:#6f757a;
+  --paper:#e9e0c8; --paper-d:#d3c8a5; --ink:#15100d; --rubric:#a8321f; --lamp:#e3b45c;
+  --text:#ebe1c9; --muted:#a89c82;
+  --ff-display:'IM Fell English SC','IM Fell English',Georgia,serif;
+  --ff-body:'IM Fell DW Pica','IM Fell English',Georgia,serif;
+  --ff-type:'IM Fell English',Georgia,serif;
+  --u:clamp(1.9px,calc((100vw - 56px) / 140),2.7px);
+  --pu:clamp(1.5px,calc((100vw - 56px) / 192),2.3px);
+  --M:132;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--floor);color:var(--text);font-family:var(--ff-body);font-size:16px;line-height:1.45;
+  padding-block:14px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.app{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--ff-display);font-weight:400;letter-spacing:.05em;margin:0;text-wrap:balance}
+h1{font-size:clamp(1.4rem,4.6vw,2rem)}
+h2{font-size:1.3rem;color:var(--lamp)}
+h3{font-size:1rem;color:var(--lamp)}
+p{margin:0}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 24px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.sub{color:var(--muted);font-style:italic}
+nav{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;color:inherit}
+.tab,.btn{background:var(--wall-2);border:1px solid var(--line);color:var(--text);padding:6px 12px;cursor:pointer;font-family:var(--ff-display);letter-spacing:.05em;font-size:.9rem;border-radius:2px}
+.tab:hover,.btn:hover:not(:disabled){border-color:var(--lamp)}
+.tab[aria-current="page"]{background:var(--lamp);color:var(--ink);border-color:var(--lamp)}
+.btn.primary{background:var(--rubric);border-color:#c65a45;color:#fff4e0}
+.btn.primary:hover:not(:disabled){background:#bd3d28}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.small{padding:3px 8px;font-size:.78rem}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+.badge{display:inline-block;min-width:1.4em;text-align:center;background:var(--ink);color:var(--lamp);border-radius:9px;padding:0 5px;margin-left:5px;font-size:.8rem}
+#notice{min-height:2.6em;padding:6px 12px;border-left:3px solid var(--lamp);background:var(--wall-2);color:var(--text);font-style:italic}
+#notice.warn{border-left-color:var(--rubric)}
+.panel{background:var(--wall-2);border:1px solid var(--line);padding:14px;border-radius:3px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.bench{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.bench>*{min-width:0}
+@media(min-width:960px){.bench.two{grid-template-columns:minmax(0,1fr) 400px}}
+.notes p{color:var(--text);font-size:.95rem;max-width:62ch}
+.notes p+p{margin-top:8px}
+.notes b{color:var(--lamp);font-weight:400;font-family:var(--ff-display);letter-spacing:.04em}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.muted{color:var(--muted)}
+.mono{font-variant-numeric:tabular-nums}
+
+/* shop scene */
+.scene{width:100%;height:auto;display:block;border:1px solid var(--line)}
+.hot{cursor:pointer}
+.hot:hover .hl,.hot:focus-visible .hl{opacity:1}
+.hl{opacity:0;fill:none;stroke:var(--lamp);stroke-width:3;stroke-dasharray:6 5;transition:opacity .15s}
+.hot:focus-visible{outline:none}
+.stations{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.stations button{text-align:left;background:var(--wall-2);border:1px solid var(--line);padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.stations button:hover{border-color:var(--lamp)}
+.stations .n{font-family:var(--ff-display);color:var(--lamp);letter-spacing:.05em}
+.stations span.d{color:var(--muted);font-size:.9rem}
+
+/* case */
+.case{display:flex;flex-direction:column;gap:3px;background:var(--timber-d);padding:6px;border:2px solid #38250f}
+.crow{display:flex;gap:3px}
+.box{flex:var(--f,1) 1 0;min-width:0;position:relative;height:clamp(38px,9vw,52px);background:#1c150f;border:1px solid #0b0806;color:var(--lead);cursor:pointer;display:grid;place-items:center;padding:0;font-family:var(--ff-type);font-size:clamp(19px,5vw,27px)}
+.box:hover:not(:disabled){background:#33271b}
+.box:disabled{opacity:.3;cursor:not-allowed}
+.box .fl{display:inline-block;transform:scaleX(-1);line-height:1}
+.box .lab{position:absolute;left:3px;top:0;font-size:10px;color:var(--lamp);font-family:var(--ff-body);display:none}
+.showlab .box .lab{display:block}
+.box .n{position:absolute;right:3px;bottom:0;font-size:10px;color:var(--muted);font-family:var(--ff-body);font-variant-numeric:tabular-nums}
+.box .sq{display:block;height:14px;background:var(--lead-d);width:calc(var(--w) * 3px)}
+.box .sl{position:absolute;left:3px;top:0;font-size:10px;color:var(--lamp);font-family:var(--ff-body)}
+.case-title{font-family:var(--ff-display);color:var(--muted);font-size:.8rem;letter-spacing:.1em}
+
+/* sorts (shared) */
+.stickwrap{overflow-x:auto;padding-bottom:4px}
+.stick{--s:var(--u);position:relative;width:calc(var(--M) * var(--s) + 14px);height:calc(var(--s) * 17);display:flex;align-items:flex-end;background:#202326;border:1px solid #0c0d0e;border-left:8px solid #54595d;border-right:6px solid #8b9196;border-bottom:5px solid #54595d}
+.sort{display:inline-flex;flex:none;position:relative;width:calc(var(--s) * var(--w));height:calc(var(--s) * 15);align-items:center;justify-content:center;background:var(--lead);border-right:1px solid #70767a;color:var(--ink);padding:0;border-top:0;border-bottom:0;border-left:0}
+.sort .g{font-family:var(--ff-type);font-style:normal;font-size:calc(var(--s) * 11.5);line-height:1;display:block;white-space:nowrap}
+button.sort{cursor:pointer}
+button.sort:hover{background:var(--lamp)}
+.sort.stick .g{transform:scaleY(-1)}
+.sort.forme .g{transform:scaleX(-1)}
+.sort.space{background:#80868b;height:calc(var(--s) * 11)}
+.sort.slip{background:var(--paper);height:calc(var(--s) * 14);width:calc(var(--s) * 1);border-right:0}
+.sort .nick{position:absolute;top:0;left:50%;width:34%;height:calc(var(--s) * 1.5);transform:translateX(-50%);background:#40454a}
+.gap{flex:none;width:calc(var(--s) * var(--w));height:100%;background:repeating-linear-gradient(135deg,transparent 0 5px,#ffffff10 5px 7px)}
+.gapnote{position:absolute;right:8px;top:-1.5em;font-size:.8rem;color:var(--lamp)}
+.status{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.status .ok{color:#9cc77a}.status .no{color:var(--lamp)}
+.proof{font-family:var(--ff-type);font-style:italic;font-size:1.15rem;min-height:1.6em;color:var(--paper);word-break:break-word}
+.galley{display:flex;flex-direction:column;gap:6px}
+.glrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.glline{--s:calc(var(--u) * .62);display:flex;overflow:hidden;width:calc(var(--M) * var(--s));flex:none;background:#202326;padding:1px 0}
+
+/* stone */
+.fmtbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+select{font:inherit;background:var(--wall-2);color:var(--text);border:1px solid var(--line);padding:4px 8px;border-radius:2px}
+.sidetabs{display:flex;gap:4px;flex-wrap:wrap}
+.btn[aria-pressed="true"]{background:var(--lamp);color:var(--ink);border-color:var(--lamp)}
+.stonebox{background:linear-gradient(160deg,#8f8e86,#6e6d65);border:2px solid #53524b;padding:18px 10px;display:flex;overflow-x:auto}
+.chase{--s:var(--u);position:relative;background:var(--iron);border:4px solid #0e0f10;padding:calc(var(--s) * 5 + 4px);flex:none;margin:0 auto}
+.fgrid{display:grid;grid-template-columns:repeat(var(--C,1),calc(var(--s) * var(--cw,180)));transition:background .3s}
+.fgrid.on{background:var(--timber)}
+.cell{position:relative;width:calc(var(--s) * var(--cw));height:calc(var(--s) * var(--ch));box-shadow:inset 0 0 0 1px #ffffff14;cursor:pointer}
+.fgrid.on .cell{box-shadow:inset 0 0 0 1px #3b2810}
+.cell.inv{transform:rotate(180deg)}
+.cell.tgt{outline:2px solid var(--lamp);outline-offset:-3px}
+.plabel{position:absolute;left:0;right:0;top:calc(var(--s) * 5);text-align:center;font-size:max(9px,calc(var(--s) * 8));color:var(--paper);opacity:.85;font-family:var(--ff-display);letter-spacing:.06em;pointer-events:none}
+.ftext{position:absolute;left:calc(var(--s) * var(--tx));top:calc(var(--s) * var(--ty));width:calc(var(--M) * var(--s));background:#1f2225}
+.slot{height:calc(var(--s) * 18);display:flex;align-items:center}
+.fline{display:flex;flex-direction:row-reverse;justify-content:flex-start;width:calc(var(--M) * var(--s));height:calc(var(--s) * 15)}
+.fline.hasline{cursor:pointer}
+.fline.hasline:hover .sort{background:var(--lamp)}
+.fline.empty{background:repeating-linear-gradient(90deg,#3a3f43 0 calc(var(--s) * 12 - 1px),#1f2225 calc(var(--s) * 12 - 1px) calc(var(--s) * 12));opacity:.55}
+.quoin{position:absolute;background:#b2b6b9;border:1px solid #111;transition:transform .3s}
+.quoin.q1{right:-4px;top:30%;width:calc(var(--s) * 5);height:calc(var(--s) * 14);clip-path:polygon(0 0,100% 20%,100% 80%,0 100%);transform:translateX(calc(var(--s) * 5))}
+.quoin.q2{bottom:-4px;left:30%;height:calc(var(--s) * 5);width:calc(var(--s) * 14);clip-path:polygon(0 0,100% 0,80% 100%,20% 100%);transform:translateY(calc(var(--s) * 5))}
+.chase.tight .quoin.q1{transform:translateX(calc(var(--s) * 1))}
+.chase.tight .quoin.q2{transform:translateY(calc(var(--s) * 1))}
+.steps{display:flex;flex-direction:column;gap:6px}
+.step{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.step .t{flex:1;min-width:10em}
+.step.done .t{color:#9cc77a}
+
+/* press */
+.pressgrid{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:860px){.pressgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.bedscroll{overflow-x:auto;padding-bottom:4px}
+.bed{position:relative;flex:none;background:var(--timber-d);border:3px solid #38250f;margin:0 auto;overflow:hidden}
+.bed .fgrid{position:absolute;left:calc(var(--s) * 10);top:calc(var(--s) * 10);background:var(--timber)}
+.bed .cell{box-shadow:none;cursor:default}
+.bed .sort{background:#8d9397}
+.bed .sort .g{color:color-mix(in srgb,#050403 calc(var(--inklevel) * 100%),#656b70)}
+.bed .sort.space{background:#4c5155}
+.bed .fline.empty{opacity:.35}
+.bed .sheet{position:absolute;left:calc(var(--s) * 10);top:calc(var(--s) * 10)}
+.bed .sheet.held{filter:drop-shadow(0 6px 8px #0009)}
+.sheet{position:relative;display:grid;flex:none;grid-template-columns:repeat(var(--C,1),calc(var(--s) * var(--cw,180)));width:calc(var(--s) * var(--cw,180) * var(--C,1));height:calc(var(--s) * var(--ch,200) * var(--R,1));background-color:var(--paper);box-shadow:0 1px 6px #0008;background-image:radial-gradient(#c9bd9a40 1px,transparent 1.5px);background-size:9px 9px}
+.sheet.damp{background-color:#cfc6a8}
+.pcell{position:relative;width:calc(var(--s) * var(--cw,180));height:calc(var(--s) * var(--ch,200))}
+.pcell.inv{transform:rotate(180deg)}
+.pcell .text{position:absolute;left:calc(var(--s) * var(--tx,24));top:calc(var(--s) * var(--ty,46));width:calc(var(--s) * 132);transform:translate(var(--dx,0),var(--dy,0)) rotate(var(--rot,0deg))}
+.pcell .pnum{position:absolute;top:calc(var(--s) * 8);left:0;right:0;text-align:center;font-family:var(--ff-type);font-size:calc(var(--s) * 8);color:var(--ink);opacity:.8}
+.pcell .pl{height:calc(var(--s) * 18);display:flex;align-items:center}
+.pcell .sort{background:none;border:0;height:auto;color:var(--ink)}
+.pcell .sort.space,.pcell .sort.slip{background:none}
+.pcell .sort .g{opacity:var(--o,1);text-shadow:0 0 .7px #000a}
+.tympan{position:absolute;inset:0;background:#d9c9a0cc;border:2px solid #7a6538;transition:opacity .4s;pointer-events:none}
+.tympan::after{content:"tympan and frisket";position:absolute;left:8px;top:4px;font-size:.75rem;color:#55451f}
+.bedlab{position:absolute;left:6px;bottom:3px;font-size:.75rem;color:var(--muted)}
+.balls{display:flex;gap:8px;align-items:center}
+.ball{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#6a4e30,#2b1c0e);border:2px solid #1a0f06;transition:background .3s}
+.ball.inked{background:radial-gradient(circle at 35% 30%,#3a3a3a,#050505)}
+.pstep{display:flex;gap:10px;align-items:baseline}
+.pstep.cur{color:var(--lamp)}.pstep.done{color:#9cc77a}.pstep.todo{color:var(--muted)}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:.92rem}
+.pelev{width:100%;height:auto;max-height:300px;background:#272219;border:1px solid var(--line)}
+.pelev .mv{transition:transform .7s ease}
+.pelev .platen{transition:transform .35s ease-in}
+.pelev .barg{transition:transform .35s ease-in;transform-origin:160px 80px}
+.pelev.pulling .platen{transform:translateY(14px)}
+.pelev.pulling .barg{transform:rotate(26deg)}
+
+/* pile */
+.pilegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;align-items:start}
+.thumb{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;color:var(--muted);font-family:var(--ff-body)}
+.thumb .sheet{transform:rotate(var(--tr,0deg))}
+.thumb:hover .sheet{outline:2px solid var(--lamp)}
+#viewer{position:fixed;inset:0;background:#000c;z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:20px 16px}
+#viewer .col{display:flex;flex-direction:column;gap:12px;align-items:center;max-width:100%;margin:auto}
+.vscale{--s:min(3px,calc(min(100vw - 48px,860px) / (var(--C0) * var(--cw))))}
+.bookscale{--s:min(3px,calc(min(100vw - 48px,860px) / (2 * var(--cw))))}
+.packet{position:relative;width:calc(var(--s) * var(--cw) * var(--C));height:calc(var(--s) * var(--ch) * var(--R));perspective:1500px;margin:6px 0}
+.pk{position:absolute;width:calc(var(--s) * var(--cw));height:calc(var(--s) * var(--ch));transform-style:preserve-3d}
+.pk .face{position:absolute;inset:0;backface-visibility:hidden;background-color:var(--paper);background-image:radial-gradient(#c9bd9a40 1px,transparent 1.5px);background-size:9px 9px;box-shadow:inset 0 0 0 1px #0002}
+.pk .back{background-color:#d6cbab;transform:rotateY(180deg)}
+.pk.mv.foldv{animation:foldv .9s ease-in-out forwards}
+.pk.mv.foldh{animation:foldh .9s ease-in-out forwards}
+@keyframes foldv{to{transform:rotateY(-180deg)}}
+@keyframes foldh{to{transform:rotateX(180deg)}}
+.spread{display:flex;gap:2px;justify-content:center;background:#0006;padding:2px}
+.leaf{position:relative;width:calc(var(--s) * var(--cw));height:calc(var(--s) * var(--ch));background-color:var(--paper);background-image:radial-gradient(#c9bd9a40 1px,transparent 1.5px);background-size:9px 9px}
+.leaf.blank{background:#2b261f}
+.vmsg{color:var(--paper);max-width:60ch;text-align:center}
+.empty-note{padding:24px;text-align:center;color:var(--muted);font-style:italic;border:1px dashed var(--line)}
+@media(prefers-reduced-motion:reduce){.pk.mv{animation-duration:.01s!important}}
+.wm{position:absolute;pointer-events:none}
+.wm svg{display:block;width:100%;height:100%}
+.sheet>.wm{left:0;top:0;width:100%;height:100%}
+.sheet>.wm.mir svg{transform:scaleX(-1)}
+.piece{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.piece .wmi{position:absolute;width:calc(var(--s) * var(--cw) * var(--C0));height:calc(var(--s) * var(--ch) * var(--R0))}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick 1.3s infinite ease-in-out}
+.flame.b{animation-duration:1.7s;animation-delay:-.4s}
+.flame.c{animation-duration:1.1s;animation-delay:-.8s}
+.glow{animation:glow 2.1s infinite ease-in-out}
+@keyframes flick{0%,100%{transform:scale(1,1) skewX(0)}20%{transform:scale(.92,1.12) skewX(3deg)}45%{transform:scale(1.05,.9) skewX(-4deg)}70%{transform:scale(.95,1.08) skewX(2deg)}}
+@keyframes glow{0%,100%{opacity:.75}30%{opacity:1}55%{opacity:.6}80%{opacity:.95}}
+@media(prefers-reduced-motion:reduce){.flame,.glow{animation:none}}
+.ctail{transform-box:fill-box;transform-origin:100% 100%;animation:tailsway 3.2s infinite ease-in-out}
+.cbody{transform-box:fill-box;transform-origin:50% 100%;animation:breathe 3.6s infinite ease-in-out}
+@keyframes tailsway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(9deg)}}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.04)}}
+@media(prefers-reduced-motion:reduce){.ctail,.cbody{animation:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+<style>
+.side{order:-1}
+@media(min-width:960px){.side{order:2}}
+.cols2{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+</style>
+<div class="app">
+<header class="top">
+  <div><h1>Hand-Press Printing House</h1><p class="sub">An English shop, about 1683. Set a line, lock it up, pull a sheet.</p></div>
+  <nav id="nav" aria-label="Stations">
+    <button class="tab" data-go="shop">Whole shop</button>
+    <button class="tab" data-go="case">Case</button>
+    <button class="tab" data-go="stone">Stone</button>
+    <button class="tab" data-go="press">Press</button>
+    <button class="tab" data-go="pile">Paper<span class="badge" id="pileCount">0</span></button>
+  </nav>
+</header>
+<div id="notice" role="status" aria-live="polite"></div>
+<main>
+
+<!-- SHOP -->
+<section id="v-shop" class="view">
+ <div class="cols2">
+  <svg class="scene" viewBox="0 0 900 440" role="img" aria-label="The printing shop: type cases on the left, the imposing stone in the middle, a paper pile, and the hand press on the right">
+   <defs>
+    <pattern id="cells" width="14" height="12" patternUnits="userSpaceOnUse"><rect width="14" height="12" fill="#1c150f"/><rect x="1" y="1" width="12" height="10" fill="#2a2016"/></pattern>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3b45c" stop-opacity=".28"/><stop offset="1" stop-color="#e3b45c" stop-opacity="0"/></linearGradient>
+   </defs>
+   <rect width="900" height="440" fill="#3b352b"/>
+   <rect y="338" width="900" height="102" fill="#241d16"/>
+   <g stroke="#1a140f" stroke-width="2"><line x1="0" y1="372" x2="900" y2="372"/><line x1="0" y1="408" x2="900" y2="408"/></g>
+   <rect y="0" width="900" height="24" fill="#5a3d20"/>
+   <rect x="20" width="16" height="338" fill="#4a3219"/><rect x="450" y="24" width="16" height="12" fill="#4a3219"/>
+   <rect x="380" y="52" width="130" height="126" fill="#56666d" stroke="#2c2218" stroke-width="6"/>
+   <path d="M445 52v126M380 115h130" stroke="#2c2218" stroke-width="4"/>
+   <polygon points="380,178 510,178 600,338 300,338" fill="url(#beam)"/>
+   <g stroke="#8a7a5a" stroke-width="1.5" fill="none"><path d="M30 70q300 22 620 0"/><path d="M60 100q300 20 600 0"/></g>
+   <g fill="#e9e0c8" stroke="#b9ad88"><rect x="120" y="72" width="22" height="30"/><rect x="170" y="76" width="22" height="30"/><rect x="220" y="77" width="22" height="30"/><rect x="540" y="73" width="22" height="30"/><rect x="590" y="70" width="22" height="30"/><rect x="190" y="108" width="22" height="30"/><rect x="330" y="112" width="22" height="30"/><rect x="520" y="110" width="22" height="30"/></g>
+
+   <!-- case -->
+   <g class="hot" data-go="case" tabindex="0" role="button" aria-label="Go to the compositor's case">
+    <rect x="62" y="318" width="12" height="70" fill="#5a3d20"/><rect x="276" y="318" width="12" height="70" fill="#5a3d20"/>
+    <rect x="50" y="188" width="250" height="62" fill="url(#cells)" stroke="#5a3d20" stroke-width="5"/>
+    <rect x="50" y="256" width="250" height="62" fill="url(#cells)" stroke="#5a3d20" stroke-width="5"/>
+    <rect x="130" y="166" width="90" height="16" fill="#8b9196" stroke="#111"/><rect x="130" y="166" width="8" height="16" fill="#54595d"/>
+    <g fill="#a7adb1"><rect x="140" y="160" width="4" height="6"/><rect x="146" y="160" width="4" height="6"/><rect x="152" y="160" width="4" height="6"/></g>
+    <rect class="hl" x="36" y="150" width="278" height="248"/>
+   </g>
+   <!-- stone -->
+   <g class="hot" data-go="stone" tabindex="0" role="button" aria-label="Go to the imposing stone">
+    <rect x="346" y="330" width="14" height="58" fill="#5a3d20"/><rect x="540" y="330" width="14" height="58" fill="#5a3d20"/><rect x="346" y="352" width="208" height="8" fill="#5a3d20"/>
+    <polygon points="332,306 568,306 556,334 344,334" fill="#8b8a82" stroke="#53524b" stroke-width="2"/>
+    <rect x="388" y="262" width="124" height="44" fill="#2a2d30" stroke="#0e0f10" stroke-width="3"/>
+    <rect x="398" y="270" width="104" height="28" fill="#8a6338"/>
+    <rect x="408" y="276" width="84" height="16" fill="#1f2225"/>
+    <g fill="#a7adb1"><rect x="412" y="278" width="60" height="2"/><rect x="420" y="282" width="68" height="2"/><rect x="416" y="286" width="52" height="2"/></g>
+    <rect x="520" y="284" width="26" height="10" rx="2" fill="#8a6338" stroke="#3b2810"/><rect x="544" y="288" width="22" height="3" fill="#8a6338"/>
+    <rect class="hl" x="322" y="250" width="256" height="146"/>
+   </g>
+   <!-- pile -->
+   <g class="hot" data-go="pile" tabindex="0" role="button" aria-label="Go to the paper pile">
+    <rect x="594" y="330" width="10" height="58" fill="#5a3d20"/><rect x="654" y="330" width="10" height="58" fill="#5a3d20"/>
+    <rect x="586" y="320" width="86" height="12" fill="#8a6338" stroke="#3b2810"/>
+    <g fill="#e9e0c8" stroke="#b9ad88"><rect x="596" y="306" width="66" height="14"/><rect x="598" y="296" width="64" height="11"/><rect x="595" y="286" width="66" height="11"/></g>
+    <rect class="hl" x="578" y="274" width="102" height="122"/>
+   </g>
+   <!-- press -->
+   <g class="hot" data-go="press" tabindex="0" role="button" aria-label="Go to the hand press">
+    <rect x="708" y="96" width="18" height="294" fill="#8a6338" stroke="#3b2810"/><rect x="842" y="96" width="18" height="294" fill="#8a6338" stroke="#3b2810"/>
+    <rect x="698" y="84" width="172" height="26" fill="#6b4a28" stroke="#3b2810"/>
+    <rect x="776" y="110" width="14" height="124" fill="#2a2d30"/>
+    <rect x="740" y="232" width="86" height="14" fill="#4b4f53" stroke="#111"/>
+    <rect x="783" y="124" width="100" height="6" fill="#5a3d20" transform="rotate(14 783 127)"/><circle cx="875" cy="150" r="7" fill="#5a3d20"/>
+    <rect x="700" y="330" width="170" height="16" fill="#8a6338" stroke="#3b2810"/>
+    <rect x="718" y="318" width="104" height="12" fill="#2a2d30"/><rect x="722" y="312" width="70" height="6" fill="#e9e0c8"/>
+    <circle cx="876" cy="338" r="13" fill="none" stroke="#5a3d20" stroke-width="4"/><path d="M876 325v26M863 338h26" stroke="#5a3d20" stroke-width="3"/>
+    <rect class="hl" x="690" y="70" width="206" height="330"/>
+   </g>
+  <g pointer-events="none" aria-hidden="true"><defs><radialGradient id="cg"><stop offset="0" stop-color="#ffc66b" stop-opacity=".42"/><stop offset=".5" stop-color="#ffb24a" stop-opacity=".14"/><stop offset="1" stop-color="#ffb24a" stop-opacity="0"/></radialGradient></defs>
+    <g transform="translate(268 166)"><circle class="glow" cx="0" cy="-8" r="70" fill="url(#cg)"/>
+    <rect x="-7" y="19" width="14" height="3" fill="#6b5a3a"/><rect x="-4" y="0" width="8" height="19" fill="#e9e0c8"/><rect x="-4" y="0" width="3" height="19" fill="#fff7de" opacity=".5"/>
+    <path d="M0 0v-3" stroke="#2a1d10" stroke-width="1"/>
+    <g class="flame a"><path d="M0 -2 C-4.5 -6 -4.5 -13 0 -21 C4.5 -13 4.5 -6 0 -2Z" fill="#f2a93b"/><path d="M0 -3 C-2 -6 -2 -10 0 -14 C2 -10 2 -6 0 -3Z" fill="#fff0b0"/></g></g><g transform="translate(360 284)"><circle class="glow" cx="0" cy="-8" r="70" fill="url(#cg)"/>
+    <rect x="-7" y="19" width="14" height="3" fill="#6b5a3a"/><rect x="-4" y="0" width="8" height="19" fill="#e9e0c8"/><rect x="-4" y="0" width="3" height="19" fill="#fff7de" opacity=".5"/>
+    <path d="M0 0v-3" stroke="#2a1d10" stroke-width="1"/>
+    <g class="flame b"><path d="M0 -2 C-4.5 -6 -4.5 -13 0 -21 C4.5 -13 4.5 -6 0 -2Z" fill="#f2a93b"/><path d="M0 -3 C-2 -6 -2 -10 0 -14 C2 -10 2 -6 0 -3Z" fill="#fff0b0"/></g></g><g transform="translate(724 62)"><circle class="glow" cx="0" cy="-8" r="70" fill="url(#cg)"/>
+    <rect x="-7" y="19" width="14" height="3" fill="#6b5a3a"/><rect x="-4" y="0" width="8" height="19" fill="#e9e0c8"/><rect x="-4" y="0" width="3" height="19" fill="#fff7de" opacity=".5"/>
+    <path d="M0 0v-3" stroke="#2a1d10" stroke-width="1"/>
+    <g class="flame c"><path d="M0 -2 C-4.5 -6 -4.5 -13 0 -21 C4.5 -13 4.5 -6 0 -2Z" fill="#f2a93b"/><path d="M0 -3 C-2 -6 -2 -10 0 -14 C2 -10 2 -6 0 -3Z" fill="#fff0b0"/></g></g></g>
+  <g pointer-events="none" aria-hidden="true" transform="translate(478 418)">
+    <ellipse cx="2" cy="2" rx="34" ry="5" fill="#000" opacity=".35"/>
+    <g class="ctail"><path d="M-22 -9 Q-46 -6 -44 -24 Q-43 -33 -35 -30" fill="none" stroke="#9a7b55" stroke-width="6" stroke-linecap="round"/><path d="M-22 -9 Q-46 -6 -44 -24 Q-43 -33 -35 -30" fill="none" stroke="#4b3824" stroke-width="6" stroke-linecap="round" stroke-dasharray="3 6"/></g>
+    <g class="cbody"><ellipse cx="0" cy="-14" rx="25" ry="14" fill="#9a7b55"/><circle cx="-10" cy="-13" r="13" fill="#8c6f4c"/>
+     <path d="M-16 -26 q2 5 0 10 M-8 -28 q2 6 0 11 M0 -28 q2 6 0 11 M8 -26 q2 5 0 10" fill="none" stroke="#4b3824" stroke-width="2.4" stroke-linecap="round"/>
+     <path d="M-20 -8 q4 2 8 0 M-20 -3 q4 2 8 0" fill="none" stroke="#4b3824" stroke-width="2" stroke-linecap="round"/>
+     <rect x="12" y="-14" width="7" height="14" rx="3" fill="#a88a63"/><ellipse cx="16" cy="0" rx="6" ry="2.6" fill="#c9b08a"/>
+     <rect x="21" y="-12" width="6" height="12" rx="3" fill="#a88a63"/><ellipse cx="25" cy="0" rx="5.5" ry="2.4" fill="#c9b08a"/></g>
+    <g class="chead"><polygon points="14,-34 15,-47 23,-38" fill="#a88a63"/><polygon points="30,-38 33,-47 35,-33" fill="#a88a63"/><polygon points="16,-36 16.5,-43 21,-38" fill="#d9a49a"/><polygon points="31,-38 32.5,-43 33.5,-35" fill="#d9a49a"/>
+     <circle cx="25" cy="-28" r="11" fill="#a88a63"/>
+     <path d="M25 -38 v5 M20 -37 l1.5 4 M30 -37 l-1.5 4" stroke="#4b3824" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+     <ellipse cx="21" cy="-28" rx="2.4" ry="2.8" fill="#d8c04a"/><ellipse cx="29.5" cy="-28" rx="2.4" ry="2.8" fill="#d8c04a"/><rect x="20.5" y="-30.5" width="1" height="5" fill="#1a120a"/><rect x="29" y="-30.5" width="1" height="5" fill="#1a120a"/>
+     <path d="M23.5 -23 l1.5 1.6 l1.5 -1.6 z" fill="#d9a49a"/><path d="M25 -21.4 v2 M25 -19.4 q-2 1.6 -4 .6 M25 -19.4 q2 1.6 4 .6" stroke="#4b3824" stroke-width=".9" fill="none"/>
+     <path d="M16 -24 l-8 -1.5 M16 -22 l-8 1 M34 -24 l8 -1.5 M34 -22 l8 1" stroke="#e9e0c8" stroke-width=".7" opacity=".8"/></g>
+   </g>
+  </svg>
+  <div class="stations">
+   <button data-go="case"><span class="n">1. Compositor's case</span><span class="d">Pick sorts from the boxes and justify a line in the composing stick.</span></button>
+   <button data-go="stone"><span class="n">2. Imposing stone</span><span class="d">Lay the lines in the chase, add furniture, tighten the quoins, plane it level.</span></button>
+   <button data-go="press"><span class="n">3. Hand press</span><span class="d">Ink the forme, lay a damp sheet, pull the bar twice, lift off the print.</span></button>
+   <button data-go="pile"><span class="n">Paper pile</span><span class="d">Look over the sheets you have printed.</span></button>
+  </div>
+  <div class="panel notes">
+   <h3>How a page got made</h3>
+   <p>Every letter is a small block of metal called a sort, cast with its face reversed. The compositor sets sorts into a line, the line is built into a page, and the page is locked into an iron frame. That frame, with the type in it, is the forme. Ink goes on the raised faces, damp paper is pressed against them, and the reversed letters print the right way round.</p>
+   <p>Start at the case. A half-finished line is already waiting in your stick. At the stone you can also choose folio, quarto or octavo, then fold the printed sheet into a book.</p>
+  </div>
+ </div>
+</section>
+
+<!-- CASE -->
+<section id="v-case" class="view" hidden>
+ <div class="bench two">
+  <div class="panel" id="casePanel">
+   <div class="row" style="justify-content:space-between"><h2>The Cases</h2>
+    <label class="row muted" style="gap:6px;cursor:pointer"><input type="checkbox" id="labToggle" checked> Show box labels</label></div>
+   <p class="muted">Click a box to pick a sort. You can also type: letters, Space for a thick space, Backspace to take one out.</p>
+   <div class="case-title">UPPER CASE: capitals, figures and the ampersand</div>
+   <div class="case" id="upper"></div>
+   <div class="case-title">LOWER CASE: small letters, points and spaces</div>
+   <div class="case" id="lower"></div>
+  </div>
+  <div class="panel side">
+   <h2>Composing Stick</h2>
+   <div class="stickwrap"><div class="stick" id="stick" aria-label="Composing stick"></div></div>
+   <div class="status mono" id="stickStatus"></div>
+   <div class="row">
+     <button class="btn" id="btnUndo">Take out last sort</button>
+     <button class="btn" id="btnEmpty">Empty stick</button>
+     <button class="btn primary" id="btnSet">Set line in galley</button>
+   </div>
+   <div class="row"><span class="muted">Fill with:</span>
+     <span id="spaceBtns" class="row" style="gap:4px"></span></div>
+   <div>
+     <div class="row" style="justify-content:space-between"><h3>Looking-glass proof</h3>
+     <label class="row muted" style="gap:6px;cursor:pointer"><input type="checkbox" id="proofToggle" checked> Show</label></div>
+     <div class="proof" id="proof"></div>
+   </div>
+   <div><h3>Galley</h3><div class="galley" id="galleyCase"></div></div>
+   <div class="notes">
+    <h3>At the case</h3>
+    <p>The compositor holds the stick in the left hand and sets each sort with its nick up, so the line runs left to right but upside down, and every face is a mirror image. Here the sorts show exactly that. The proof line shows what the finished print will say.</p>
+    <p>Boxes are sized by use, so the e is large and the z small. Capitals sit in the upper case, which is how it got its name. J and U sit after Z because they were still thought of as forms of I and V. The long s (ſ) was used at the start and middle of words. The lay here is simplified from Moxon's, 1683.</p>
+    <p>A line must fit the measure exactly, or the type falls apart when lifted. Fill the gap with quads and spaces; a slip of paper makes up the last point. In a real shop each letter came in a limited number, and running short left you out of sorts. Here every box is unlimited.</p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- STONE -->
+<section id="v-stone" class="view" hidden>
+ <div class="bench two">
+  <div class="panel">
+   <h2>The Imposing Stone</h2>
+   <div class="fmtbar">
+     <label class="row" style="gap:8px">Format
+       <select id="fmtSel"><option value="broad">Broadside (1 page)</option><option value="folio">Folio (4 pages)</option><option value="quarto">Quarto (8 pages)</option><option value="octavo">Octavo (16 pages)</option></select></label>
+     <span class="sidetabs" id="sideTabs"></span>
+   </div>
+   <p class="muted" id="fmtInfo"></p>
+   <div class="stonebox"><div class="chase" id="chase">
+     <div class="fgrid" id="fgrid"></div>
+     <div class="quoin q1"></div><div class="quoin q2"></div>
+   </div></div>
+   <div class="status mono" id="formeStatus"></div>
+   <p class="muted">The forme is seen from above, so the type reads backwards and the pages sit in mirror order. Click a page to choose where the next line goes. Click a line to lift it back to the galley.</p>
+  </div>
+  <div class="panel">
+   <h3>Galley</h3>
+   <div class="galley" id="galleyStone"></div>
+   <button class="btn" id="btnSample">Set ready-made type in empty pages</button>
+   <h3>Lock up the forme</h3>
+   <div class="steps" id="lockSteps"></div>
+   <div class="row">
+     <button class="btn primary" id="btnCarry">Carry forme to the press</button>
+     <button class="btn" id="btnDist">Break up the forme</button>
+   </div>
+   <div class="notes">
+    <h3>At the stone</h3>
+    <p>The stone gives a perfectly flat surface. Pages are set in an iron chase, wooden furniture fills the gaps, and quoins, which are wedges, are driven in until everything is tight. A planer is tapped across the faces to bring them level. Only then can the forme be lifted as a single piece.</p>
+    <p>Books were printed on whole sheets carrying several pages each. Imposition means arranging the pages so that, once the sheet is folded, they fall in order. Each sheet needs two formes, one for each side. Choose folio, quarto or octavo above to see the layouts. Pages in the top row of a quarto or octavo are set upside down, and page numbers are set for you.</p>
+    <p>Print both formes on the same sheets, then open the paper pile and fold one.</p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- PRESS -->
+<section id="v-press" class="view" hidden>
+ <div class="pressgrid">
+  <div class="panel">
+   <h2>The Hand Press</h2>
+   <p class="muted" id="pressTitle"></p>
+   <div id="nopress" class="empty-note" hidden>No forme on the bed. Lock one up at the stone and carry it over.</div>
+   <div id="bedwrap" class="bedscroll">
+    <div class="bed" id="bed">
+      <div class="fgrid" id="bedForme"></div>
+      <div id="bedSheet"></div>
+      <div class="tympan" id="bedTymp" style="opacity:0"></div>
+      <div class="bedlab" id="bedLab"></div>
+    </div>
+   </div>
+  </div>
+  <div class="panel">
+   <svg class="pelev" id="pelev" viewBox="0 0 320 250" role="img" aria-label="Side view of the press">
+    <line x1="0" y1="226" x2="320" y2="226" stroke="#5a3d20" stroke-width="3"/>
+    <rect x="60" y="30" width="14" height="190" fill="#8a6338" stroke="#3b2810"/><rect x="246" y="30" width="14" height="190" fill="#8a6338" stroke="#3b2810"/>
+    <rect x="50" y="22" width="220" height="24" fill="#6b4a28" stroke="#3b2810"/>
+    <rect x="44" y="208" width="232" height="8" fill="#2a2d30"/>
+    <g class="mv" id="peBed" style="transform:translateX(110px)">
+      <rect x="40" y="192" width="150" height="16" fill="#8a6338" stroke="#3b2810"/>
+      <rect id="peForme" x="70" y="184" width="80" height="8" fill="#a7adb1"/>
+      <rect id="pePaper" x="64" y="179" width="92" height="4" fill="#e9e0c8" opacity="0"/>
+      <g id="peTymp" style="transform-origin:190px 190px;transform:rotate(100deg);transition:transform .5s">
+        <rect x="66" y="186" width="124" height="4" fill="#7a6538"/>
+      </g>
+    </g>
+    <g class="platen"><rect x="153" y="46" width="14" height="108" fill="#2a2d30"/><rect x="118" y="152" width="84" height="14" fill="#4b4f53" stroke="#111"/></g>
+    <g class="barg"><rect x="160" y="77" width="104" height="6" fill="#8a6338"/><circle cx="264" cy="80" r="6" fill="#5a3d20"/></g>
+    <circle cx="300" cy="196" r="14" fill="none" stroke="#8a6338" stroke-width="4"/><path d="M300 183v26M287 196h26" stroke="#8a6338" stroke-width="3"/>
+    <text x="8" y="244" fill="#a89c82" font-size="11" font-family="serif">Platen, bar and sliding bed seen from the side</text>
+   </svg>
+   <div class="balls"><span class="ball" id="ballA"></span><span class="ball" id="ballB"></span><span class="muted" id="ballLab">Ink balls</span></div>
+   <button class="btn primary" id="btnStep"></button>
+   <p class="muted" id="phint"></p>
+   <ol class="plist" id="plist"></ol>
+   <div class="row muted"><span>Damp paper left: <b id="blanks" class="mono">0</b></span><span>Waiting for a second forme: <b id="halfCount" class="mono">0</b></span>
+     <button class="btn small" id="btnBack">Return forme to the stone</button></div>
+  </div>
+ </div>
+ <div class="panel notes" style="margin-top:14px">
+  <h3>At the press</h3>
+  <p>The pressman beats ink, a mix of linseed-oil varnish and lampblack, onto two leather balls and dabs it over the type. Paper is dampened the day before so it takes the ink. It goes on the tympan, the frisket folds down to keep the margins clean, and the whole carriage is wound in on rails by the rounce.</p>
+  <p>The platen is smaller than the bed, so a forme took two pulls of the bar. The wet sheet then hung up to dry. An experienced crew is often said to have managed about 200 to 250 impressions an hour, with one person inking while the other pulled.</p>
+  <p>For a folded format, one side of every sheet is printed from the outer forme and the sheets are then turned and printed from the inner forme. Small holes pricked by points on the tympan keep the two sides in register.</p>
+ </div>
+</section>
+
+<!-- PILE -->
+<section id="v-pile" class="view" hidden>
+ <div class="panel">
+  <h2>The Paper Pile</h2>
+  <p class="muted">Finished sheets hang here. Click one to look at it. A sheet printed for folio, quarto or octavo can be folded into a book.</p>
+  <h3>Finished sheets</h3>
+  <div class="pilegrid" id="pilegrid"></div>
+  <div id="halfWrap" hidden><h3>Printed on one side only</h3><p class="muted">These wait at the press for the other forme.</p><div class="pilegrid" id="halfgrid"></div></div>
+ </div>
+</section>
+
+</main>
+</div>
+<div id="viewer" hidden></div>
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const M=132;
+
+/* ---------- the fount: every kind of sort and its width in 1/12 em (unlimited supply) ---------- */
+const S={};
+const def=(id,glyph,w,kind,name)=>{S[id]={id,glyph,w,kind:kind||'letter',name:name||glyph};};
+const LW={a:5,b:6,c:5,d:6,e:5,f:4,g:6,h:6,i:3,j:3,k:6,l:3,m:9,n:6,o:6,p:6,q:6,r:4,s:4,t:4,u:6,v:6,w:8,x:6,y:6,z:5};
+for(const c in LW) def(c,c,LW[c]);
+const UW={A:9,B:8,C:8,D:9,E:8,F:7,G:9,H:9,I:4,J:5,K:9,L:8,M:11,N:9,O:9,P:7,Q:9,R:8,S:6,T:8,U:9,V:9,W:12,X:9,Y:9,Z:8};
+for(const c in UW) def(c,c,UW[c]);
+for(const d of '1234567890') def(d,d,6);
+[[',',3],['.',3],[';',3],[':',3],['-',4],['?',5],['!',3],['&',10]].forEach(([c,w])=>def(c,c,w));
+def('ſ','ſ',4); def('fi','ﬁ',6,'letter','fi');
+def('em','',12,'space','em quad'); def('en','',6,'space','en quad');
+def('th3','',4,'space','3-to-em'); def('th4','',3,'space','4-to-em'); def('th5','',2,'space','5-to-em');
+def('slip','',1,'slip','paper slip');
+
+/* ---------- the lay of the cases (simplified from Moxon, 1683) ---------- */
+const UPPER=[['A','B','C','D','E','F','G'],['H','I','K','L','M','N','O'],['P','Q','R','S','T','V','W'],['X','Y','Z','J','U','&'],['1','2','3','4','5','6','7','8','9','0']].map(r=>r.map(i=>[i,1]));
+const LOWER=[
+ [['j',1],['b',1],['c',1],['d',1],['e',2.2],['ſ',1],['f',1],['g',1],['fi',1]],
+ [[';',1],[':',1],['h',1.2],['y',1],['p',1],['w',1],[',',1],['.',1],['-',1]],
+ [['z',1],['x',1],['q',1],['v',1],['u',1],['t',1],['a',1.6],['r',1.4]],
+ [['k',1],['m',1],['n',1.3],['o',1.3],['i',1.4],['l',1],['?',1],['!',1]],
+ [['em',1.5],['en',1.3],['th3',1.2],['th4',1],['th5',1],['slip',1]]];
+
+/* ---------- formats. Layouts are as they appear on the PRINTED side; the forme on the stone is their mirror image.
+   A flag of 1 means the page is set upside down (head to head) so it comes out upright after folding. ---------- */
+const FMT={
+ broad:{name:'Broadside',C:1,R:1,cw:180,ch:200,tx:24,ty:46,pl:6,kf:1,kb:1,leaves:1,outer:[[1]],inner:null,io:[[0]],ii:null,folds:[]},
+ folio:{name:'Folio',C:2,R:1,cw:168,ch:150,tx:18,ty:28,pl:4,kf:.66,kb:.6,leaves:2,outer:[[4,1]],inner:[[2,3]],io:[[0,0]],ii:[[0,0]],folds:[['v','L',1]]},
+ quarto:{name:'Quarto',C:2,R:2,cw:168,ch:150,tx:18,ty:28,pl:4,kf:.66,kb:.6,leaves:4,outer:[[5,8],[4,1]],inner:[[7,6],[2,3]],io:[[1,1],[0,0]],ii:[[1,1],[0,0]],folds:[['v','L',1],['h','T',1]]},
+ octavo:{name:'Octavo',C:4,R:2,cw:168,ch:150,tx:18,ty:28,pl:4,kf:.34,kb:.32,leaves:8,outer:[[5,12,9,8],[4,13,16,1]],inner:[[7,10,11,6],[2,15,14,3]],io:[[1,1,1,1],[0,0,0,0]],ii:[[1,1,1,1],[0,0,0,0]],folds:[['v','L',1],['h','T',1],['v','L',1]]}};
+const INFO={
+ broad:'A broadside is one page on one side of a sheet: one forme, no folding.',
+ folio:'Folio: the sheet is folded once, giving 2 leaves and 4 pages. It needs two formes. The outer forme carries pages 4 and 1, the inner forme pages 2 and 3.',
+ quarto:'Quarto: folded twice, giving 4 leaves and 8 pages. Outer forme: 5 8 over 4 1. Inner forme: 7 6 over 2 3. The top row is set upside down so that it comes out upright after folding.',
+ octavo:'Octavo: folded three times, giving 8 leaves and 16 pages. Outer forme: 5 12 9 8 over 4 13 16 1. Inner forme: 7 10 11 6 over 2 15 14 3. The top row is set upside down.'};
+const PHRASES=['Of the Compositor','Of the Case','Of Setting Type','Of the Stick','Of the Galley','Of the Stone','Of the Forme','Of Imposition','Of Furniture','Of the Quoins','Of the Press','Of Ink','Of Paper','Of the Pull','Of Drying','Of Folding'];
+
+/* ---------- state ---------- */
+const fresh=()=>({furn:false,quoin:false,plane:false});
+let sid=0;
+const st={view:'shop',stick:[],galley:[],fmt:'broad',side:'outer',pages:{outer:{},inner:{}},target:1,
+  lock:{outer:fresh(),inner:fresh()},onPress:null,p:0,blanks:40,cur:null,held:null,half:[],pile:[],busy:false,proof:true,vw:null};
+'Mechanick'.split('').forEach(c=>st.stick.push(c));
+
+const F=()=>FMT[st.fmt];
+const sidesOf=f=>f.inner?['outer','inner']:['outer'];
+const layoutOf=(f,side)=>side==='outer'?f.outer:f.inner;
+const invOf=(f,side,r,c)=>(side==='outer'?f.io:f.ii)[r][c];
+const pageList=(f,side)=>layoutOf(f,side).flat();
+const lw=a=>a.reduce((s,i)=>s+S[i].w,0);
+const txt=a=>a.map(i=>S[i].kind==='letter'?S[i].glyph:S[i].kind==='space'?' ':'').join('').replace(/\s+/g,' ').trim();
+const rng=seed=>()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+function say(m,warn){const n=$('#notice');n.textContent=m;n.classList.toggle('warn',!!warn);}
+const unlock=side=>{st.lock[side]=fresh();};
+function getPage(side,n){return st.pages[side][n]||(st.pages[side][n]=Array(F().pl).fill(null));}
+const linesOnSide=side=>pageList(F(),side).reduce((a,n)=>a+getPage(side,n).filter(Boolean).length,0);
+const fmtVars=f=>`--C:${f.C};--R:${f.R};--C0:${f.C};--R0:${f.R};--cw:${f.cw};--ch:${f.ch};--tx:${f.tx};--ty:${f.ty}`;
+function pickTarget(){
+  const ps=pageList(F(),st.side).slice().sort((a,b)=>a-b);
+  st.target=ps.find(n=>getPage(st.side,n).includes(null))||ps[0];
+}
+
+/* ---------- markup for sorts and pages ---------- */
+function sortHTML(id,mode){const d=S[id];
+  if(d.kind==='letter') return `<span class="sort ${mode}" style="--w:${d.w}"><i class="g">${d.glyph}</i>${mode==='stick'?'<b class="nick"></b>':''}</span>`;
+  return `<span class="sort ${mode} ${d.kind}" style="--w:${d.w}"></span>`;}
+function printSort(id,r){const d=S[id];
+  if(d.kind!=='letter') return `<span class="sort space" style="--w:${d.w}"></span>`;
+  return `<span class="sort" style="--w:${d.w}"><i class="g" style="--o:${(0.78+r()*0.22).toFixed(2)};transform:translate(${((r()-.5)*.6).toFixed(2)}px,${((r()-.5)*.9).toFixed(2)}px) rotate(${((r()-.5)*2).toFixed(2)}deg)">${d.glyph}</i></span>`;}
+function pageHTML(lines,n,r,showNum){
+  return `${showNum?`<div class="pnum">${n}</div>`:''}<div class="text">${lines.map(l=>`<div class="pl">${l?l.map(id=>printSort(id,r)).join(''):''}</div>`).join('')}</div>`;}
+function snapshotSide(side){const o={};pageList(F(),side).forEach(n=>{o[n]=getPage(side,n).map(l=>l?l.slice():null);});return o;}
+function sheetSideHTML(sh,side,cls,extra){
+  const f=FMT[sh.fmt],r=rng(sh.seed+(side==='inner'?7919:0)),snap=sh.sides[side],L=layoutOf(f,side);
+  const rot=((r()-.5)*1.2).toFixed(2),dx=((r()-.5)*5).toFixed(1),dy=((r()-.5)*5).toFixed(1);
+  let cells='';
+  for(let a=0;a<f.R;a++)for(let c=0;c<f.C;c++){const n=L[a][c];
+    cells+=`<div class="pcell ${invOf(f,side,a,c)?'inv':''}">${pageHTML(snap[n]||Array(f.pl).fill(null),n,r,f.C*f.R>1)}</div>`;}
+  return `<div class="sheet ${cls||''}" style="${fmtVars(f)};--rot:${rot}deg;--dx:${dx}px;--dy:${dy}px;${extra||''}">${wmLayer(f,side==='inner')}${cells}</div>`;}
+/* watermark: a pot in the left half of the mould and the moulder's initials in the right half, part of the paper itself */
+function wmSVG(f){const W=f.C*f.cw,H=f.R*f.ch;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><g stroke-linejoin="round" stroke-linecap="round">
+   <g transform="translate(${W*.25} ${H*.5}) scale(.75)" fill="rgba(110,90,50,.10)" stroke="rgba(110,90,50,.55)" stroke-width="1.8">
+    <path d="M-17 36 L-21 4 Q-21 -14 0 -14 Q21 -14 21 4 L17 36 Z"/><path d="M-13 -14 L-15 -22 L15 -22 L13 -14 Z"/><path d="M-19 36 L19 36 L19 41 L-19 41 Z"/>
+    <path d="M21 2 Q42 2 40 20 Q38 36 18 30" fill="none"/>
+    <path d="M0 -22 L0 -54 M0 -22 Q-16 -36 -22 -48 M0 -22 Q16 -36 22 -48" fill="none"/>
+    <circle cx="0" cy="-58" r="5"/><circle cx="-24" cy="-52" r="5"/><circle cx="24" cy="-52" r="5"/></g>
+   <g transform="translate(${W*.75} ${H*.5}) scale(.75)"><text text-anchor="middle" y="9" font-size="30" font-family="IM Fell English,Georgia,serif" fill="rgba(110,90,50,.22)" stroke="none">IW</text></g>
+  </g></svg>`;}
+const wmLayer=(f,mir)=>`<div class="wm ${mir?'mir':''}">${wmSVG(f)}</div>`;
+/* the part of the watermark that lies in one cell of the sheet, as seen from one face of that cell */
+function piece(f,cell,isTop){
+  const mir=isTop?!cell.front:cell.front;
+  return `<div class="piece" style="transform:rotate(${cell.pr}deg)${mir?' scaleX(-1)':''}"><div class="wmi" style="left:calc(var(--s) * var(--cw) * -${cell.o.c});top:calc(var(--s) * var(--ch) * -${cell.o.r})">${wmSVG(f)}</div></div>`;}
+function backFace(sh,f,cell){const b=cell.bottom,lines=pageContent(sh,b.p)||Array(f.pl).fill(null);
+  return piece(f,cell,false)+`<div class="pcell ${b.rot?'inv':''}">${pageHTML(lines,b.p,rng(sh.seed+b.p*31),true)}</div>`;}
+function pageContent(sh,n){const f=FMT[sh.fmt];for(const side of sidesOf(f)){if(pageList(f,side).includes(n))return sh.sides[side][n];}return null;}
+
+/* ---------- case view ---------- */
+function boxHTML([id,f]){const d=S[id];
+  const aria=`${d.name}, unlimited`;
+  if(d.kind==='letter') return `<button class="box" style="--f:${f}" data-id="${id}" aria-label="${aria}"><span class="lab">${d.glyph}</span><span class="fl">${d.glyph}</span><span class="n">∞</span></button>`;
+  return `<button class="box" style="--f:${f}" data-id="${id}" aria-label="${aria}"><span class="sl">${d.name}</span><span class="sq" style="--w:${d.w}"></span><span class="n">∞</span></button>`;}
+function renderCase(){
+  $('#upper').innerHTML=UPPER.map(r=>`<div class="crow">${r.map(boxHTML).join('')}</div>`).join('');
+  $('#lower').innerHTML=LOWER.map(r=>`<div class="crow">${r.map(boxHTML).join('')}</div>`).join('');
+  const w=lw(st.stick),gap=M-w;
+  $('#stick').innerHTML=st.stick.map((id,i)=>{const d=S[id];
+    return d.kind==='letter'?`<button class="sort stick" data-i="${i}" style="--w:${d.w}" title="Take out ${d.name}" aria-label="Take out ${d.name}"><i class="g">${d.glyph}</i><b class="nick"></b></button>`
+      :`<button class="sort stick ${d.kind}" data-i="${i}" style="--w:${d.w}" title="Take out ${d.name}" aria-label="Take out ${d.name}"></button>`;}).join('')+(gap>0?`<span class="gap" style="--w:${gap}"></span>`:'');
+  $('#stickStatus').innerHTML=`<span>${w} of ${M} units (12 units to the em)</span><span class="${gap===0?'ok':'no'}">${gap===0?'Tight: the line is justified':gap+' units to fill'}</span>`;
+  $('#spaceBtns').innerHTML=['em','en','th3','th4','th5','slip'].map(id=>`<button class="btn small" data-id="${id}">${S[id].name}</button>`).join('');
+  $('#proof').textContent=st.proof?(txt(st.stick)||'(nothing set yet)'):'Hidden. Read the sorts as they lie.';
+  $('#galleyCase').innerHTML=galleyHTML('unset');
+}
+function galleyHTML(mode){
+  if(!st.galley.length) return `<p class="muted">No lines waiting. Justify a line and set it here.</p>`;
+  const off=st.onPress===st.side;
+  return st.galley.map((l,i)=>`<div class="glrow"><div class="glline">${l.map(id=>sortHTML(id,'stick')).join('')}</div>
+    <span class="muted" style="flex:1;min-width:6em">${txt(l)}</span>
+    ${mode==='lay'?`<button class="btn small" data-lay="${i}" ${off?'disabled':''}>Lay in page ${st.target}</button>`:`<button class="btn small" data-unset="${i}">Back to stick</button>`}</div>`).join('');}
+function addSort(id){
+  const d=S[id];
+  if(lw(st.stick)+d.w>M){say(`That will not fit. The stick has ${M-lw(st.stick)} units left and ${d.name} takes ${d.w}.`,1);return;}
+  st.stick.push(id);renderCase();
+}
+function takeOut(i){if(i>=0&&i<st.stick.length){st.stick.splice(i,1);renderCase();}}
+function setLine(){
+  const w=lw(st.stick);
+  if(!st.stick.some(i=>S[i].kind==='letter')){say('There is nothing to print yet. Set some letters first.',1);return;}
+  if(w!==M){say(`The line is ${M-w} units short of the measure. Loose type falls out when the stick is lifted, so fill it with quads and spaces until it is tight.`,1);return;}
+  st.galley.push(st.stick);st.stick=[];say('Line set in the galley. Take it to the stone when you have enough lines.');renderCase();
+}
+function unset(i){
+  if(st.stick.length){say('Empty the stick first.',1);return;}
+  st.stick=st.galley.splice(i,1)[0];renderCase();
+}
+
+/* ---------- stone view ---------- */
+function cellHTML(side,n,inv,o){
+  const f=F(),pg=getPage(side,n);
+  const slots=pg.map((ln,i)=>`<div class="slot">`+(ln
+    ?`<div class="fline hasline" ${o.live?`data-pg="${n}" data-slot="${i}" title="Lift back to the galley" role="button" tabindex="0"`:'style="pointer-events:none"'}>${ln.map(id=>sortHTML(id,'forme')).join('')}</div>`
+    :`<div class="fline empty"></div>`)+`</div>`).join('');
+  return `<div class="cell ${inv?'inv':''} ${o.tgt===n?'tgt':''}" ${o.live?`data-page="${n}"`:''}>${o.labels?`<div class="plabel">Page ${n}</div>`:''}<div class="ftext">${slots}</div></div>`;}
+function formeGridHTML(side,o){
+  const f=F(),L=layoutOf(f,side);let h='';
+  for(let r=0;r<f.R;r++)for(let k=0;k<f.C;k++){const c=f.C-1-k;h+=cellHTML(side,L[r][c],invOf(f,side,r,c),o);}
+  return h;}
+function renderStone(){
+  const f=F(),side=st.side,on=st.onPress===side,lk=st.lock[side];
+  $('#fmtSel').value=st.fmt;
+  $('#fmtInfo').textContent=INFO[st.fmt];
+  $('#sideTabs').innerHTML=f.inner?['outer','inner'].map(s=>`<button class="btn small" data-side="${s}" aria-pressed="${s===side}">${s==='outer'?'Outer':'Inner'} forme${st.onPress===s?' (on press)':''}</button>`).join(''):'';
+  const fg=$('#fgrid');fg.style.cssText=fmtVars(f);
+  fg.innerHTML=formeGridHTML(side,{labels:true,tgt:st.target,live:!on});
+  fg.classList.toggle('on',lk.furn);
+  const ch=$('#chase');ch.style.setProperty('--s',`calc(var(--u) * ${f.kf})`);ch.classList.toggle('tight',lk.quoin);
+  const n=linesOnSide(side);
+  $('#formeStatus').textContent=on?'This forme is on the press.':`${n} line${n===1?'':'s'} in the ${f.inner?side+' ':''}forme. ${lk.plane?'Locked up and level.':lk.quoin?'Tight, not yet planed.':lk.furn?'Furniture in, quoins loose.':'The type is loose: do not lift it.'}${st.onPress?` The ${st.onPress} forme is still on the press: bring it back to the stone before carrying this one over.`:''}`;
+  $('#galleyStone').innerHTML=galleyHTML('lay');
+  const L=[['furn','Lay furniture around the pages',n>0],['quoin','Tighten the quoins',lk.furn],['plane','Plane the faces level',lk.quoin]];
+  $('#lockSteps').innerHTML=L.map(([k,t,ok])=>`<div class="step ${lk[k]?'done':''}"><span class="t">${lk[k]?'✓ ':''}${t}</span><button class="btn small" data-lock="${k}" ${(ok&&!on&&!lk[k])?'':'disabled'}>${lk[k]?'Done':'Do this'}</button></div>`).join('');
+  $('#btnCarry').textContent=`Carry the ${f.inner?side+' ':''}forme to the press`;
+  $('#btnCarry').disabled=!(!st.onPress&&lk.plane&&n>0);
+  $('#btnDist').disabled=!!st.onPress;
+  $('#btnSample').disabled=on;
+}
+function setFormat(k){
+  if(k===st.fmt)return;
+  if(st.onPress){say('Take the forme off the press before changing format.',1);renderStone();return;}
+  const had=linesOnSide('outer')+(F().inner?linesOnSide('inner'):0);
+  st.pages={outer:{},inner:{}};st.lock={outer:fresh(),inner:fresh()};st.fmt=k;st.side='outer';pickTarget();
+  say(`${FMT[k].name} chosen.${had?' The old forme was broken up and its type distributed.':''} ${INFO[k]}`);renderStone();
+}
+function layInForme(i){
+  const side=st.side;if(st.onPress===side)return;
+  const pg=getPage(side,st.target),slot=pg.indexOf(null);
+  if(slot<0){say(`Page ${st.target} is full. Click another page in the forme first.`,1);return;}
+  pg[slot]=st.galley.splice(i,1)[0];unlock(side);pickTarget();say(`Line laid in the forme. The forme reads from right to left.`);renderStone();
+}
+function liftOut(n,slot){
+  const side=st.side;if(st.onPress===side)return;
+  const pg=getPage(side,n);if(!pg[slot])return;
+  st.galley.push(pg[slot]);pg[slot]=null;unlock(side);st.target=n;renderStone();
+}
+const LOCKMSG={furn:'Wooden furniture fills the gaps around and between the pages.',quoin:'The quoins are driven home. Nothing moves now.',plane:'You tap the planer across the faces with the mallet. Every letter sits level.'};
+function doLock(k){if(st.onPress===st.side)return;st.lock[st.side][k]=true;say(LOCKMSG[k]);renderStone();}
+function fillIds(n){const o=[];for(const [id,w] of [['em',12],['en',6],['th3',4],['th4',3],['th5',2],['slip',1]])while(n>=w){o.push(id);n-=w;}return o;}
+function centred(text){const ids=[...text].map(c=>c===' '?'th3':c),w=lw(ids),left=Math.floor((M-w)/2);return [...fillIds(left),...ids,...fillIds(M-w-left)];}
+function sampleFill(){
+  const side=st.side;if(st.onPress===side)return;let c=0;
+  pageList(F(),side).forEach(n=>{const pg=getPage(side,n);if(pg.every(l=>!l)){pg[0]=centred(PHRASES[(n-1)%PHRASES.length]);c++;}});
+  unlock(side);pickTarget();
+  say(c?`Set ready-made type in ${c} empty page${c===1?'':'s'}. Each heading matches its page number.`:'No empty pages to fill.');renderStone();
+}
+function distribute(){
+  if(st.onPress)return;
+  st.pages={outer:{},inner:{}};st.galley=st.galley;st.lock={outer:fresh(),inner:fresh()};pickTarget();
+  say('The forme is broken up and the type distributed back into the case.');renderStone();
+}
+function carry(){
+  const side=st.side;if(st.onPress||!st.lock[side].plane)return;
+  st.onPress=side;st.p=0;st.cur=null;say('Two hands under the chase, and across to the press bed.');go('press');
+}
+
+/* ---------- press view ---------- */
+const STEPS=[
+ {l:'Beat ink onto the balls',m:'The balls are leather, stuffed with wool. Beating them together spreads the ink thinly.'},
+ {l:'Dab the balls on the forme',m:'Ink goes only on the raised faces of the letters.'},
+ {l:'Dab again to cover the type',m:'A second dabbing takes the ink to every letter.'},
+ {l:'Lay a damp sheet on the tympan',m:'The paper was wetted the day before so it takes the ink.'},
+ {l:'Fold down the frisket and tympan',m:'The frisket is a paper mask that keeps ink off the margins; the tympan cushions the sheet.'},
+ {l:'Turn the rounce: first half under the platen',m:'The crank winds the bed in on its rails.'},
+ {l:'Pull the bar',m:'The bar turns the screw and drives the platen down onto the sheet.',pull:1},
+ {l:'Turn the rounce: second half under the platen',m:'The platen is smaller than the bed, so the second half needs its own pull.'},
+ {l:'Pull the bar',m:'The second impression.',pull:1},
+ {l:'Turn the rounce: run the bed out',m:'The bed rolls clear of the platen.'},
+ {l:'Lift tympan and frisket; take off the sheet',m:'The sheet comes away with the print on it, still wet.'},
+ {l:'Hang the sheet on the pile',m:'It dries on lines or in a heap before the other side or the next job.'}];
+const POS=['110px','50px','8px'];
+const bedPos=p=>p<6?0:p<8?1:p<10?2:0;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function renderPress(){
+  const has=!!st.onPress,p=st.p,f=F(),side=st.onPress;
+  $('#nopress').hidden=has;$('#bedwrap').hidden=!has;
+  $('#btnStep').disabled=!has||st.busy;$('#btnBack').disabled=!has||st.busy;
+  $('#blanks').textContent=st.blanks;$('#halfCount').textContent=st.half.length;
+  $('#pressTitle').textContent=has?`On the bed: ${f.name}${f.inner?', '+side+' forme':''}. The forme is shown from above, mirrored.`:'';
+  const ink=p<2?0:p===2?.45:p<=10?1:.5;
+  if(has){
+    const bed=$('#bed'),sw=f.C*f.cw,sh=f.R*f.ch;
+    bed.style.cssText=`--s:calc(var(--pu) * ${f.kb});width:calc(var(--s) * ${sw+20});height:calc(var(--s) * ${sh+20});--inklevel:${ink}`;
+    const bf=$('#bedForme');bf.style.cssText=fmtVars(f);
+    bf.innerHTML=formeGridHTML(side,{labels:false,live:false});
+    $('#bedSheet').innerHTML=(p>=4&&p<=10)?`<div class="sheet damp" style="${fmtVars(f)}">${wmLayer(f,side==='inner')}</div>`
+      :(p===11&&st.cur?sheetSideHTML(st.cur,side,'held',''):'');
+    $('#bedTymp').style.opacity=(p>=5&&p<=10)?1:0;
+    $('#bedLab').textContent=['Forme dry','Forme dry','Forme half inked','Forme inked','Sheet on tympan','Tympan folded down','First half under the platen','First half printed','Second half under the platen','Both halves printed','Bed run out','Sheet in hand'][Math.min(p,11)];
+  }
+  $('#peBed').style.transform=`translateX(${POS[bedPos(p)]})`;
+  $('#pePaper').setAttribute('opacity',(p>=4&&p<=10)?1:0);
+  $('#peTymp').style.transform=(p>=5&&p<=10)?'rotate(0deg)':'rotate(100deg)';
+  $('#peForme').setAttribute('fill',ink>.7?'#2a2a2a':ink>0?'#6a6e72':'#a7adb1');
+  const bi=p>=1&&p<3;
+  $('#ballA').classList.toggle('inked',bi);$('#ballB').classList.toggle('inked',bi);
+  $('#ballLab').textContent=bi?'Balls charged with ink':'Ink balls';
+  $('#btnStep').textContent=STEPS[p].l;
+  $('#phint').textContent=STEPS[p].m;
+  $('#plist').innerHTML=STEPS.map((s,i)=>`<li class="pstep ${i<p?'done':i===p?'cur':'todo'}"><span>${i<p?'✓':i===p?'›':'·'}</span><span>${s.l}</span></li>`).join('');
+}
+function doStep(){
+  if(st.busy||!st.onPress)return;
+  const i=st.p,s=STEPS[i],side=st.onPress,f=F();
+  if(i===3){
+    const idx=st.half.findIndex(h=>h.fmt===st.fmt&&!h.sides[side]);
+    if(idx>=0){st.cur=st.half.splice(idx,1)[0];st.cur.fromHalf=true;say('You take a sheet already printed on its other side. Its point holes go over the points on the tympan, so the two sides register.');}
+    else{
+      if(st.blanks<=0){say('There is no damp paper left.',1);return;}
+      st.blanks--;st.cur={id:++sid,fmt:st.fmt,seed:(Math.random()*1e9)|0,sides:{},fromHalf:false};say(s.m);
+    }
+  } else say(s.m);
+  if(i===10)st.cur.sides[side]=snapshotSide(side);
+  if(i===11){
+    const done=sidesOf(f).every(x=>st.cur.sides[x]);
+    const other=side==='outer'?'inner':'outer';
+    st.cur.fromHalf=false;(done?st.pile:st.half).push(st.cur);st.cur=null;st.p=0;
+    say(done?(f.inner?'The sheet is printed on both sides. Open the paper pile to fold it.':'The sheet is hung up to dry.')+' The forme needs inking again before the next pull.':`Printed on the ${side} side only. Lock up and print the ${other} forme to finish it.`);
+    updateBadges();renderPress();return;
+  }
+  st.p++;
+  if(s.pull){st.busy=true;$('#pelev').classList.add('pulling');setTimeout(()=>{$('#pelev').classList.remove('pulling');st.busy=false;renderPress();},reduced?20:800);}
+  renderPress();
+}
+function backToStone(){
+  if(st.p===11){say('You are holding a printed sheet. Hang it on the pile first.',1);return;}
+  if(st.p>=4&&st.p<=10&&st.cur){if(st.cur.fromHalf)st.half.push(st.cur);else st.blanks++;st.cur=null;}
+  st.side=st.onPress;st.onPress=null;st.p=0;pickTarget();say('The forme goes back to the stone.');go('stone');
+}
+
+/* ---------- paper pile and the viewer ---------- */
+function thumbHTML(sh,code,side,label){
+  const f=FMT[sh.fmt],sc=(150/(f.C*f.cw)).toFixed(3);
+  return `<button class="thumb" data-open="${code}" style="--tr:${(((sh.seed%7)-3)*.4).toFixed(1)}deg" aria-label="${label}">${sheetSideHTML(sh,side,'',`--s:${sc}px`)}<span>${label}</span></button>`;}
+function renderPile(){
+  const g=$('#pilegrid'),h=$('#halfgrid');
+  g.innerHTML=st.pile.length?st.pile.map((sh,i)=>thumbHTML(sh,'p'+i,'outer',`${FMT[sh.fmt].name}, sheet ${i+1}`)).join(''):'<div class="empty-note">No finished sheets yet. Pull one at the press.</div>';
+  h.innerHTML=st.half.length?st.half.map((sh,i)=>{const sd=Object.keys(sh.sides)[0];return thumbHTML(sh,'h'+i,sd,`${FMT[sh.fmt].name}, ${sd} side only`);}).join(''):'<div class="empty-note">Nothing waiting for a second forme.</div>';
+  $('#halfWrap').hidden=!st.half.length;
+}
+const updateBadges=()=>{$('#pileCount').textContent=st.pile.length;};
+const curSheet=()=>st.vw.kind==='p'?st.pile[st.vw.i]:st.half[st.vw.i];
+function openViewer(code){
+  const kind=code[0],i=+code.slice(1),sh=(kind==='p'?st.pile:st.half)[i];if(!sh)return;
+  st.vw={kind,i,tab:kind==='h'?Object.keys(sh.sides)[0]:'outer',stage:0,spread:0,busy:false};renderViewer();}
+
+/* fold simulation: each layer is a grid of cells; each cell has a face-up and a face-down page with its rotation */
+function simInit(f){const cells=[];for(let r=0;r<f.R;r++){cells[r]=[];for(let c=0;c<f.C;c++)cells[r][c]={top:{p:f.outer[r][c],rot:f.io[r][c]?180:0},bottom:{p:f.inner[r][f.C-1-c],rot:f.ii[r][f.C-1-c]?180:0},o:{r,c},pr:0,front:true};}return [{R:f.R,C:f.C,cells}];}
+function simFold(stack,[axis,,under]){
+  const out=[],mv=[];
+  for(const L of stack){const {R,C,cells}=L;
+    if(axis==='v'){const h=C/2;out.push({R,C:h,cells:cells.map(w=>w.slice(h))});
+      mv.push({R,C:h,cells:cells.map(w=>w.slice(0,h).reverse().map(x=>({top:x.bottom,bottom:x.top,o:x.o,pr:x.pr,front:!x.front})))});}
+    else{const h=R/2;out.push({R:h,C,cells:cells.slice(h)});
+      mv.push({R:h,C,cells:cells.slice(0,h).reverse().map(w=>w.map(x=>({top:{p:x.bottom.p,rot:(x.bottom.rot+180)%360},bottom:{p:x.top.p,rot:(x.top.rot+180)%360},o:x.o,pr:(x.pr+180)%360,front:!x.front})))});}}
+  mv.reverse();return under?mv.concat(out):out.concat(mv);}
+function stackAt(f,stage){let s=simInit(f);for(let k=0;k<stage;k++)s=simFold(s,f.folds[k]);return s;}
+const FOLDTXT={v:'left half back behind the right half',h:'top half back behind the bottom half'};
+function foldHTML(sh,f){
+  const vw=st.vw,K=f.folds.length,stage=vw.stage,stack=stackAt(f,stage),top=stack[stack.length-1];
+  const R=top.R,C=top.C,nf=f.folds[stage],anim=vw.busy;let cells='';
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    const cell=top.cells[r][c],{p,rot}=cell.top,lines=pageContent(sh,p)||Array(f.pl).fill(null),rr=rng(sh.seed+p*31);
+    const moving=anim&&nf&&(nf[0]==='v'?c<C/2:r<R/2);
+    const origin=nf?(nf[0]==='v'?`calc(var(--s) * var(--cw) * ${C/2-c}) 50%`:`50% calc(var(--s) * var(--ch) * ${R/2-r})`):'50% 50%';
+    cells+=`<div class="pk ${moving?'mv fold'+nf[0]:''}" style="left:calc(var(--s) * var(--cw) * ${c});top:calc(var(--s) * var(--ch) * ${r});transform-origin:${origin}"><div class="face">${piece(f,cell,true)}<div class="pcell ${rot?'inv':''}">${pageHTML(lines,p,rr,true)}</div></div><div class="face back">${moving?backFace(sh,f,cell):''}</div></div>`;}
+  const msg=stage<K?`Fold ${stage+1} of ${K}: fold the ${FOLDTXT[nf[0]]}. The outer forme stays facing out. Watch the watermark move with the paper.`
+    :K===0?'A broadside needs no folding.':`Folded ${K} time${K===1?'':'s'}. Page 1 is on the top and the pages now run in order. Cut the folds at the head and tail and the ${f.leaves} leaves come free for binding. The watermark travelled with the paper, so it lands somewhere different in each format.`;
+  return `<div class="packet vscale" style="${fmtVars(f)};--C:${C};--R:${R}">${cells}</div>
+   <p class="vmsg">${msg}</p>
+   <div class="row"><button class="btn primary" data-vact="fold" ${stage>=K||anim?'disabled':''}>Fold</button><button class="btn" data-vact="unfold" ${stage<=0||anim?'disabled':''}>Unfold</button>${stage===K?'<button class="btn primary" data-vact="book">Open the book</button>':''}</div>`;}
+function bookHTML(sh,f){
+  const N=f.C*f.R*2,sp=Math.max(0,Math.min(st.vw.spread,N/2)),l=sp*2,rgt=l+1,stk=stackAt(f,f.folds.length);
+  const leaf=n=>{if(!n||n>N)return `<div class="leaf bookscale blank" style="${fmtVars(f)}"></div>`;
+    return `<div class="leaf bookscale" style="${fmtVars(f)}">${piece(f,stk[stk.length-1-((n-1)>>1)].cells[0][0],n%2===1)}<div class="pcell">${pageHTML(pageContent(sh,n)||Array(f.pl).fill(null),n,rng(sh.seed+n*17),true)}</div></div>`;};
+  const lbl=(!l?'Page 1 alone, facing the cover':l>=N?`Page ${N} alone, at the back`:`Pages ${l} and ${rgt} facing each other`);
+  return `<div class="spread">${leaf(l)}${leaf(rgt)}</div><p class="vmsg">${lbl}</p>
+   <div class="row"><button class="btn" data-vact="prev" ${sp<=0?'disabled':''}>Previous</button><button class="btn" data-vact="next" ${sp>=N/2?'disabled':''}>Next</button><button class="btn" data-vact="refold">Back to the folded sheet</button></div>`;}
+function renderViewer(){
+  const v=$('#viewer'),vw=st.vw,sh=curSheet(),f=FMT[sh.fmt];v.hidden=false;
+  const tabs=(vw.kind==='p'&&f.inner)?['outer','inner','fold'].map(t=>`<button class="btn small" data-vtab="${t}" aria-pressed="${vw.tab===t||(t==='fold'&&vw.tab==='book')}">${t==='fold'?'Fold it':t==='outer'?'Outer side':'Inner side'}</button>`).join(''):'';
+  let body='';
+  if(vw.tab==='outer'||vw.tab==='inner'){
+    body=sheetSideHTML(sh,vw.tab,'vscale','')+`<p class="vmsg">Hold it to the light: the pot watermark and the moulder's initials are part of the paper. They read normally from the outer side and mirrored from the inner side.</p>`;
+    if(vw.kind==='h')body+=`<p class="vmsg">Printed on the ${vw.tab} side only. It waits for the ${vw.tab==='outer'?'inner':'outer'} forme.</p>`;
+    else if(f.inner)body+=`<p class="vmsg">The ${vw.tab} side, as printed. ${f.inner?'Pages in the top row are upside down on purpose.':''}</p>`;
+  } else if(vw.tab==='fold')body=foldHTML(sh,f);
+  else body=bookHTML(sh,f);
+  v.innerHTML=`<div class="col"><div class="row">${tabs}</div>${body}<button class="btn" data-close="1">Close</button></div>`;
+}
+function vact(a){
+  const vw=st.vw,sh=curSheet(),f=FMT[sh.fmt],N=f.C*f.R*2;
+  if(a==='fold'&&!vw.busy&&vw.stage<f.folds.length){vw.busy=true;renderViewer();setTimeout(()=>{vw.busy=false;vw.stage++;renderViewer();},reduced?20:950);}
+  else if(a==='unfold'&&!vw.busy&&vw.stage>0){vw.stage--;renderViewer();}
+  else if(a==='book'){vw.tab='book';vw.spread=0;renderViewer();}
+  else if(a==='refold'){vw.tab='fold';renderViewer();}
+  else if(a==='next'){vw.spread=Math.min(vw.spread+1,N/2);renderViewer();}
+  else if(a==='prev'){vw.spread=Math.max(vw.spread-1,0);renderViewer();}
+}
+
+/* ---------- navigation ---------- */
+function go(v){
+  st.view=v;
+  $$('.view').forEach(el=>el.hidden=el.id!=='v-'+v);
+  $$('#nav .tab').forEach(b=>{if(b.dataset.go===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  render();
+}
+function render(){
+  updateBadges();
+  if(st.view==='case')renderCase();
+  if(st.view==='stone')renderStone();
+  if(st.view==='press')renderPress();
+  if(st.view==='pile')renderPile();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  if(e.target.id==='viewer'){$('#viewer').hidden=true;return;}
+  const t=e.target.closest('[data-go],[data-id],[data-i],[data-lay],[data-unset],[data-slot],[data-page],[data-side],[data-lock],[data-open],[data-close],[data-vtab],[data-vact]');
+  if(!t)return;
+  const d=t.dataset;
+  if(d.go)go(d.go);
+  else if(d.id)addSort(d.id);
+  else if(d.i!==undefined)takeOut(+d.i);
+  else if(d.lay!==undefined)layInForme(+d.lay);
+  else if(d.unset!==undefined)unset(+d.unset);
+  else if(d.slot!==undefined)liftOut(+d.pg,+d.slot);
+  else if(d.page!==undefined){st.target=+d.page;renderStone();}
+  else if(d.side){st.side=d.side;pickTarget();renderStone();}
+  else if(d.lock)doLock(d.lock);
+  else if(d.open!==undefined)openViewer(d.open);
+  else if(d.vtab){st.vw.tab=d.vtab;st.vw.stage=0;renderViewer();}
+  else if(d.vact)vact(d.vact);
+  else if(d.close)$('#viewer').hidden=true;
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')$('#viewer').hidden=true;
+  const hot=e.target.closest&&e.target.closest('.hot');
+  if(hot&&(e.key==='Enter'||e.key===' ')){e.preventDefault();go(hot.dataset.go);return;}
+  if(st.view==='case'&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.target.tagName!=='INPUT'){
+    const onBtn=e.target.tagName==='BUTTON';
+    if(e.key==='Backspace'){e.preventDefault();takeOut(st.stick.length-1);}
+    else if(e.key===' '&&!onBtn){e.preventDefault();addSort('th3');}
+    else if(e.key==='Enter'&&!onBtn){e.preventDefault();setLine();}
+    else if(e.key.length===1&&e.key!==' '&&S[e.key]&&S[e.key].kind==='letter'){e.preventDefault();addSort(e.key);}
+  }
+});
+$('#btnUndo').onclick=()=>takeOut(st.stick.length-1);
+$('#btnEmpty').onclick=()=>{st.stick=[];renderCase();};
+$('#btnSet').onclick=setLine;
+$('#btnCarry').onclick=carry;
+$('#btnDist').onclick=distribute;
+$('#btnSample').onclick=sampleFill;
+$('#fmtSel').onchange=e=>setFormat(e.target.value);
+$('#btnStep').onclick=doStep;
+$('#btnBack').onclick=backToStone;
+$('#labToggle').onchange=e=>$('#casePanel').classList.toggle('showlab',e.target.checked);
+$('#proofToggle').onchange=e=>{st.proof=e.target.checked;renderCase();};
+$('#casePanel').classList.add('showlab');
+
+pickTarget();
+say('Welcome to the shop. Click the case, the stone or the press, or use the buttons below the picture.');
+go('shop');
+})();
+</script>
+</body>
+</html>

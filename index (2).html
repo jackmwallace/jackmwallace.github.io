@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hand-Press Bibliography</title>
+<style>
+:root{--bg:#f1f1ef;--panel:#fff;--line:#d8d8d4;--text:#1e1e1e;--muted:#62625e;--accent:#2f5f8f;--serif:Georgia,'Times New Roman',serif;--sans:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 var(--sans);padding:40px 16px 56px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font:600 1.9rem/1.2 var(--serif);margin:0}
+h2{font:600 1.2rem/1.3 var(--serif);margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+a.card{display:flex;flex-direction:column;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;color:inherit;text-decoration:none}
+a.card:hover,a.card:focus-visible{border-color:var(--accent)}
+a.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.go{color:var(--accent);font-weight:600;margin-top:auto}
+footer{font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Hand-Press Bibliography</h1>
+    <p class="muted">Two teaching tools for how early modern books were made and how bibliographers describe them.</p>
+  </header>
+  <div class="cards">
+    <a class="card" href="printing-house/">
+      <h2>Hand-Press Printing House</h2>
+      <p>Set mirrored type from a historical case, impose folio, quarto or octavo formes on the stone, print both sides on a hand press, then fold the sheet into a book.</p>
+      <span class="go">Open the printing house →</span>
+    </a>
+    <a class="card" href="collation/">
+      <h2>Collational Formula Workbench</h2>
+      <p>Gather and sign gatherings, mark cancels and insertions, and bind them to see the book's collational formula and signing statement, following Bowers.</p>
+      <span class="go">Open the workbench →</span>
+    </a>
+  </div>
+  <footer>Both tools run entirely in the browser. No data is collected or stored.</footer>
+</div>
+</body>
+</html>

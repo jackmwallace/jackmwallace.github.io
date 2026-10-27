@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Collational Formula Workbench</title>
+<style>
+:root{
+  --bg:#f1f1ef; --panel:#ffffff; --line:#d8d8d4; --line-2:#bcbcb6; --text:#1e1e1e; --muted:#62625e;
+  --accent:#2f5f8f; --soft:#edf1f5; --warn:#8a5600; --warn-bg:#fdf6e7;
+  --serif:Georgia,'Times New Roman',Times,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--sans);
+  padding:20px max(16px,env(safe-area-inset-right,0px)) 56px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font:600 1.65rem/1.2 var(--serif);margin:0}
+h2{font:600 1.08rem/1.3 var(--sans);margin:0}
+h3{font:600 .95rem/1.3 var(--sans);margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+header{display:flex;flex-direction:column;gap:6px}
+header p{max-width:75ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.between{justify-content:space-between}
+input,select,textarea{font:inherit;color:var(--text);padding:5px 7px;border:1px solid var(--line-2);border-radius:4px;background:#fff}
+input:disabled,select:disabled{background:#f4f4f2;color:#888}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:6px 12px}
+.btn:hover:not(:disabled){border-color:#777}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:#264e76}
+.btn.small{padding:2px 8px;font-size:.82rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{border:0;background:none;color:var(--accent);text-decoration:underline;padding:0}
+
+/* guide */
+.tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--line)}
+.tabs button{border:1px solid transparent;border-bottom:0;background:none;padding:8px 14px;margin-bottom:-1px;border-radius:5px 5px 0 0;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:#fff;border-color:var(--line);color:var(--text);font-weight:600}
+.tabs .num{display:inline-block;width:1.4em;height:1.4em;line-height:1.4em;text-align:center;border-radius:50%;background:#e4e4e0;font-size:.78rem;margin-right:6px;font-weight:600}
+.tabs button[aria-selected="true"] .num{background:var(--accent);color:#fff}
+.famgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,300px);gap:18px}
+@media(max-width:860px){.famgrid{grid-template-columns:minmax(0,1fr)}}
+.famtext p{max-width:70ch}
+.famtext p+p{margin-top:8px}
+.schemes{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.scheme{border:1px solid var(--line);border-radius:5px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;cursor:pointer;background:#fafaf9}
+.scheme input{margin-top:4px}
+.scheme.on{border-color:var(--accent);background:var(--soft)}
+.scheme b{font-weight:600}
+.scheme .d{display:block;font-size:.84rem;color:var(--muted)}
+.makeup{border:1px solid var(--line);border-radius:5px;padding:10px;background:#fafaf9;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.facts{font-size:.86rem;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:2px 10px;text-align:left;width:100%}
+.facts dt{color:var(--text)}
+.facts dd{margin:0}
+.examples{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+/* bench */
+.bench{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:860px){.bench{grid-template-columns:minmax(0,1fr)}}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:.86rem;color:var(--muted)}
+label.chk{display:flex;gap:8px;align-items:flex-start;font-size:.88rem}
+label.chk input{margin-top:3px}
+.hint{font-size:.8rem;color:var(--muted)}
+.msg{font-size:.86rem;color:var(--warn);min-height:1.2em}
+details.alpha{border-top:1px solid var(--line);padding-top:8px;font-size:.88rem}
+details.alpha summary{cursor:pointer;font-weight:600}
+details.alpha .in{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+
+.glist{display:flex;flex-direction:column;gap:6px}
+.grow{border:1px solid var(--line);border-radius:5px;padding:7px 9px;background:#fcfcfb}
+.grow.err{border-color:#d9a441;background:var(--warn-bg)}
+.gmain{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.badge{font:1.08rem var(--serif);min-width:5.5em}
+.badge sup,.formula sup,.gd sup{font-size:.66em;line-height:0}
+.mini{display:flex;align-items:center;gap:5px;font-size:.82rem;color:var(--muted)}
+.sigin{width:4.6em}
+.lvin{width:4.4em}
+.spacer{flex:1}
+.details{border-top:1px dashed var(--line);margin-top:7px;padding-top:7px;display:flex;flex-direction:column;gap:7px;font-size:.84rem}
+.chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.chips .lab{color:var(--muted);min-width:5.2em}
+.chip{border:1px solid var(--line-2);background:#fff;border-radius:3px;padding:1px 7px;font:.86rem var(--serif)}
+.chip.rem{text-decoration:line-through;color:#999;border-style:dashed}
+.chip.can{background:#fff1dc;border-color:#c9964a}
+.chip.on{background:var(--soft);border-color:var(--accent)}
+.chip:disabled{cursor:default}
+.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:5px}
+
+/* output */
+.formula{font:1.4rem/1.65 var(--serif);word-break:break-word}
+.formula .fmt{margin-right:.25em}
+.statement{font:1.05rem/1.5 var(--serif)}
+.outgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);gap:16px}
+@media(max-width:860px){.outgrid{grid-template-columns:minmax(0,1fr)}}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.ctl label.f{min-width:7em}
+.ctl .note{flex:1;min-width:14em}
+.warns{background:var(--warn-bg);border:1px solid #ecd7a8;border-radius:5px;padding:8px 12px;font-size:.88rem;color:#5b3d00}
+.warns ul{margin:4px 0 0;padding-left:1.2em}
+textarea.plain{width:100%;min-height:4.4em;font:.95rem/1.4 var(--serif);resize:vertical}
+.book{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:flex-start;padding:10px;background:#fafaf9;border:1px solid var(--line);border-radius:5px;max-height:440px;overflow:auto}
+.gd{display:flex;flex-direction:column;align-items:center;gap:2px;font:.86rem var(--serif)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{display:inline-block;width:16px;height:3px}
+
+/* reference */
+.ref dl{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:8px 18px;margin:0}
+@media(max-width:640px){.ref dl{grid-template-columns:minmax(0,1fr)}}
+.ref dt{font:1.05rem var(--serif)}
+.ref dd{margin:0;max-width:72ch}
+.ref sup{font-size:.68em}
+footer{font-size:.84rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Collational Formula Workbench</h1>
+  <p class="muted">A guide to Fredson Bowers's collational formula. Choose a format, gather gatherings from a signature series, mark any cancels, insertions or signing irregularities, then bind the book. The workbench writes the formula, the signing statement and the leaf count.</p>
+</header>
+
+<section class="panel" id="guide" aria-label="Formats">
+  <div class="tabs" role="tablist" id="famTabs"></div>
+  <div class="famgrid">
+    <div class="famtext" id="famText"></div>
+    <div class="makeup" id="makeup"></div>
+  </div>
+  <div class="schemes" id="schemes" role="radiogroup" aria-label="Gathering scheme"></div>
+  <div class="examples" id="examples"></div>
+</section>
+
+<div class="bench">
+  <section class="panel" id="gatherPanel">
+    <h2>Gather</h2>
+    <p class="small muted" id="schemeNow"></p>
+    <label class="f">Signature series
+      <select id="gSeries">
+        <option value="cap">Capital letters (A, B … Z, 2A …)</option>
+        <option value="low">Lower-case letters (a, b …)</option>
+        <option value="sym">Symbols (*, ¶, †, §)</option>
+        <option value="pi">π: unsigned preliminaries</option>
+        <option value="chi">χ: unsigned gatherings elsewhere</option>
+      </select></label>
+    <label class="f">Start at <input id="gStart" value="A" autocomplete="off"></label>
+    <span class="hint">Type A, 2A (or Aa), a, *, ¶, 2*, π or χ.</span>
+    <label class="f">Number of gatherings <input id="gCount" type="number" min="1" max="200" value="4"></label>
+    <label class="f">Leaves in each <input id="gLeaves" value="6" autocomplete="off"></label>
+    <span class="hint">For gatherings that alternate, write 8/4.</span>
+    <label class="f">Series
+      <select id="gDup"><option value="1">First series (A)</option><option value="2">Repeated series (²A)</option><option value="3">Third series (³A)</option></select></label>
+    <label class="chk"><input type="checkbox" id="gInfer"> The first of these gatherings is unsigned, but its signature can be inferred</label>
+    <button class="btn primary" id="btnGather">Gather</button>
+    <p class="msg" id="gMsg" role="status"></p>
+    <details class="alpha">
+      <summary>Alphabet and conventions</summary>
+      <div class="in">
+        <span class="hint">The formula assumes the 23-letter alphabet: I and J are one letter, U and V are one letter, and there is no W. Tick any the book actually uses.</span>
+        <label class="chk"><input type="checkbox" id="optJ"> J used as a separate signature</label>
+        <label class="chk"><input type="checkbox" id="optU"> U used as a separate signature</label>
+        <label class="chk"><input type="checkbox" id="optW"> W used</label>
+        <span class="hint">Show inferred signatures as</span>
+        <label class="chk"><input type="radio" name="inf" value="italic" checked> italic, as Bowers does</label>
+        <label class="chk"><input type="radio" name="inf" value="bracket"> square brackets, as many catalogues do</label>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel" id="listPanel">
+    <div class="row between">
+      <h2>Gatherings <span class="muted" id="gTotal"></span></h2>
+      <div class="row">
+        <button class="btn" id="btnClear">Clear all</button>
+        <button class="btn primary" id="btnBind">Bind the book</button>
+      </div>
+    </div>
+    <p class="small muted" id="listNote"></p>
+    <p class="msg" id="listMsg" role="status"></p>
+    <div class="glist" id="glist"></div>
+  </section>
+</div>
+
+<section class="panel" id="outPanel">
+  <h2>The bound book</h2>
+  <div id="outBody"></div>
+</section>
+
+<section class="panel ref">
+  <h2>Reading the formula</h2>
+  <dl>
+    <dt>2° 4° 8° 12°</dt>
+    <dd>Format: folio, quarto, octavo, duodecimo. Format describes how the sheet was folded, not the size of the book. Quiring or half-sheet imposition that changes the normal gathering is noted in parentheses, as in 4° (in 8s) or 8° (in 4s).</dd>
+    <dt>A–Z<sup>4</sup></dt>
+    <dd>Every gathering from A to Z has the number of leaves shown by the superior figure. The run uses the 23-letter alphabet, so A–Z<sup>4</sup> is 23 gatherings and 92 leaves. If J, U or W were used, the formula says so.</dd>
+    <dt>2A, 3A</dt>
+    <dd>A doubled or tripled signature (Aa or AA, Aaa or AAA) in a second or third run through the alphabet. A–2C<sup>8</sup> runs straight through Z into 2A, 2B and 2C.</dd>
+    <dt><sup>2</sup>A</dt>
+    <dd>A superior figure in front marks a repeated series: the printer started the alphabet again with the same single letters, as often happens in a second part or an appendix.</dd>
+    <dt>a<sup>4</sup> *<sup>4</sup> ¶<sup>4</sup></dt>
+    <dd>Lower-case letters and printers' symbols, often used for preliminaries printed last. A doubled symbol (** or ¶¶) is written 2* or 2¶.</dd>
+    <dt><i>A</i><sup>4</sup>, [A]<sup>4</sup></dt>
+    <dd>A gathering with no printed signature whose letter can be inferred from its place in the series. Bowers prints the inferred signature in italic. Many catalogues, which cannot print italic, put it in square brackets instead.</dd>
+    <dt>π χ</dt>
+    <dd>Unsigned gatherings that cannot be fitted into the series. π marks preliminaries before the main sequence. χ marks unsigned gatherings elsewhere, such as inserted plates or text. A second one becomes 2π or 2χ.</dd>
+    <dt>D<sup>4</sup>(±D2)</dt>
+    <dd>A cancel: the original leaf (the cancellandum) was cut away and a replacement (the cancellans) was pasted onto its stub.</dd>
+    <dt>K<sup>4</sup>(−K4)</dt>
+    <dd>A leaf removed without replacement, often a blank. The superior figure still counts the leaves the gathering was made with.</dd>
+    <dt>F<sup>4</sup>(F2+χ1)</dt>
+    <dd>A single leaf inserted, here after F2.</dd>
+    <dt>$3 signed (−A1)</dt>
+    <dd>The statement of signing. $ means each gathering, and the figure is how many leaves in each normally carry a signature. Exceptions follow in parentheses: − for leaves within the $ figure that are unsigned, + for extra leaves that are signed. Missigned leaves can be added in words, such as "K3 signed K2".</dd>
+  </dl>
+</section>
+<footer>Based on Fredson Bowers, <i>Principles of Bibliographical Description</i> (1949), and Philip Gaskell, <i>A New Introduction to Bibliography</i> (1972). The diagrams draw each gathering's conjugate leaves as nested pairs, shaded by the sheet they came from.</footer>
+</div>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SUPD={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const supU=n=>String(n).split('').map(c=>SUPD[c]||c).join('');
+const sup=(n,h)=>h?`<sup>${n}</sup>`:supU(n);
+
+/* ---------- formats and gathering schemes ---------- */
+const FAMS=[
+ {id:'folio',name:'Folio',
+  text:['A folio sheet is folded once, giving two leaves and four pages. One sheet on its own makes a gathering of only two leaves, which is awkward to sew, so folios were usually quired: several folded sheets were laid one inside another and sewn as a single gathering.',
+        'Folio in 6s (three sheets) is very common in the seventeenth century; folios in 4s, 8s and 10s are also found. A short final gathering often reflects how much text was left.'],
+  facts:[['Leaves per sheet','2'],['Chain lines','Vertical'],['Watermark','Centre of one leaf of each sheet']]},
+ {id:'quarto',name:'Quarto',
+  text:['A quarto sheet is folded twice, giving four leaves and eight pages. Quartos are normally gathered in 4s, one sheet to a gathering. A half-sheet, often used at the end, gives a gathering of two leaves.',
+        'Sometimes two quarto sheets were quired together to make gatherings of 8. A quarto in 8s can be mistaken for an octavo, so check the chain lines and the watermark before naming the format.'],
+  facts:[['Leaves per sheet','4'],['Chain lines','Horizontal'],['Watermark','Middle of the gutter, split between conjugate leaves']]},
+ {id:'octavo',name:'Octavo',
+  text:['An octavo sheet is folded three times, giving eight leaves and sixteen pages, normally sewn as one gathering of 8.',
+        'In half-sheet imposition all eight pages of a 4-leaf gathering were set in one forme. The sheet was printed on both sides from that forme (work and turn) and cut in half, giving two copies of the same gathering. The book then collates in 4s: 8° (in 4s).'],
+  facts:[['Leaves per sheet','8'],['Chain lines','Vertical'],['Watermark','Head of the gutter, divided between leaves']]},
+ {id:'duodecimo',name:'Duodecimo',
+  text:['A duodecimo sheet gives twelve leaves. In the usual imposition part of the sheet was cut off: an 8-leaf section and a 4-leaf offcut. The offcut could be set inside the eight to make a gathering of 12, or signed and sewn as its own gathering, giving gatherings of 8 and 4 in turn. Half-sheet duodecimo gives gatherings of 6.',
+        'Long duodecimo (long twelves) was imposed differently, giving taller and narrower leaves. Its chain lines run vertically, where those of ordinary twelves run horizontally. It is gathered in 12s.'],
+  facts:[['Leaves per sheet','12'],['Chain lines','Horizontal (vertical in long twelves)'],['Offcut','4 leaves, inset or separate']]}
+];
+const SCHEMES=[
+ {id:'f2',fam:'folio',name:'Folio in 2s',d:'Single sheets, each its own gathering',fmt:'2°',leaves:'2',groups:[1],dollar:1,make:'1 sheet'},
+ {id:'f4',fam:'folio',name:'Folio in 4s',d:'Two sheets, one inside the other',fmt:'2°',leaves:'4',groups:[1],dollar:2,make:'2 sheets, quired'},
+ {id:'f6',fam:'folio',name:'Folio in 6s',d:'Three sheets quired',fmt:'2°',leaves:'6',groups:[1],dollar:3,make:'3 sheets, quired'},
+ {id:'f8',fam:'folio',name:'Folio in 8s',d:'Four sheets quired',fmt:'2°',leaves:'8',groups:[1],dollar:4,make:'4 sheets, quired'},
+ {id:'f10',fam:'folio',name:'Folio in 10s',d:'Five sheets quired',fmt:'2°',leaves:'10',groups:[1],dollar:5,make:'5 sheets, quired'},
+ {id:'q4',fam:'quarto',name:'Quarto in 4s',d:'One sheet to each gathering',fmt:'4°',leaves:'4',groups:[2],dollar:3,make:'1 sheet'},
+ {id:'q8',fam:'quarto',name:'Quarto in 8s',d:'Two sheets quired together',fmt:'4° (in 8s)',leaves:'8',groups:[2],dollar:4,make:'2 sheets, quired'},
+ {id:'o8',fam:'octavo',name:'Octavo in 8s',d:'One sheet to each gathering',fmt:'8°',leaves:'8',groups:[4],dollar:4,make:'1 sheet'},
+ {id:'o4',fam:'octavo',name:'Octavo in 4s',d:'Half-sheet imposition',fmt:'8° (in 4s)',leaves:'4',groups:[2],dollar:2,make:'half-sheet'},
+ {id:'d12',fam:'duodecimo',name:'Duodecimo in 12s',d:'Offcut set inside the eight',fmt:'12°',leaves:'12',groups:[4,2],off:1,dollar:6,make:'1 sheet: 8 leaves with the 4-leaf offcut inset'},
+ {id:'d84',fam:'duodecimo',name:'Duodecimo in 8s and 4s',d:'Offcut signed as its own gathering',fmt:'12° (in 8s and 4s)',leaves:'8/4',groups:[4],dollar:4,make:'8-leaf section; the next gathering is the offcut'},
+ {id:'d6',fam:'duodecimo',name:'Duodecimo in 6s',d:'Half-sheet imposition',fmt:'12° (in 6s)',leaves:'6',groups:[3],dollar:3,make:'half-sheet'},
+ {id:'dl',fam:'duodecimo',name:'Long duodecimo',d:'Long twelves, gathered in 12s',fmt:'12° (long)',leaves:'12',groups:[6],dollar:6,make:'1 sheet'}
+];
+const SC=id=>SCHEMES.find(s=>s.id===id);
+
+/* ---------- examples ---------- */
+const EXAMPLES={
+ folio:[
+  {label:'Folio in 2s: A–Q²',scheme:'f2',segs:[['A',16,'2']],dollar:1},
+  {label:'Folio in 6s: π² A–2B⁶ 2C⁴',scheme:'f6',segs:[['π',1,'2'],['A',25,'6'],['2C',1,'4']],dollar:3,sign:{A:{1:false}}},
+  {label:'Folio in 10s: A–F¹⁰',scheme:'f10',segs:[['A',6,'10']],dollar:5}],
+ quarto:[
+  {label:'Quarto in 4s: A–Z⁴ 2A²',scheme:'q4',segs:[['A',23,'4'],['2A',1,'2']],dollar:3,sign:{A:{1:false}}},
+  {label:'Quarto in 8s: A–F⁸',scheme:'q8',segs:[['A',6,'8']],dollar:4},
+  {label:'A cancel, an insertion and a repeated series',scheme:'q4',segs:[['π',1,'2'],['A',11,'4'],['χ',1,'2'],['A',2,'4',2]],dollar:3,
+   mods:{D:{state:{2:'can'}},F:{ins:[2]},K:{state:{4:'rem'}}},sign:{A:{1:false}}}],
+ octavo:[
+  {label:'Octavo in 8s: A–2B⁸ 2C⁴',scheme:'o8',segs:[['A',25,'8'],['2C',1,'4']],dollar:4,sign:{A:{1:false}}},
+  {label:'Octavo in 4s: A–2F⁴, A unsigned',scheme:'o4',segs:[['A',29,'4']],dollar:2,infer:['A']}],
+ duodecimo:[
+  {label:'Duodecimo in 12s: A–K¹²',scheme:'d12',segs:[['A',10,'12']],dollar:6,sign:{A:{1:false}}},
+  {label:'Duodecimo in 8s and 4s: A⁸ B⁴ … R⁸',scheme:'d84',segs:[['A',17,'8/4']],dollar:4},
+  {label:'Duodecimo in 6s: A–2D⁶',scheme:'d6',segs:[['A',27,'6']],dollar:3},
+  {label:'Long duodecimo: A–H¹²',scheme:'dl',segs:[['A',8,'12']],dollar:6}]
+};
+
+/* ---------- state ---------- */
+const opt={J:false,U:false,W:false,infer:'italic'};
+const st={fam:'folio',scheme:'f6',G:[],bound:false,dollar:3,dollarSmall:2,note:'',open:new Set(),prev:null};
+let uid=0;
+const alphabet=()=>('ABCDEFGHI'+(opt.J?'J':'')+'KLMNOPQRST'+(opt.U?'U':'')+'V'+(opt.W?'W':'')+'XYZ').split('');
+const lettered=g=>g.series==='cap'||g.series==='low';
+const signedSeries=g=>g.series!=='pi'&&g.series!=='chi';
+function ordOf(s){const A=alphabet(),i=A.indexOf(s.letter);return i<0?-1:(s.mult-1)*A.length+i;}
+function fromOrd(o){const A=alphabet();return {letter:A[o%A.length],mult:Math.floor(o/A.length)+1};}
+function nextSig(s){
+  if(s.series==='cap'||s.series==='low'){const o=ordOf(s);return o<0?{...s,mult:s.mult+1}:{...s,...fromOrd(o+1)};}
+  return {...s,mult:s.mult+1};
+}
+function core(g){
+  const m=g.mult>1?g.mult:'';
+  switch(g.series){
+    case 'cap':return m+g.letter;
+    case 'low':return m+g.letter.toLowerCase();
+    case 'sym':return m+g.sym;
+    case 'pi':return m+'π';
+    default:return m+'χ';
+  }
+}
+const pre=(g,h)=>g.dup>1?sup(g.dup,h):'';
+const ref=(g,p,h)=>pre(g,h)+core(g)+p;
+function parseSig(str){
+  str=String(str).trim();if(!str)return null;let m;
+  if((m=str.match(/^(\d*)\s*(π|pi)$/i)))return {series:'pi',mult:+m[1]||1};
+  if((m=str.match(/^(\d*)\s*(χ|chi)$/i)))return {series:'chi',mult:+m[1]||1};
+  if((m=str.match(/^(\d*)([*¶†‡§])$/)))return {series:'sym',sym:m[2],mult:+m[1]||1};
+  if((m=str.match(/^([*¶†‡§])\1+$/)))return {series:'sym',sym:m[1],mult:str.length};
+  let letter,mult,low;
+  if((m=str.match(/^([A-Za-z])\1+$/i))){letter=m[1].toUpperCase();mult=str.length;low=m[1]===m[1].toLowerCase()&&str.slice(1)===str.slice(1).toLowerCase();}
+  else if((m=str.match(/^(\d*)([A-Za-z])$/))){letter=m[2].toUpperCase();mult=+m[1]||1;low=m[2]!==letter;}
+  else return null;
+  if(!alphabet().includes(letter))return {err:`${letter} is not in the 23-letter alphabet. Tick it under "Alphabet and conventions" if the book uses it.`};
+  return {series:low?'low':'cap',letter,mult};
+}
+const sigText=s=>core({...s,mult:s.mult||1});
+const leafSpec=v=>{const a=String(v).split('/').map(x=>parseInt(x,10)).filter(n=>n>0&&n<=32);return a.length?a:null;};
+function newG(s,leaves,dup,inferred){
+  return {id:++uid,series:s.series,letter:s.letter||null,mult:s.mult||1,sym:s.sym||null,dup:dup||1,leaves,inferred:!!inferred,state:{},ins:[],sign:{}};
+}
+const scheme=()=>SC(st.scheme);
+const removed=g=>Object.keys(g.state).filter(p=>g.state[p]==='rem').length;
+const hasMods=g=>Object.keys(g.state).length>0||g.ins.length>0;
+const leafTotal=()=>st.G.reduce((a,g)=>a+g.leaves-removed(g)+g.ins.length,0);
+function dollarFor(g){return (st.scheme==='d84'&&g.leaves<=4)?st.dollarSmall:st.dollar;}
+function defSigned(g,p){return signedSeries(g)&&p<=Math.min(dollarFor(g),g.leaves);}
+function effSigned(g,p){if(!signedSeries(g)||g.inferred)return false;return (p in g.sign)?g.sign[p]:defSigned(g,p);}
+
+/* ---------- the formula ---------- */
+function continues(a,b){
+  if(!lettered(a)||a.series!==b.series||a.dup!==b.dup||a.leaves!==b.leaves||a.inferred!==b.inferred)return false;
+  if(hasMods(a)||hasMods(b))return false;
+  const oa=ordOf(a),ob=ordOf(b);return oa>=0&&ob===oa+1;
+}
+function groups(){
+  const out=[];let i=0;const G=st.G;
+  while(i<G.length){let j=i;while(j+1<G.length&&continues(G[j],G[j+1]))j++;out.push([G[i],G[j]]);i=j+1;}
+  return out;
+}
+function rangeLabel(a,b,h){
+  let s=pre(a,h)+core(a);if(b!==a)s+='–'+core(b);
+  if(a.inferred&&signedSeries(a))s=(h&&opt.infer==='italic')?`<i>${s}</i>`:`[${s}]`;
+  return s;
+}
+function mods(g,h){
+  const it=[];let k=0;
+  for(let p=1;p<=g.leaves;p++){
+    if(g.state[p]==='rem')it.push('−'+ref(g,p,h));
+    if(g.state[p]==='can')it.push('±'+ref(g,p,h));
+    g.ins.forEach(a=>{if(a===p){k++;it.push(ref(g,p,h)+'+χ'+k);}});
+  }
+  return it.length?`(${it.join(', ')})`:'';
+}
+function lettersUsed(){
+  const u=new Set();st.G.forEach(g=>{if(lettered(g)&&'JUW'.includes(g.letter))u.add(g.letter);});
+  const a=[...u];return a.length?` (${a.length>1?a.slice(0,-1).join(', ')+' and '+a.slice(-1):a[0]} used)`:'';
+}
+function formula(h){
+  const body=groups().map(([a,b])=>rangeLabel(a,b,h)+sup(a.leaves,h)+mods(a,h)).join(' ');
+  return h?`<span class="fmt">${scheme().fmt}:</span> ${body}${lettersUsed()}`:`${scheme().fmt}: ${body}${lettersUsed()}`;
+}
+function runs(g,arr,h){
+  const out=[];let i=0;
+  while(i<arr.length){let j=i;while(j+1<arr.length&&arr[j+1]===arr[j]+1)j++;out.push(ref(g,arr[i],h)+(j>i?'–'+arr[j]:''));i=j+1;}
+  return out;
+}
+function signing(h){
+  const minus=[],plus=[];
+  st.G.forEach(g=>{
+    if(!signedSeries(g))return;const m=[],p=[];
+    for(let i=1;i<=g.leaves;i++){if(g.state[i]==='rem')continue;const d=defSigned(g,i),e=effSigned(g,i);if(d&&!e)m.push(i);if(!d&&e)p.push(i);}
+    minus.push(...runs(g,m,h));plus.push(...runs(g,p,h));
+  });
+  const par=[];
+  if(st.scheme==='d84')par.push(`$${st.dollarSmall} in 4s`);
+  if(minus.length)par.push('−'+minus.join(', '));
+  if(plus.length)par.push('+'+plus.join(', '));
+  if(st.note.trim())par.push(h?esc(st.note.trim()):st.note.trim());
+  return `$${st.dollar} signed${par.length?` (${par.join('; ')})`:''}`;
+}
+function warnings(){
+  const w=[],G=st.G,seen=new Map();
+  for(let i=0;i<G.length;i++){
+    const g=G[i],lab=rangeLabel(g,g,true);
+    if(lettered(g)&&ordOf(g)<0)w.push(`${lab} uses a letter outside the chosen alphabet.`);
+    const key=g.series+'|'+core(g)+'|'+g.dup;
+    if(seen.has(key))w.push(`${lab} appears twice. If the printer started the alphabet again, mark the later run as a repeated series (²A).`);
+    seen.set(key,1);
+    if(i>0){const a=G[i-1];
+      if(lettered(a)&&a.series===g.series&&a.dup===g.dup&&ordOf(a)>=0&&ordOf(g)>=0){
+        const d=ordOf(g)-ordOf(a);
+        if(d>1)w.push(`${lab} follows ${rangeLabel(a,a,true)}, skipping ${d-1} signature${d>2?'s':''}. Check for missing gatherings.`);
+      }}
+    if(g.leaves%2===1&&g.leaves>1)w.push(`${lab} has an odd number of leaves (${g.leaves}). One leaf has no conjugate; it may be better recorded as an insertion.`);
+  }
+  return w;
+}
+
+/* ---------- gathering diagram: conjugate leaves as nested pairs, shaded by sheet ---------- */
+const SHADE=['#2b2b2b','#3f6f9f','#8a8a86','#4f7a46','#6f5a8a'];
+const OFFCUT='#b0672c',ADDED='#b0672c';
+function pairColour(sc,g,i){
+  if(st.scheme==='d84'&&g.leaves<=4)return OFFCUT;
+  const gr=sc.groups;let acc=0;
+  for(let k=0;k<64;k++){const size=gr[k%gr.length];if(i<acc+size){if(sc.off&&k%gr.length===1)return OFFCUT;return SHADE[k%SHADE.length];}acc+=size;}
+  return SHADE[0];
+}
+function diagram(g,scale){
+  const sc=scheme(),n=g.leaves,pairs=Math.floor(n/2),mid=n%2?(n+1)/2:0;
+  const rows=[];for(let p=1;p<=n;p++){rows.push({p});g.ins.forEach(a=>{if(a===p)rows.push({ins:1});});}
+  const RH=6,T=5,STEP=4,base=6+pairs*STEP,len=46,W=base+len+10,H=T*2+(rows.length-1)*RH;
+  const y={};rows.forEach((r,i)=>{r.y=T+i*RH;if(r.p)y[r.p]=r.y;});
+  const col={};for(let i=0;i<pairs;i++){const c=pairColour(sc,g,i);col[i+1]=c;col[n-i]=c;}
+  let s='';
+  for(let i=0;i<pairs;i++){const a=i+1,b=n-i,x=base-(pairs-i)*STEP;
+    s+=`<path d="M${base} ${y[a]}H${x}V${y[b]}H${base}" fill="none" stroke="${col[a]}" stroke-width="1.3"/>`;}
+  rows.forEach(r=>{
+    if(r.ins){s+=`<path d="M${base+9} ${r.y-2.5}V${r.y}H${base+len}" fill="none" stroke="${ADDED}" stroke-width="1.3"/><text x="${base+len+2}" y="${r.y+2.3}" font-size="7" fill="${ADDED}">+</text>`;return;}
+    const p=r.p,c=col[p]||'#555',stt=g.state[p];
+    if(p===mid&&!stt){s+=`<path d="M${base} ${r.y-2.5}V${r.y}H${base+len}" fill="none" stroke="#555" stroke-width="1.3"/>`;return;}
+    if(stt==='rem'){s+=`<path d="M${base} ${r.y}h5" stroke="${c}" stroke-width="1.3"/><path d="M${base+7} ${r.y}H${base+len}" stroke="#bbb" stroke-width="1" stroke-dasharray="2 2"/><text x="${base+len+2}" y="${r.y+2.3}" font-size="7" fill="#888">−</text>`;return;}
+    if(stt==='can'){s+=`<path d="M${base} ${r.y}h5" stroke="${c}" stroke-width="1.3"/><path d="M${base+3} ${r.y-1.6}H${base+len}" stroke="${ADDED}" stroke-width="1.3"/><text x="${base+len+2}" y="${r.y+2.3}" font-size="7" fill="${ADDED}">±</text>`;return;}
+    s+=`<path d="M${base} ${r.y}H${base+len}" stroke="${c}" stroke-width="1.3"/>`;
+  });
+  const k=scale||1.6;
+  return `<svg width="${(W*k).toFixed(0)}" height="${(H*k).toFixed(0)}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagram of gathering ${esc(core(g))}">${s}</svg>`;
+}
+
+/* ---------- rendering ---------- */
+function renderGuide(){
+  const fam=FAMS.find(f=>f.id===st.fam),sc=scheme();
+  $('#famTabs').innerHTML=FAMS.map((f,i)=>`<button role="tab" data-fam="${f.id}" aria-selected="${f.id===st.fam}"><span class="num">${i+1}</span>${f.name}</button>`).join('');
+  $('#famText').innerHTML=`<h2>${fam.name}</h2>`+fam.text.map(t=>`<p>${t}</p>`).join('');
+  $('#schemes').innerHTML=SCHEMES.filter(s=>s.fam===st.fam).map(s=>`<label class="scheme ${s.id===st.scheme?'on':''}"><input type="radio" name="scheme" value="${s.id}" ${s.id===st.scheme?'checked':''}><span><b>${s.name}</b><span class="d">${s.d}. Formula: ${s.fmt}</span></span></label>`).join('');
+  const models=st.scheme==='d84'?[newG({series:'cap',letter:'A',mult:1},8),newG({series:'cap',letter:'B',mult:1},4)]:[newG({series:'cap',letter:'A',mult:1},parseInt(sc.leaves,10))];
+  $('#makeup').innerHTML=`<h3>How a gathering is made</h3><div class="row" style="justify-content:center;gap:18px">${models.map(g=>`<div class="gd">${diagram(g,2.2)}<span>${core(g)}${sup(g.leaves,true)}</span></div>`).join('')}</div>
+    <p class="small muted">${sc.make}. Each bracket joins two conjugate leaves; ${sc.groups.length>1||sc.id.startsWith('f')||sc.id==='q8'?'colours show which sheet each pair comes from':'the colour shows the sheet'}${sc.off||sc.id==='d84'?', and the offcut is shown in brown':''}.</p>
+    <dl class="facts">${fam.facts.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>`;
+  $('#examples').innerHTML=`<span class="small muted">Load an example:</span>`+EXAMPLES[st.fam].map((e,i)=>`<button class="btn small" data-ex="${i}">${e.label}</button>`).join('');
+  $('#schemeNow').textContent=`Scheme: ${sc.name} (${sc.fmt}). New gatherings take ${sc.leaves.replace('/',' and ')} leaves unless you change it.`;
+}
+function rowHTML(g,i){
+  const b=st.bound,dis=b?'disabled':'',open=st.open.has(g.id),n=g.leaves;
+  const parsedOk=!(lettered(g)&&ordOf(g)<0);
+  let h=`<div class="grow ${parsedOk?'':'err'}" data-id="${g.id}"><div class="gmain">
+    <span class="badge">${rangeLabel(g,g,true)}${sup(n,true)}${mods(g,true)}</span>
+    <label class="mini">Signature <input class="sigin" data-f="sig" value="${esc(core(g))}" ${dis} aria-label="Signature"></label>
+    <label class="mini"><select data-f="dup" ${dis} aria-label="Series">${[1,2,3].map(d=>`<option value="${d}" ${g.dup===d?'selected':''}>${d===1?'1st series':d===2?'2nd (²)':'3rd (³)'}</option>`).join('')}</select></label>
+    <label class="mini">Leaves <input class="lvin" type="number" min="1" max="32" data-f="leaves" value="${n}" ${dis}></label>
+    ${signedSeries(g)?`<label class="mini"><input type="checkbox" data-f="inferred" ${g.inferred?'checked':''} ${dis}> Unsigned (inferred)</label>`:'<span class="mini">Unsigned by definition</span>'}
+    <span class="spacer"></span>
+    <button class="btn small" data-a="open" aria-expanded="${open}">${open?'Hide leaves':'Leaves'}</button>
+    <button class="btn small" data-a="up" ${b||i===0?'disabled':''} aria-label="Move up">↑</button>
+    <button class="btn small" data-a="down" ${b||i===st.G.length-1?'disabled':''} aria-label="Move down">↓</button>
+    <button class="btn small" data-a="del" ${dis} aria-label="Remove gathering">✕</button></div>`;
+  if(open){
+    h+=`<div class="details">
+      <div class="chips"><span class="lab">Leaves</span>${Array.from({length:n},(_,k)=>{const p=k+1,s=g.state[p]||'';return `<button class="chip ${s}" data-a="leaf" data-p="${p}" ${dis} title="${s==='rem'?'Removed':s==='can'?'Cancelled and replaced':'Present'}">${ref(g,p,true)}${s==='rem'?' −':s==='can'?' ±':''}</button>`;}).join('')}</div>
+      <span class="hint">Click a leaf once to mark it removed (−), again to mark it cancelled and replaced (±), and a third time to restore it.</span>`;
+    if(signedSeries(g)&&!g.inferred) h+=`<div class="chips"><span class="lab">Signed</span>${Array.from({length:n},(_,k)=>{const p=k+1,e=effSigned(g,p);return `<button class="chip ${e?'on':''}" data-a="sign" data-p="${p}" ${dis||g.state[p]==='rem'?'disabled':''} aria-pressed="${e}">${ref(g,p,true)}</button>`;}).join('')}</div>
+      <span class="hint">Highlighted leaves carry a printed signature. The default follows the $ figure; click to change one.</span>`;
+    h+=`<div class="chips"><span class="lab">Insert</span><label class="mini">a single leaf after <select data-f="insAfter" ${dis}>${Array.from({length:n},(_,k)=>`<option value="${k+1}">${ref(g,k+1,false)}</option>`).join('')}</select></label><button class="btn small" data-a="ins" ${dis}>Insert</button>
+      ${g.ins.map((a,k)=>`<span class="chip can">${ref(g,a,true)}+χ${k+1} <button class="link" data-a="delins" data-k="${k}" ${dis} aria-label="Remove insertion">remove</button></span>`).join('')}</div>`;
+    h+=`<div>${diagram(g,1.8)}</div></div>`;
+  }
+  return h+'</div>';
+}
+function renderList(){
+  const G=st.G;
+  $('#gTotal').textContent=G.length?`(${G.length})`:'';
+  $('#glist').innerHTML=G.length?G.map(rowHTML).join(''):'<div class="empty">No gatherings yet. Use Gather, or load an example from the guide above.</div>';
+  $('#btnBind').textContent=st.bound?'Unbind to edit':'Bind the book';
+  $('#btnBind').disabled=!G.length;
+  $('#btnClear').disabled=!G.length||st.bound;
+  $('#btnGather').disabled=st.bound;
+  $('#listNote').textContent=st.bound?'The book is bound. Unbind it to change the gatherings.':'Edit a signature or leaf count in place. Open Leaves to mark removed, cancelled or inserted leaves and to record which leaves are signed.';
+}
+function renderOut(){
+  const o=$('#outBody');
+  if(!st.bound){
+    o.innerHTML=`<p class="muted">${st.G.length?`${st.G.length} gathering${st.G.length===1?'':'s'} on the bench. Bind the book to see its collational formula.`:'Nothing gathered yet. Gather some gatherings, then bind the book.'}</p>`;return;
+  }
+  const opts=(max,v)=>Array.from({length:max},(_,k)=>`<option value="${k+1}" ${k+1===v?'selected':''}>$${k+1}</option>`).join('');
+  o.innerHTML=`<div class="ctl">
+     <label class="f">Leaves signed in each gathering <select id="oDollar">${opts(12,st.dollar)}</select></label>
+     ${st.scheme==='d84'?`<label class="f">In the 4-leaf gatherings <select id="oDollarSmall">${opts(4,st.dollarSmall)}</select></label>`:''}
+     <label class="f note">Other signing details <input id="oNote" value="${esc(st.note)}" placeholder="e.g. K3 signed K2" autocomplete="off"></label>
+   </div><div id="oResult"></div>`;
+  renderResult();
+}
+function renderResult(){
+  const r=$('#oResult');if(!r)return;
+  const n=leafTotal(),w=warnings();
+  const plain=`${formula(false)}. ${signing(false)}. ${n} leaves.`;
+  const expl=groups().map(([a,b])=>{
+    const cnt=(a===b)?1:ordOf(b)-ordOf(a)+1,lv=cnt*a.leaves;
+    const what=a.series==='pi'?'unsigned preliminary gathering':a.series==='chi'?'unsigned gathering outside the series':a.inferred?'unsigned gathering, signature inferred':'gathering';
+    return `<li><span class="statement">${rangeLabel(a,b,true)}${sup(a.leaves,true)}${mods(a,true)}</span>: ${cnt} ${what}${cnt>1?'s':''} of ${a.leaves} leaves${cnt>1?` (${lv} leaves)`:''}${hasMods(a)?`, ${n1(a)}`:''}</li>`;}).join('');
+  r.innerHTML=`<div class="outgrid"><div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <div class="formula">${formula(true)}</div>
+      <p class="statement">${signing(true)}.</p>
+      <p class="statement">${n} leaves (${n*2} pages).</p>
+      ${w.length?`<div class="warns"><b>Check</b><ul>${w.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
+      <label class="f">Plain text for copying${opt.infer==='italic'?' (inferred signatures in brackets, since plain text has no italic)':''}<textarea class="plain" id="oPlain" readonly>${esc(plain)}</textarea></label>
+      <div class="row"><button class="btn" id="oCopy">Copy</button><span class="small muted" id="oCopied" role="status"></span></div>
+    </div>
+    <div><h3>How the formula reads</h3><ul class="small" style="padding-left:1.1em;margin:6px 0 0">${expl}</ul></div></div>
+    <h3 style="margin-top:14px">Gatherings as bound</h3>
+    <div class="legend"><span><i class="sw" style="background:${SHADE[0]}"></i>first sheet</span><span><i class="sw" style="background:${SHADE[1]}"></i>second sheet</span><span><i class="sw" style="background:${SHADE[2]}"></i>third sheet</span><span><i class="sw" style="background:${OFFCUT}"></i>offcut, cancel or inserted leaf</span><span><i class="sw" style="background:#bbb"></i>removed leaf</span></div>
+    <div class="book">${st.G.map(g=>`<div class="gd">${diagram(g,1.5)}<span>${rangeLabel(g,g,true)}${sup(g.leaves,true)}</span></div>`).join('')}</div>`;
+}
+function n1(g){
+  const r=removed(g),c=Object.values(g.state).filter(s=>s==='can').length,i=g.ins.length,a=[];
+  if(r)a.push(`${r} removed`);if(c)a.push(`${c} cancelled and replaced`);if(i)a.push(`${i} inserted`);
+  return `${a.join(', ')}, so ${g.leaves-r+i} leaves remain`;
+}
+function renderAll(){renderGuide();renderList();renderOut();}
+function say(el,msg,undo){
+  $(el).innerHTML=esc(msg)+(undo?' <button class="link" data-undo="1">Undo</button>':'');
+}
+
+/* ---------- actions ---------- */
+function setScheme(id){const s=SC(id);st.scheme=id;st.fam=s.fam;st.dollar=s.dollar;st.dollarSmall=2;$('#gLeaves').value=s.leaves;renderAll();}
+const snap=()=>JSON.parse(JSON.stringify({G:st.G,scheme:st.scheme,dollar:st.dollar,dollarSmall:st.dollarSmall,bound:st.bound,note:st.note}));
+function restore(){if(!st.prev)return;const p=st.prev;st.prev=null;Object.assign(st,{G:p.G,scheme:p.scheme,fam:SC(p.scheme).fam,dollar:p.dollar,dollarSmall:p.dollarSmall,bound:p.bound,note:p.note});$('#gLeaves').value=SC(p.scheme).leaves;say('#listMsg','Restored.');renderAll();}
+function gather(){
+  const s0=parseSig($('#gStart').value),spec=leafSpec($('#gLeaves').value);
+  const count=Math.max(1,Math.min(200,parseInt($('#gCount').value,10)||1)),dup=+$('#gDup').value;
+  if(!s0){say('#gMsg','Write a signature such as A, 2A, a, *, π or χ.');return;}
+  if(s0.err){say('#gMsg',s0.err);return;}
+  if(!spec){say('#gMsg','Write the number of leaves, such as 4, or 8/4 for alternating gatherings.');return;}
+  let s=s0;
+  for(let k=0;k<count;k++){st.G.push(newG(s,spec[k%spec.length],dup,k===0&&$('#gInfer').checked));s=nextSig(s);}
+  $('#gStart').value=sigText(s);$('#gInfer').checked=false;
+  say('#gMsg',`Gathered ${count}. The next would be ${sigText(s)}.`);
+  renderAll();
+}
+function loadExample(i){
+  const ex=EXAMPLES[st.fam][i];st.prev=snap();st.G=[];st.open.clear();st.note='';
+  for(const [sig,count,lv,dup] of ex.segs){
+    let s=parseSig(sig);const spec=leafSpec(lv);
+    for(let k=0;k<count;k++){st.G.push(newG(s,spec[k%spec.length],dup||1,false));s=nextSig(s);}
+  }
+  const find=l=>st.G.find(g=>g.dup===1&&core(g)===l);
+  Object.entries(ex.sign||{}).forEach(([l,o])=>{const g=find(l);if(g)Object.assign(g.sign,o);});
+  Object.entries(ex.mods||{}).forEach(([l,o])=>{const g=find(l);if(!g)return;if(o.state)Object.assign(g.state,o.state);if(o.ins)g.ins.push(...o.ins);});
+  (ex.infer||[]).forEach(l=>{const g=find(l);if(g)g.inferred=true;});
+  const s=SC(ex.scheme);st.scheme=s.id;st.fam=s.fam;st.dollar=ex.dollar;st.dollarSmall=2;st.bound=true;$('#gLeaves').value=s.leaves;
+  say('#listMsg',`Loaded and bound: ${ex.label}.`,true);
+  renderAll();
+  $('#outPanel').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+}
+const byId=id=>st.G.find(g=>g.id===id);
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-fam],[data-ex],[data-undo],[data-a]');if(!t)return;
+  if(t.dataset.fam){const f=t.dataset.fam;if(f!==st.fam){setScheme(SCHEMES.find(s=>s.fam===f).id);}return;}
+  if(t.dataset.ex!==undefined){loadExample(+t.dataset.ex);return;}
+  if(t.dataset.undo){restore();return;}
+  const row=t.closest('.grow');if(!row||st.bound&&t.dataset.a!=='open')return;
+  const g=byId(+row.dataset.id),i=st.G.indexOf(g),a=t.dataset.a;
+  if(a==='open'){st.open.has(g.id)?st.open.delete(g.id):st.open.add(g.id);}
+  else if(a==='up'&&i>0){[st.G[i-1],st.G[i]]=[st.G[i],st.G[i-1]];}
+  else if(a==='down'&&i<st.G.length-1){[st.G[i+1],st.G[i]]=[st.G[i],st.G[i+1]];}
+  else if(a==='del'){st.prev=snap();st.G.splice(i,1);say('#listMsg',`Removed ${core(g)}.`,true);}
+  else if(a==='leaf'){const p=+t.dataset.p,c=g.state[p];if(!c)g.state[p]='rem';else if(c==='rem')g.state[p]='can';else delete g.state[p];}
+  else if(a==='sign'){const p=+t.dataset.p,v=!effSigned(g,p);if(v===defSigned(g,p))delete g.sign[p];else g.sign[p]=v;}
+  else if(a==='ins'){g.ins.push(+row.querySelector('[data-f="insAfter"]').value);g.ins.sort((x,y)=>x-y);}
+  else if(a==='delins'){g.ins.splice(+t.dataset.k,1);}
+  renderList();renderOut();
+});
+$('#glist').addEventListener('change',e=>{
+  const t=e.target,f=t.dataset.f;if(!f||f==='insAfter'||st.bound)return;
+  const g=byId(+t.closest('.grow').dataset.id);
+  if(f==='sig'){const s=parseSig(t.value);
+    if(!s||s.err){say('#listMsg',s&&s.err?s.err:`"${t.value}" is not a signature. Try A, 2A, a, *, π or χ.`);renderList();return;}
+    Object.assign(g,{series:s.series,letter:s.letter||null,mult:s.mult||1,sym:s.sym||null});if(!signedSeries(g))g.inferred=false;say('#listMsg','');}
+  else if(f==='dup')g.dup=+t.value;
+  else if(f==='leaves'){const n=Math.max(1,Math.min(32,parseInt(t.value,10)||1));g.leaves=n;
+    Object.keys(g.state).forEach(p=>{if(+p>n)delete g.state[p];});Object.keys(g.sign).forEach(p=>{if(+p>n)delete g.sign[p];});g.ins=g.ins.filter(a=>a<=n);}
+  else if(f==='inferred')g.inferred=t.checked;
+  renderList();renderOut();
+});
+$('#schemes').addEventListener('change',e=>{if(e.target.name==='scheme')setScheme(e.target.value);});
+$('#gSeries').addEventListener('change',e=>{$('#gStart').value={cap:'A',low:'a',sym:'*',pi:'π',chi:'χ'}[e.target.value];});
+$('#gStart').addEventListener('input',e=>{const s=parseSig(e.target.value);if(s&&!s.err)$('#gSeries').value=s.series;});
+$('#btnGather').addEventListener('click',gather);
+$('#btnBind').addEventListener('click',()=>{if(!st.G.length)return;st.bound=!st.bound;say('#listMsg',st.bound?'Bound.':'Unbound. The gatherings can be changed again.');renderList();renderOut();if(st.bound)$('#outPanel').scrollIntoView({block:'start'});});
+$('#btnClear').addEventListener('click',()=>{st.prev=snap();st.G=[];st.bound=false;st.open.clear();say('#listMsg','Cleared all gatherings.',true);renderList();renderOut();});
+['J','U','W'].forEach(k=>$('#opt'+k).addEventListener('change',e=>{opt[k]=e.target.checked;renderAll();}));
+document.querySelectorAll('input[name="inf"]').forEach(r=>r.addEventListener('change',e=>{opt.infer=e.target.value;renderAll();}));
+$('#outBody').addEventListener('change',e=>{
+  if(e.target.id==='oDollar'){st.dollar=+e.target.value;renderResult();renderList();}
+  if(e.target.id==='oDollarSmall'){st.dollarSmall=+e.target.value;renderResult();renderList();}
+});
+$('#outBody').addEventListener('input',e=>{if(e.target.id==='oNote'){st.note=e.target.value;renderResult();}});
+$('#outBody').addEventListener('click',e=>{
+  if(e.target.id!=='oCopy')return;const ta=$('#oPlain');
+  const done=()=>{$('#oCopied').textContent='Copied.';};
+  const fallback=()=>{ta.focus();ta.select();try{document.execCommand('copy');done();}catch(_){$('#oCopied').textContent='Select the text and copy it.';}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,fallback);else fallback();
+});
+
+/* start with a small folio in 6s on the bench, unbound */
+(function seed(){let s={series:'cap',letter:'A',mult:1};for(let k=0;k<4;k++){st.G.push(newG(s,6,1,false));s=nextSig(s);}$('#gStart').value='E';})();
+$('#gLeaves').value=scheme().leaves;
+renderAll();
+})();
+</script>
+</body>
+</html>
