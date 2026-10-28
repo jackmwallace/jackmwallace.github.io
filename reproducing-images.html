@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reproducing Images</title>
+<style>
+:root{
+  --bg:#f1f1ef; --panel:#ffffff; --line:#d8d8d4; --line-2:#bcbcb6; --text:#1e1e1e; --muted:#62625e;
+  --accent:#2f5f8f; --soft:#edf1f5; --ok:#3d7a3d; --warn-bg:#fdf6e7;
+  --relief:#8a5a2b; --intaglio:#2f5f8f; --plano:#5e7f3a; --photo:#7a4f8a; --ms:#9b2c20;
+  --serif:Georgia,'Times New Roman',Times,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans);
+  padding:20px max(16px,env(safe-area-inset-right,0px)) 56px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font:600 1.65rem/1.2 var(--serif);margin:0}
+h2{font:600 1.15rem/1.3 var(--serif);margin:0}
+h3{font:600 .95rem/1.3 var(--sans);margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+header{display:flex;flex-direction:column;gap:8px}
+header p{max-width:80ch}
+.hero{position:relative;overflow:hidden;padding:26px 30px 22px}
+.hero>*:not(.pm){position:relative}
+.hero .pm{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero h1{font-size:clamp(1.9rem,4.5vw,2.6rem);letter-spacing:.02em}
+.orn{display:flex;align-items:center;gap:10px;max-width:320px;color:#5a5a55}
+.orn span{flex:1;border-top:1px solid #9c9c95;border-bottom:1px solid #9c9c95;height:4px}
+.orn i{font-style:normal;font-size:18px;line-height:1}
+nav.jump{display:flex;flex-wrap:wrap;gap:6px}
+nav.jump a{font-size:.88rem;color:var(--text);text-decoration:none;border:1px solid var(--line-2);background:rgba(255,255,255,.9);border-radius:4px;padding:4px 10px}
+nav.jump a:hover{border-color:#777}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0;scroll-margin-top:12px}
+.intro{max-width:80ch}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.between{justify-content:space-between}
+input[type=range]{width:100%;max-width:280px;accent-color:var(--accent)}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:6px 12px}
+.btn:hover:not(:disabled){border-color:#777}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:#264e76}
+.btn.small{padding:3px 9px;font-size:.84rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn[aria-pressed="true"],.btn[aria-selected="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+svg text{font-family:var(--sans)}
+.figure{border:1px solid var(--line);border-radius:5px;background:#fbfbfa;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.figure svg,.figure canvas{width:100%;height:auto;display:block}
+.cap{font-size:.82rem;color:var(--muted)}
+.box{border:1px solid var(--line);border-radius:5px;padding:10px 12px;background:#fafaf9;font-size:.92rem}
+.box ul{margin:6px 0 0;padding-left:1.15em}
+.box li+li{margin-top:3px}
+.note{font-size:.88rem;border-radius:5px;padding:8px 12px;background:#f6f6f4;border:1px solid var(--line)}
+.note.ok{background:#eef6ee;border-color:#c4dcc4;color:#2f5d2f}
+.note.bad{background:var(--warn-bg);border-color:#ecd7a8;color:#5b3d00}
+.fam{display:inline-block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--c,#666)}
+
+/* families */
+.famgrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:860px){.famgrid{grid-template-columns:minmax(0,1fr)}}
+
+/* timeline */
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.tlscroll{max-height:440px;overflow-y:auto;border:1px solid var(--line);border-radius:5px;background:#fcfcfb;padding:4px 14px 4px 4px;overscroll-behavior:contain}
+.tl{display:flex;flex-direction:column;border-left:2px solid var(--line-2);margin-left:6.5em}
+.ev{position:relative;padding:8px 0 10px 18px}
+.ev::before{content:"";position:absolute;left:-7px;top:14px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid var(--c,#888)}
+.ev .yr{position:absolute;left:-7.4em;width:6.4em;text-align:right;top:9px;font:600 .86rem var(--serif);font-variant-numeric:tabular-nums;color:var(--c,#555)}
+.ev h3{font:600 1rem var(--serif)}
+.ev p{font-size:.9rem;max-width:78ch;margin-top:2px}
+.ev .src{font-size:.78rem;color:var(--muted);margin-top:3px}
+@media(max-width:560px){.tl{margin-left:0;border-left:0}.ev{padding-left:0}.ev::before{display:none}.ev .yr{position:static;text-align:left;display:block}}
+
+/* workshop */
+.proctabs{display:flex;flex-wrap:wrap;gap:6px}
+.proctabs .btn{display:inline-flex;flex-direction:column;align-items:flex-start;gap:0;line-height:1.25}
+.proctabs .btn .fam{font-size:.66rem}
+.wsgrid{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:860px){.wsgrid{grid-template-columns:minmax(0,1fr)}}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:3px}
+ol.steps li button{width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:4px;padding:5px 8px 5px 2.3em;position:relative;font-size:.9rem;color:var(--muted)}
+ol.steps li button::before{counter-increment:s;content:counter(s);position:absolute;left:6px;top:5px;width:1.45em;height:1.45em;border-radius:50%;background:#e4e4e0;color:var(--text);font-size:.76rem;text-align:center;line-height:1.45em;font-weight:600}
+ol.steps li button.done{color:var(--text)}
+ol.steps li button.done::before{background:#cfd9e3}
+ol.steps li button[aria-current="step"]{border-color:var(--accent);background:var(--soft);color:var(--accent);font-weight:600}
+ol.steps li button[aria-current="step"]::before{background:var(--accent);color:#fff}
+.wsfigs{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+@media(max-width:700px){.wsfigs{grid-template-columns:minmax(0,1fr)}}
+.wsfigs.solo{grid-template-columns:minmax(0,1fr)}.wsfigs.solo>.figure{max-width:560px}
+#printFig[hidden]{display:none}
+.steptext{display:flex;flex-direction:column;gap:8px}
+.steptext h3{font:600 1.05rem var(--serif)}
+.ctl{display:flex;flex-direction:column;gap:4px;font-size:.86rem;color:var(--muted)}
+
+/* identify */
+.idgrid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:760px){.idgrid{grid-template-columns:minmax(0,1fr)}}
+.ref{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:860px){.ref{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ref .figure h3{font:600 .95rem var(--serif)}
+.ref .figure p{font-size:.82rem}
+
+/* codex */
+.codex{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.codex .figure h3{font:600 .95rem var(--serif)}
+.codex .figure p{font-size:.84rem}
+
+/* sources */
+.srcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 28px;align-items:start}
+@media(max-width:980px){.srcs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.srcs{grid-template-columns:minmax(0,1fr)}}
+.scol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.srcs ul{margin:6px 0 0;padding-left:1.1em;font-size:.9rem}
+.srcs li+li{margin-top:5px}
+footer{font-size:.84rem;color:var(--muted);max-width:95ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <svg class="pm" aria-hidden="true" focusable="false">
+    <defs>
+      <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="7" stroke="#e1e1db" stroke-width="1"/></pattern>
+      <pattern id="hatch2" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-25)"><line x1="0" y1="0" x2="0" y2="9" stroke="#e6e6e0" stroke-width=".8"/></pattern>
+      <radialGradient id="fadeR" cx="78%" cy="50%" r="40%"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      <mask id="fadeM"><rect width="100%" height="100%" fill="url(#fadeR)"/></mask>
+    </defs>
+    <g mask="url(#fadeM)"><rect width="100%" height="100%" fill="url(#hatch)"/><rect width="100%" height="100%" fill="url(#hatch2)"/></g>
+    <!-- a plate-mark: the bevelled impression an intaglio plate leaves in the paper -->
+    <rect x="1.5%" y="6%" width="97%" height="88%" rx="6" fill="none" stroke="#fbfbf9" stroke-width="3"/>
+    <rect x="1.5%" y="6%" width="97%" height="88%" rx="6" fill="none" stroke="#dcdcd5" stroke-width="1" transform="translate(2 2)"/>
+  </svg>
+  <h1>Reproducing Images</h1>
+  <div class="orn" aria-hidden="true"><span></span><i>❦</i><span></span></div>
+  <p class="muted">How pictures were put into books. From the unique hand-painted image of the manuscript to the woodcut and the copperplate, lithography and the photomechanical halftone. Follow each process from block, plate or stone to printed page, and learn to identify them under the glass.</p>
+  <nav class="jump" aria-label="Sections">
+    <a href="#families">1. Relief, intaglio, planographic</a><a href="#workshop">2. The workshop</a><a href="#timeline">3. Through time</a><a href="#glass">4. Under the glass</a><a href="#codex">5. Images in the book</a><a href="#sources">Sources</a>
+  </nav>
+</header>
+
+<section class="panel" id="families">
+  <h2>1. Relief, intaglio, planographic</h2>
+  <p class="intro small">Every printed picture before photography belongs to one of three families, depending on where the ink sits on the printing surface. Choose a family and step through an impression. The drawing is a section through block, plate or stone, much enlarged.</p>
+  <div class="row" id="famTabs" role="tablist" aria-label="Family"></div>
+  <div class="famgrid">
+    <div class="figure"><div id="famFig"></div><div class="row" id="famSteps"></div></div>
+    <div class="box" id="famText"></div>
+  </div>
+</section>
+
+<section class="panel" id="workshop">
+  <h2>2. The workshop</h2>
+  <p class="intro small">Choose a process and work through it from bare block, plate or stone to the printed impression. The section shows the printing surface; at the last step the finished print appears beside it, under magnification.</p>
+  <div class="proctabs" id="procTabs" role="tablist" aria-label="Process"></div>
+  <div class="wsgrid">
+    <ol class="steps" id="procSteps"></ol>
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="wsfigs" id="wsFigs">
+        <div class="figure"><div id="procFig"></div><span class="cap">Section through the printing surface, not to scale</span></div>
+        <div class="figure" id="printFig"><canvas id="procPrint" width="320" height="240" aria-label="The print under magnification"></canvas><span class="cap" id="procPrintCap"></span><div id="procCtl"></div></div>
+      </div>
+      <div class="steptext" id="procText"></div>
+      <div class="row"><button class="btn" id="btnPrev">Previous step</button><button class="btn primary" id="btnNext">Next step</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="timeline">
+  <h2>3. Through time</h2>
+  <p class="intro small">From the illuminated manuscript to the halftone. Filter by family; each entry names the works in the source list that treat it most fully.</p>
+  <div class="filters" id="tlFilters" role="radiogroup" aria-label="Show"></div>
+  <div class="tlscroll" tabindex="0" role="region" aria-label="Timeline entries (scrolls)"><div class="tl" id="tl"></div></div>
+  <p class="small muted" id="tlCount"></p>
+</section>
+
+
+<section class="panel" id="glass">
+  <h2>4. Under the glass</h2>
+  <p class="intro small">Identifying a process means looking closely, ideally with a 10× glass, at the character of the marks: how lines begin and end, whether tone is made of lines, dots or grain, and whether the ink sits on, in or flat with the paper. These magnified details are generated for teaching, after the kinds of evidence Gascoigne illustrates.</p>
+  <div class="idgrid">
+    <div class="figure"><canvas id="quizCv" width="340" height="250" aria-label="A magnified detail to identify"></canvas></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <p class="small">Which process made this detail?</p>
+      <div class="row" id="quizBtns"></div>
+      <div class="note" id="quizFb" role="status">Choose an answer.</div>
+      <div><button class="btn small" id="quizNext">Another detail</button></div>
+    </div>
+  </div>
+  <h3>What to look for</h3>
+  <div class="ref" id="refGrid"></div>
+</section>
+
+<section class="panel" id="codex">
+  <h2>5. Images in the book</h2>
+  <p class="intro small">The process decided where a picture could go. A relief block is type-high and prints with the text; an intaglio plate or a lithographic stone needs a different press and usually a separate leaf. These differences leave evidence a bibliographer must record.</p>
+  <div class="codex" id="codexGrid"></div>
+  <div class="box">
+    <h3>In a bibliographical description</h3>
+    <ul>
+      <li>Woodcuts, wood engravings and line or halftone blocks printed with the text are part of the gatherings. Note them in the contents and, for woodcuts, identify the blocks (for early English books, Hodnett).</li>
+      <li>Plates printed separately, in intaglio or lithography, are not part of the collational formula. List them separately with their position, process and plate-mark size. Check whether each is a singleton tipped or guarded in, or conjugate with another plate.</li>
+      <li>Record the lettering below an intaglio plate exactly. "Pinx." or "delin." names the designer and "sculp." or "fecit" the engraver; lettering added or changed marks a new state of the plate.</li>
+      <li>Watch for offsets (ink transferred onto a facing page), tissue guards, plate numbers and directions to the binder, which show where plates were meant to go.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="panel" id="sources">
+  <h2>Sources</h2>
+  <div class="srcs" id="srcs"></div>
+</section>
+<footer>All pictures are generated teaching schematics, not reproductions of real prints: marks are exaggerated so that they read on screen. Dates are approximate; check them against the sources for any particular print or book.</footer>
+</div>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const rng=seed=>()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+
+const FAM={ms:{n:'Manuscript',c:'#9b2c20'},relief:{n:'Relief',c:'#8a5a2b'},intaglio:{n:'Intaglio',c:'#2f5f8f'},plano:{n:'Planographic',c:'#5e7f3a'},photo:{n:'Photomechanical',c:'#7a4f8a'}};
+
+/* =========================================================
+   1. THE THREE FAMILIES
+   ========================================================= */
+const FAMILIES={
+ relief:{steps:['The block','Ink','Print','The impression'],
+  text:'In relief printing the image stands up from the block, and everything that should print white is cut away. Ink is dabbed or rolled onto the raised surface and the block is pressed against the paper, exactly as type is. A relief block made type-high can therefore be locked into the forme and printed with the text, in the same press, at the same pull.',
+  ex:'Woodcut, wood engraving, metal cuts, line blocks, halftone blocks.',
+  look:'Ink is pressed into the paper, sometimes squeezed to the edges of the lines, and the block may emboss the back of the leaf.'},
+ intaglio:{steps:['The plate','Ink','Wipe','Print','The impression'],
+  text:'In intaglio printing the image is cut or bitten into a metal plate, usually copper. Ink is worked into the lines and the surface is wiped clean. Dampened paper is then forced into the lines under great pressure in a rolling press, and it lifts the ink out. Intaglio needs its own press and its own printers, so plates were normally printed on separate leaves.',
+  ex:'Engraving, etching, drypoint, mezzotint, aquatint, stipple, steel engraving, photogravure.',
+  look:'Ink stands up from the surface of the paper, and the edge of the plate leaves a plate-mark.'},
+ plano:{steps:['The stone','Draw with grease','Dampen','Ink','Print','The impression'],
+  text:'In planographic printing the image and the blank areas are on the same level, separated chemically, not physically. A lithographic stone is drawn on with greasy crayon or ink. When the stone is wetted the blank areas hold water; greasy ink rolled over it then sticks only to the image. It is printed in a scraper press.',
+  ex:'Lithography, chromolithography, collotype, photolithography; later, offset printing.',
+  look:'The ink lies flat, with no relief and no plate-mark. Marks follow the grain of the stone or the texture of the crayon.'}
+};
+
+/* =========================================================
+   2. TIMELINE
+   ========================================================= */
+const EVENTS=[
+ {y:'Middle Ages',k:'ms',t:'The illuminated image',d:'In manuscripts every picture was made by hand, so no two copies were the same. Designs travelled through model books, pattern drawings and copying, and illuminators often worked in teams, dividing drawing, gilding and painting.',s:'Alexander; McKitterick'},
+ {y:'c. 1400',k:'relief',t:'Woodcuts on paper',d:'Single-sheet woodcuts of saints and devotional subjects, and playing cards, were printed in quantity, often coloured by hand. The St Christopher in the John Rylands Library is inscribed 1423, but its style and paper suggest it was printed in the 1430s.',s:'Hind, Woodcut; Parshall & Schoch'},
+ {y:'1430s–1446',k:'intaglio',t:'Engraving',d:'Engraving grew out of goldsmiths’ work in the Upper Rhine and the Low Countries. The earliest dated engravings, a series of the Passion, are of 1446.',s:'Hind, Engraving; Landau & Parshall'},
+ {y:'c. 1461',k:'relief',t:'Woodcuts printed with type',d:'Albrecht Pfister at Bamberg printed Boner’s Edelstein with woodcuts, one of the first books in which type and pictures were printed together. Because a woodcut is relief like type, it could share the forme.',s:'Hind, Woodcut; Hindman'},
+ {y:'1477',k:'intaglio',t:'The first book with engravings',d:'Il Monte Santo di Dio (Florence, 1477) contains engravings printed from copper plates. Printing them with the text proved so awkward that engraving was little used in books for decades.',s:'Landau & Parshall; Gaskell'},
+ {y:'1481',k:'relief',t:'Illustration in English books',d:'Caxton’s Mirrour of the World (c. 1481) is the first illustrated book printed in England. English woodcut illustration of the following half-century, often crude and much reused, is catalogued by Hodnett.',s:'Hodnett'},
+ {y:'1493',k:'relief',t:'The Nuremberg Chronicle',d:'Schedel’s Chronicle has more than 1,800 woodcuts printed from about 650 blocks: the same city or king serves for many. Repetition like this complicates Ivins’s claim that prints were "exactly repeatable pictorial statements", and Eisenstein’s argument built on it.',s:'Ivins; Eisenstein; Landau & Parshall'},
+ {y:'c. 1500–1520',k:'intaglio',t:'Etching',d:'Etching was taken over from the decoration of armour. Daniel Hopfer of Augsburg etched iron plates around 1500, and Dürer made a handful of etchings in 1515–18. Copper soon replaced iron.',s:'Stijnman; Hind, Engraving'},
+ {y:'Later 16th century',k:'intaglio',t:'The copperplate age',d:'Engraved title pages, portraits, maps and plates became the mark of the better illustrated book, while woodcut was left to cheap print and ornament. The trade in prints and plates is the subject of Griffiths’s The Print Before Photography.',s:'Griffiths; Gaskell'},
+ {y:'1642',k:'intaglio',t:'Mezzotint',d:'Ludwig von Siegen made the first mezzotint, a portrait of the Landgravine Amalia Elisabeth of Hesse. The process, which works from dark to light, became the great English method for reproducing portraits in the eighteenth century.',s:'Griffiths; Stijnman'},
+ {y:'1645',k:'intaglio',t:'Bosse’s treatise',d:'Abraham Bosse’s Traicté des manières de graver en taille douce was the first printed manual of etching and engraving, and illustrates the tools and the rolling press.',s:'Bosse; Stijnman'},
+ {y:'1760s',k:'intaglio',t:'Tone processes: aquatint and stipple',d:'Jean-Baptiste Le Prince developed aquatint, which bites tone through a ground of resin grains (1768). Crayon-manner and stipple engraving imitated chalk drawings. Aquatint, often hand-coloured, dominated topographical books around 1790–1830.',s:'Griffiths; Stijnman'},
+ {y:'1790',k:'relief',t:'Wood engraving',d:'Thomas Bewick’s General History of Quadrupeds (1790) and British Birds (1797) showed what could be done by engraving the end grain of boxwood with a graver. Wood engraving became the standard way of illustrating text for a century.',s:'Bewick; Bain; Chatto & Jackson'},
+ {y:'1796–98',k:'plano',t:'Lithography',d:'Alois Senefelder discovered printing from stone in Munich. His own account, the Vollständiges Lehrbuch der Steindruckerey, appeared in 1818, with an English translation in 1819.',s:'Senefelder; Twyman'},
+ {y:'1820s',k:'intaglio',t:'Steel engraving',d:'Engraving on steel, much harder than copper, allowed thousands of impressions. Its fine, silvery lines filled the annuals, keepsakes and topographical books of the 1820s–1850s.',s:'Hunnisett'},
+ {y:'1830s–40s',k:'relief',t:'The illustrated press',d:'Electrotyping (from about 1840) made copper duplicates of wood engravings. Large pictures were engraved on many small blocks bolted together and shared among engravers. Together these made possible the Penny Magazine (1832) and the Illustrated London News (1842).',s:'Anderson; Goldman; Engen'},
+ {y:'1837',k:'plano',t:'Chromolithography',d:'Godefroy Engelmann patented printing in colour from several stones in 1837. By the 1850s colour-plate books, such as Owen Jones’s Grammar of Ornament (1856), were printed from dozens of stones.',s:'Twyman; Marzio'},
+ {y:'1839–58',k:'photo',t:'Photography and the printed page',d:'Photography was announced in 1839, but photographs could not be printed in ink. Henry Fox Talbot’s photoglyphic engraving (patented 1858) etched a photograph into a plate through a screen of fine gauze, a precursor of photogravure.',s:'Schaaf; Jussim'},
+ {y:'1860s–80s',k:'photo',t:'Collotype and line blocks',d:'Collotype printed continuous tone from gelatine (Albert, 1868). Photo-engraved line blocks reproduced pen drawings in relief, to print with type, and replaced much facsimile wood engraving.',s:'Wakeman; Nadeau'},
+ {y:'1879',k:'photo',t:'Photogravure',d:'Karel Klíč’s photogravure, an intaglio process with an aquatint-like grain, gave the finest photographic reproductions, at a price.',s:'Nadeau; Benson'},
+ {y:'1880s–90s',k:'photo',t:'The halftone',d:'Georg Meisenbach’s halftone (1882) and the cross-line screens of Max and Louis Levy broke photographs into dots on a relief block that could print with type. The trade of the reproductive wood engraver collapsed within twenty years.',s:'Harris; Beegan; Jussim'},
+ {y:'1904',k:'plano',t:'Offset',d:'Offset lithography, transferring the image from plate to rubber blanket to paper, began to take over commercial printing in the twentieth century.',s:'Twyman, Printing 1770–1970'}
+];
+
+/* =========================================================
+   3. PROCESSES
+   ========================================================= */
+const PROC={
+ wc:{n:'Woodcut',fam:'relief',per:'from c. 1400',cap:'A woodcut under magnification: bold black lines, with shading in simple hatching.',steps:[
+  {t:'Prepare the block',d:'A plank of close-grained wood such as pear or box, cut along the grain, is planed smooth and made type-high so that it can print with type.',s:{}},
+  {t:'Draw the design',d:'The design is drawn on the block, or pasted on, in reverse, since the print reverses it.',s:{drawn:1}},
+  {t:'Cut away the whites',d:'With a knife the cutter cuts down on both sides of every line, then clears the spaces between with gouges. The lines are left standing in relief.',s:{cut:1,tool:'knife'}},
+  {t:'Ink the block',d:'Ink is dabbed on with ink balls, or later rolled on. It catches only on the raised lines.',s:{cut:1,inked:1,tool:'ball'}},
+  {t:'Print with the text',d:'Locked into the forme with type, the block is printed in the common press at the same pull as the text.',s:{cut:1,inked:1,printed:1}},
+  {t:'The impression',d:'Black lines, with ink sometimes squeezed out to their edges, and a slight embossing of the paper. Cross-hatching has to be cut as many tiny islands of wood, so it is rare in early woodcuts. Many were coloured by hand.',s:{cut:1,result:1}}]},
+ we:{n:'Wood engraving',fam:'relief',per:'from 1790',cap:'A wood engraving under magnification: fine white lines cut into black.',steps:[
+  {t:'An end-grain block',d:'Boxwood is cut across the grain and polished, so the tool meets the ends of the fibres and can move in any direction. Box trunks are narrow, so large pictures were made from small blocks bolted together.',s:{}},
+  {t:'Engrave white lines',d:'The engraver cuts with a graver, the tool of the metal engraver. Every cut prints white, so the engraver thinks in white lines on a black ground and builds tones from fine parallel cuts.',s:{cut:1,tool:'burin'}},
+  {t:'Print with the text',d:'Like a woodcut, the block is type-high and prints with type. For long runs it was copied as an electrotype.',s:{cut:1,inked:1,printed:1}},
+  {t:'The impression',d:'Fine, regular tints of white lines, solid blacks and great detail on a small scale. Bewick’s pupils and the Victorian facsimile engravers made it the standard illustration of the nineteenth-century book and periodical.',s:{cut:1,result:1}}]},
+ en:{n:'Engraving',fam:'intaglio',per:'from the 1430s',cap:'An engraving under magnification: lines that swell and taper, crossed in regular hatching.',steps:[
+  {t:'A polished copper plate',d:'Copper is hammered, planed and polished until it is perfectly smooth.',s:{}},
+  {t:'Cut with the burin',d:'The burin, a lozenge-section steel rod, is pushed through the copper, ploughing a V-shaped groove. Pressing harder makes it wider and deeper, so lines swell and taper.',s:{grooves:1,burr:1,tool:'burin'}},
+  {t:'Scrape off the burr',d:'The ridges of copper thrown up beside each line are shaved off with a scraper; mistakes are burnished out.',s:{grooves:1,tool:'scraper'}},
+  {t:'Ink the plate',d:'The warmed plate is inked all over with a dabber, working ink down into every line.',s:{grooves:1,ink:'all',tool:'dabber'}},
+  {t:'Wipe the surface',d:'The surface is wiped with muslin and then the palm of the hand, leaving ink only in the lines.',s:{grooves:1,ink:'lines'}},
+  {t:'The rolling press',d:'Dampened paper and soft blankets are laid on the plate and passed between the rollers. Under enormous pressure the paper is forced into the lines and draws out the ink.',s:{grooves:1,ink:'lines',printed:1}},
+  {t:'The impression',d:'Crisp lines that swell and taper to fine points, with ink standing up from the paper, and a plate-mark round the image. Regular cross-hatching, sometimes with dots in the lozenges, builds tone.',s:{grooves:1,result:1}}]},
+ et:{n:'Etching',fam:'intaglio',per:'from c. 1500',cap:'An etching under magnification: free lines of even width with blunt ends.',ctl:'bite',steps:[
+  {t:'Lay the ground',d:'The plate is coated with an acid-resisting ground of wax, resin and bitumen, and smoked black so that the drawing shows.',s:{ground:1}},
+  {t:'Draw with the needle',d:'The etcher draws through the ground with a needle, exposing the copper without cutting it. Drawing is as free as with a pen.',s:{ground:1,gaps:1,tool:'needle'}},
+  {t:'Bite with acid',d:'The plate is put in acid, which eats into the copper wherever the ground has been removed.',s:{ground:1,gaps:1,bite:1,acid:1}},
+  {t:'Stop out and bite again',d:'Lines meant to stay pale are covered with varnish (stopping out) and the plate is bitten again, deepening the rest. Longer bites give darker lines.',s:{ground:1,gaps:1,bite:2,stop:1,acid:1}},
+  {t:'Clean, ink, wipe and print',d:'The ground is removed and the plate inked, wiped and printed in the rolling press like an engraving.',s:{bite:2,ink:'lines',printed:1}},
+  {t:'The impression',d:'Lines of even width with blunt, rounded ends, often wandering and sketchy, with a plate-mark. Accidental biting through the ground (foul-biting) leaves stray marks.',s:{bite:2,result:1}}]},
+ mz:{n:'Mezzotint',fam:'intaglio',per:'from 1642',cap:'A mezzotint under magnification: soft tone made of dense grain, with no lines.',ctl:'scrape',steps:[
+  {t:'Rock the plate',d:'A rocker, a curved blade with fine teeth, is rocked across the plate in many directions until the whole surface is pitted and burred. Inked now, it would print a velvety black.',s:{rocked:1,tool:'rocker'}},
+  {t:'Scrape and burnish',d:'The engraver works from dark to light, scraping and burnishing the burr away where the image should be pale. A smooth area holds no ink and prints white.',s:{rocked:1,scraped:1,tool:'scraper'}},
+  {t:'Ink, wipe and print',d:'The plate is printed like any intaglio plate. The delicate burr wears quickly, so only the earliest impressions are rich.',s:{rocked:1,scraped:1,ink:'lines',printed:1}},
+  {t:'The impression',d:'Soft, continuous tone without lines, the lights scraped out of darkness. Under a glass it shows as a dense, irregular grain.',s:{rocked:1,scraped:1,result:1}}]},
+ aq:{n:'Aquatint',fam:'intaglio',per:'from the 1760s',cap:'An aquatint under magnification: flat tones of fine net-like grain.',steps:[
+  {t:'Lay a resin ground',d:'Fine resin dust is allowed to settle on the plate in a dust box, then heated so that each grain melts and sticks.',s:{rosin:1}},
+  {t:'Stop out and bite in stages',d:'Acid bites around the grains. Areas to be palest are stopped out first, then the plate is bitten again and more is stopped out, building a scale of flat tones.',s:{rosin:1,bite:1,stop:1,acid:1}},
+  {t:'Ink, wipe and print',d:'The resin is cleaned off, and the plate is inked and printed as an intaglio plate, usually with etched outlines.',s:{bite:1,ink:'lines',printed:1}},
+  {t:'The impression',d:'Areas of flat tone made of a fine reticulated grain, like a wash drawing. Aquatints were often coloured by hand.',s:{bite:1,result:1}}]},
+ li:{n:'Lithography',fam:'plano',per:'from 1796',cap:'A crayon lithograph under magnification: flat ink in a soft grain that follows the stone.',steps:[
+  {t:'The stone',d:'A slab of fine limestone, the best from Solnhofen in Bavaria, is ground flat and given a fine grain for crayon work.',s:{}},
+  {t:'Draw with grease',d:'The artist draws in reverse with greasy crayon or ink. Alternatively the drawing is made on transfer paper and transferred to the stone, which saves drawing in reverse.',s:{drawn:1,tool:'crayon'}},
+  {t:'Etch the stone',d:'Gum arabic and a little acid fix the drawing and make the blank stone more receptive to water.',s:{drawn:1,gum:1}},
+  {t:'Dampen',d:'The stone is sponged with water, which lies on the blank areas but is repelled by the grease.',s:{drawn:1,damp:1,tool:'sponge'}},
+  {t:'Ink',d:'A roller of greasy ink passes over the stone. The ink takes on the drawing and is rejected by the wet stone.',s:{drawn:1,damp:1,inked:1,tool:'roller'}},
+  {t:'The scraper press',d:'Paper and tympan are laid on the stone and a leather-covered scraper is drawn across under pressure.',s:{drawn:1,inked:1,printed:1}},
+  {t:'The impression',d:'The ink lies flat, without the relief of an intaglio line or the pressure of a woodcut. Crayon work has a soft grain following the stone, and there is no plate-mark.',s:{drawn:1,result:1}}]},
+ cl:{n:'Chromolithography',fam:'plano',per:'from 1837',cap:'A chromolithograph: flat colours printed one over another from separate stones.',ctl:'layers',steps:[
+  {t:'The key drawing',d:'An outline of the whole image is drawn and transferred to every stone, so that each colour can be placed exactly.',s:{drawn:1}},
+  {t:'A stone for each colour',d:'Each colour has its own stone, drawn only with the parts that print in that colour. Elaborate plates needed a dozen stones or more.',s:{drawn:1,tool:'crayon'}},
+  {t:'Print in register',d:'Each stone is printed in turn on the same sheet, positioned by pins or marks so that the colours fall exactly into place. Use the colour switches to build up the print.',s:{drawn:1,inked:1,printed:1}},
+  {t:'The impression',d:'Overlapping flat colours. Under the glass, stippled or grained textures, and colours slightly out of register at the edges.',s:{drawn:1,result:1}}]},
+ ht:{n:'Halftone',fam:'photo',per:'from the 1880s',cap:'A halftone under magnification: a regular screen of dots that grow with the tone.',ctl:'screen',steps:[
+  {t:'Photograph through a screen',d:'In the process camera a glass screen ruled with fine crossed lines stands just in front of the negative. It breaks the continuous tones of a photograph into dots, large in the darks and small in the lights.',s:{tool:'camera'}},
+  {t:'Etch the block',d:'The negative is printed onto light-sensitive copper or zinc, and acid etches away the metal between the dots, which are left in relief.',s:{dots:1,acid:1}},
+  {t:'Print with the text',d:'Mounted type-high, the block prints with type. Fine screens need smooth, coated "art" paper, which is why halftones often appear on separate plates.',s:{dots:1,inked:1,printed:1}},
+  {t:'The impression',d:'Under a glass a regular grid of dots, usually at 45°. Change the screen ruling to see why coarse newspaper halftones and fine book halftones look so different.',s:{dots:1,result:1}}]}
+};
+const PROC_ORDER=['wc','we','en','et','mz','aq','li','cl','ht'];
+const ID_ORDER=['wc','we','en','et','mz','aq','li','ht'];
+const LOOK={
+ wc:['Black lines, often thick, with ink squeezed to their edges','Simple parallel hatching; cross-hatching rare','Embossing of the lines visible on the back'],
+ we:['White lines cut into black','Fine, very regular tints of parallel lines','Small blocks printed with the text'],
+ en:['Lines swell and taper to pointed ends','Regular cross-hatching, sometimes with dots','Ink raised on the paper; plate-mark'],
+ et:['Lines of even width with blunt ends','Free, sketchy, wandering strokes','Plate-mark; sometimes foul-biting'],
+ mz:['Velvety tone without lines','Dense, irregular grain under the glass','Lights scraped and burnished out'],
+ aq:['Flat tones of fine net-like grain','Tones in distinct steps','Often with etched lines; plate-mark'],
+ li:['Flat ink, no relief, no plate-mark','Soft crayon grain following the stone','Drawn quality, as with chalk'],
+ ht:['A regular grid of dots, usually at 45°','Dots grow and merge in the darks','Usually on smooth coated paper']
+};
+
+/* =========================================================
+   5. IMAGES IN THE CODEX
+   ========================================================= */
+const CODEX=[
+ {k:'ms',t:'Painted by hand',d:'A manuscript miniature is painted into the page. Every copy of a text has different pictures, if any.'},
+ {k:'relief',t:'Woodcut in the text',d:'A relief block sits in the forme with the type and prints at the same pull, so text and picture share the page.'},
+ {k:'intaglio',t:'Engraved plate',d:'Printed on a separate leaf in the rolling press, with a plate-mark and lettering, and inserted by the binder: tipped in, guarded or sewn.'},
+ {k:'intaglio2',t:'Text and plate on one page',d:'An engraved vignette on a letterpress page means two printings in two presses. The plate-mark surrounds the vignette, and the two rarely align perfectly.'},
+ {k:'photo',t:'Halftone on art paper',d:'Fine halftones needed smooth coated paper, so they were often printed separately and inserted with a tissue guard.'}
+];
+
+/* =========================================================
+   SOURCES
+   ========================================================= */
+const SOURCES=[
+ ['Overviews across the whole sequence',[
+  'William M. Ivins Jr., <i>Prints and Visual Communication</i> (1953). The foundational argument for treating prints as a technology for reproducing visual information; his shorter <i>How Prints Look</i> (1943) is a practical companion.',
+  'Bamber Gascoigne, <i>How to Identify Prints</i> (1986; 2nd ed. 2004). The indispensable technical guide, heavily illustrated with magnified details.',
+  'Antony Griffiths, <i>Prints and Printmaking: An Introduction to the History and Techniques</i> (1980; 2nd ed. 1996). The British Museum’s standard introduction.',
+  'Antony Griffiths, <i>The Print Before Photography: An Introduction to European Printmaking 1550–1820</i> (2016). The trade, economics and uses of prints in the copperplate era.',
+  'Richard Benson, <i>The Printed Picture</i> (2008). A printer’s-eye history from woodcut through digital.',
+  'Michael Twyman, <i>Printing 1770–1970</i> (1970). The best visual survey of the industrial period.',
+  'Luis Nadeau, <i>Encyclopedia of Printing, Photographic, and Photomechanical Processes</i> (1989).',
+  'Philip Gaskell, <i>A New Introduction to Bibliography</i> (1972). How each illustration process fitted into book production.']],
+ ['From manuscript to the printed image',[
+  'J. J. G. Alexander, <i>Medieval Illuminators and Their Methods of Work</i> (1992).',
+  'Sandra Hindman (ed.), <i>Printing the Written Word</i> (1991).',
+  'David McKitterick, <i>Print, Manuscript and the Search for Order, 1450–1830</i> (2003).',
+  'Elizabeth Eisenstein, <i>The Printing Press as an Agent of Change</i> (1979). Its argument that printing made images exactly repeatable is central here, and much debated.']],
+ ['Woodcut and early relief illustration',[
+  'Arthur M. Hind, <i>An Introduction to a History of Woodcut</i> (1935).',
+  'Peter Parshall and Rainer Schoch, <i>Origins of European Printmaking: Fifteenth-Century Woodcuts and Their Public</i> (2005).',
+  'David Landau and Peter Parshall, <i>The Renaissance Print, 1470–1550</i> (1994).',
+  'Edward Hodnett, <i>English Woodcuts 1480–1535</i> (1935).']],
+ ['Copperplate engraving and etching',[
+  'Abraham Bosse, <i>Traicté des manières de graver en taille douce</i> (1645). The first printed manual of intaglio technique.',
+  'Arthur M. Hind, <i>A History of Engraving and Etching</i> (1923).',
+  'Ad Stijnman, <i>Engraving and Etching 1400–2000</i> (2012). The definitive technical history of intaglio processes.']],
+ ['Wood engraving',[
+  'W. A. Chatto and John Jackson, <i>A Treatise on Wood Engraving</i> (1839).',
+  'Thomas Bewick, <i>Memoir</i> (published 1862), and Iain Bain’s studies of Bewick.',
+  'Rodney Engen, <i>Dictionary of Victorian Wood Engravers</i> (1985).',
+  'Paul Goldman, <i>Victorian Illustration</i> (1996).',
+  'Patricia Anderson, <i>The Printed Image and the Transformation of Popular Culture, 1790–1860</i> (1991).']],
+ ['Steel engraving',[
+  'Basil Hunnisett, <i>Steel-Engraved Book Illustration in England</i> (1980) and <i>An Illustrated Dictionary of British Steel Engravers</i> (1989).']],
+ ['Lithography and chromolithography',[
+  'Alois Senefelder, <i>Vollständiges Lehrbuch der Steindruckerey</i> (1818; English translation 1819).',
+  'Michael Twyman, <i>Lithography 1800–1850</i> (1970), <i>Breaking the Mould: The First Hundred Years of Lithography</i> (2001), and <i>A History of Chromolithography</i> (2013).',
+  'Peter Marzio, <i>The Democratic Art: Chromolithography 1840–1900</i> (1979).']],
+ ['Photomechanical processes',[
+  'Estelle Jussim, <i>Visual Communication and the Graphic Arts: Photographic Technologies in the Nineteenth Century</i> (1974).',
+  'Geoffrey Wakeman, <i>Victorian Book Illustration: The Technical Revolution</i> (1973).',
+  'Gerry Beegan, <i>The Mass Image: A Social History of Photomechanical Reproduction in Victorian London</i> (2008).',
+  'Neil Harris, "Iconography and Intellectual History: The Half-Tone Effect" (1979).',
+  'Larry Schaaf’s work on Henry Fox Talbot, whose photoglyphic engraving was a precursor to photogravure.']]
+];
+
+/* =========================================================
+   SECTIONS THROUGH BLOCK, PLATE AND STONE
+   ========================================================= */
+const INK='#151515',PAPER='#f4efe1',PAPERS='#cbbf9f',WOOD='#c49a62',WOODD='#8a6a3c',COPPER='#c27a4a',COPPERD='#8b4f2a',STONE='#c9c7bd',STONED='#9a978c';
+const lab=(x,y,t,a)=>`<text x="${x}" y="${y}" font-size="12" fill="#62625e" text-anchor="${a||'middle'}">${t}</text>`;
+function tool(name){
+  const T={
+   knife:`<g transform="translate(400 40) rotate(25)"><rect x="0" y="0" width="12" height="60" rx="3" fill="#8a6a3c"/><path d="M2 60 L10 60 L6 84 Z" fill="#9aa0a4" stroke="#555"/></g>${lab(440,30,'knife and gouge')}`,
+   burin:`<g transform="translate(360 70) rotate(-18)"><ellipse cx="0" cy="0" rx="14" ry="10" fill="#8a6a3c"/><rect x="10" y="-3" width="80" height="6" fill="#9aa0a4" stroke="#555"/><path d="M90 -3 L104 4 L90 3 Z" fill="#9aa0a4" stroke="#555"/></g>${lab(420,40,'graver (burin)')}`,
+   ball:`<g transform="translate(420 40)"><rect x="-4" y="0" width="8" height="40" fill="#8a6a3c"/><ellipse cx="0" cy="52" rx="26" ry="16" fill="#3a2a1c"/></g>${lab(420,26,'ink ball')}`,
+   dabber:`<g transform="translate(420 44)"><rect x="-4" y="0" width="8" height="34" fill="#8a6a3c"/><ellipse cx="0" cy="44" rx="18" ry="12" fill="#3a2a1c"/></g>${lab(420,30,'dabber')}`,
+   scraper:`<g transform="translate(380 50) rotate(-30)"><rect x="0" y="0" width="56" height="8" fill="#8a6a3c"/><path d="M56 -4 L100 4 L56 12 Z" fill="#9aa0a4" stroke="#555"/></g>${lab(392,84,'scraper')}`,
+   needle:`<g transform="translate(400 40) rotate(20)"><rect x="0" y="0" width="8" height="60" rx="3" fill="#8a6a3c"/><path d="M3 60 L5 60 L4 92 Z" fill="#555"/></g>${lab(440,30,'etching needle')}`,
+   rocker:`<g transform="translate(360 50)"><rect x="40" y="-30" width="10" height="40" fill="#8a6a3c"/><path d="M0 10 Q45 40 90 10" fill="none" stroke="#9aa0a4" stroke-width="7"/><path d="M4 16 l4 6 l4 -4 l4 7 l4 -5 l4 7 l4 -5 l4 7 l4 -5 l4 7 l4 -5 l4 7 l4 -5 l4 6 l4 -5 l4 6 l4 -5 l4 5 l4 -5 l4 4" fill="none" stroke="#666"/></g>${lab(420,26,'rocker')}`,
+   crayon:`<g transform="translate(410 40) rotate(20)"><rect x="0" y="0" width="12" height="70" rx="2" fill="#2b2b2b"/></g>${lab(440,30,'greasy crayon')}`,
+   sponge:`<g transform="translate(400 60)"><rect x="0" y="0" width="56" height="26" rx="10" fill="#e3c86a" stroke="#a88d33"/></g>${lab(428,50,'damp sponge')}`,
+   roller:`<g transform="translate(330 60)"><rect x="0" y="0" width="150" height="26" rx="13" fill="#3b3b3b"/><rect x="-26" y="9" width="26" height="8" fill="#8a6a3c"/><rect x="150" y="9" width="26" height="8" fill="#8a6a3c"/></g>${lab(405,48,'leather roller')}`,
+   camera:`<g transform="translate(40 20)"><rect x="0" y="20" width="70" height="60" fill="#6b5a46"/><rect x="70" y="40" width="20" height="20" fill="#333"/><rect x="90" y="10" width="190" height="80" fill="none" stroke="#6b5a46" stroke-width="3" stroke-dasharray="6 4"/><rect x="280" y="0" width="8" height="100" fill="#9aa0a4"/>${Array.from({length:12},(_,i)=>`<line x1="280" x2="288" y1="${4+i*8}" y2="${8+i*8}" stroke="#444"/>`).join('')}<rect x="292" y="0" width="10" height="100" fill="#cfd6d8"/></g>${lab(80,138,'lens')}${lab(325,138,'ruled screen and plate')}`
+  };
+  return T[name]||'';
+}
+function printedSheet(fam){
+  /* the finished impression in section */
+  let g=`<rect x="20" y="140" width="480" height="16" fill="${PAPER}" stroke="${PAPERS}"/>`;
+  const xs=[90,150,220,290,360,420];
+  if(fam==='relief'){xs.forEach(x=>{g+=`<path d="M${x-12} 140 Q${x} 146 ${x+12} 140 Z" fill="${INK}"/><path d="M${x-14} 156 Q${x} 162 ${x+14} 156" fill="none" stroke="${PAPERS}"/>`;});g+=lab(260,186,'ink pressed into the paper; the back slightly embossed');}
+  if(fam==='intaglio'){xs.forEach(x=>{g+=`<path d="M${x-6} 140 Q${x} 128 ${x+6} 140 Z" fill="${INK}"/>`;});g+=`<path d="M40 140 L40 146 M480 140 L480 146" stroke="#999"/><path d="M20 140 H40 V144 H480 V140 H500" fill="none" stroke="${PAPERS}"/>`+lab(260,186,'ink stands up from the paper; the plate edge leaves a plate-mark');}
+  if(fam==='plano'){xs.forEach(x=>{g+=`<rect x="${x-14}" y="138" width="28" height="2.4" fill="${INK}"/>`;});g+=lab(260,186,'a flat film of ink, with no relief');}
+  if(fam==='photo'){for(let i=0;i<24;i++){const x=40+i*19,w=3+((i*7)%11)*1.1;g+=`<rect x="${x-w/2}" y="137.5" width="${w}" height="2.6" fill="${INK}"/>`;}g+=lab(260,186,'dots of ink of different sizes, pressed in like type');}
+  return `<svg viewBox="0 0 520 200" role="img" aria-label="The printed sheet in section">${lab(260,30,'the printed sheet, seen in section')}${g}</svg>`;
+}
+
+/* families */
+function famSVG(f,i){
+  const st=FAMILIES[f].steps,last=i===st.length-1;
+  if(last)return printedSheet(f);
+  let g='';const xs=[90,150,220,290,360,420];
+  if(f==='relief'){
+    g+=`<path d="M20 230 V180 ${xs.map(x=>`H${x-10} V150 H${x+10} V180`).join(' ')} H500 V230 Z" fill="${WOOD}" stroke="${WOODD}"/>`;
+    if(i>=1)xs.forEach(x=>{g+=`<rect x="${x-10}" y="146" width="20" height="4" fill="${INK}"/>`;});
+    if(i===1)g+=tool('ball');
+    if(i===2){g+=`<rect x="20" y="138" width="480" height="8" fill="${PAPER}" stroke="${PAPERS}"/><rect x="20" y="96" width="480" height="30" fill="#7d7d78"/>`+lab(260,90,'platen presses the paper onto the raised lines')+`<path d="M260 60 V92" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>`;}
+    g+=lab(260,252,i===0?'the block: lines stand up, the whites are cut away':i===1?'ink lies only on the raised lines':'');
+  }
+  if(f==='intaglio'){
+    g+=`<path d="M20 230 V150 ${xs.map(x=>`H${x-7} L${x} 174 L${x+7} 150`).join(' ')} H500 V230 Z" fill="${COPPER}" stroke="${COPPERD}"/>`;
+    if(i===1){g+=`<rect x="20" y="144" width="480" height="6" fill="${INK}"/>`;xs.forEach(x=>{g+=`<path d="M${x-7} 150 L${x} 174 L${x+7} 150 Z" fill="${INK}"/>`;});g+=tool('dabber');}
+    if(i>=2)xs.forEach(x=>{g+=`<path d="M${x-7} 150 L${x} 174 L${x+7} 150 Z" fill="${INK}"/>`;});
+    if(i===2)g+=`<g transform="translate(330 104)"><rect x="0" y="0" width="120" height="30" rx="12" fill="#e8d6b8" stroke="#a88d63"/></g>${lab(390,96,'wiping with muslin and the palm')}<path d="M300 124 h-60" stroke="#62625e" marker-end="url(#ar)"/>`;
+    if(i===3){g+=`<path d="M20 146 ${xs.map(x=>`H${x-7} L${x} 168 L${x+7} 146`).join(' ')} H500" fill="none" stroke="${PAPERS}" stroke-width="6"/><path d="M20 138 H500" stroke="#d6d1c3" stroke-width="10"/><circle cx="260" cy="88" r="40" fill="#9a9a94" stroke="#666"/>`+lab(260,36,'roller of the rolling press');}
+    g+=lab(260,252,i===0?'the plate: lines are cut below the surface':i===1?'ink is worked into the lines and covers the surface':i===2?'the surface is wiped clean; ink stays in the lines':'damp paper and blankets are forced into the lines');
+  }
+  if(f==='plano'){
+    g+=`<rect x="20" y="150" width="480" height="80" fill="${STONE}" stroke="${STONED}"/>`;
+    if(i>=1)xs.forEach((x,k)=>{if(k%2===0||k===3)g+=`<rect x="${x-18}" y="147" width="36" height="3" fill="#6a5a3a"/>`;});
+    if(i===1)g+=tool('crayon');
+    if(i>=2&&i<4){let w='';for(let x=24;x<496;x+=8){const onImg=xs.some((c,k)=>(k%2===0||k===3)&&Math.abs(x-c)<20);if(!onImg)w+=`<ellipse cx="${x}" cy="146" rx="4" ry="2.4" fill="#7fb2cf" opacity=".9"/>`;}g+=w;if(i===2)g+=tool('sponge');}
+    if(i>=3)xs.forEach((x,k)=>{if(k%2===0||k===3)g+=`<rect x="${x-18}" y="143" width="36" height="4" fill="${INK}"/>`;});
+    if(i===3)g+=tool('roller');
+    if(i===4){g+=`<rect x="20" y="134" width="480" height="8" fill="${PAPER}" stroke="${PAPERS}"/><rect x="20" y="128" width="480" height="5" fill="#b8a77f"/><g transform="translate(240 92)"><rect x="0" y="0" width="16" height="34" fill="#6b5a46"/><rect x="-6" y="30" width="28" height="6" fill="#3b3b3b"/></g>`+lab(248,84,'the scraper is drawn across the tympan');}
+    g+=lab(260,252,['the stone, ground flat','greasy drawing on the stone','water lies on the blank stone only','greasy ink takes on the drawing only','paper and tympan under the scraper'][i]);
+  }
+  return `<svg viewBox="0 0 520 262" role="img" aria-label="${FAMILIES[f].steps[i]}"><defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#62625e"/></marker></defs>${g}</svg>`;
+}
+
+/* processes */
+function procSVG(k,s){
+  const fam=PROC[k].fam;
+  if(s.result)return printedSheet(fam==='photo'?'photo':fam);
+  let g='',cap='';
+  const xs=[80,130,175,215,260,300,350,400,445];
+  if(k==='wc'||k==='we'){
+    if(k==='wc'){
+      g+=s.cut?`<path d="M20 230 V185 ${xs.map((x,i)=>{const w=i%3===0?14:8;return `H${x-w} V150 H${x+w} V185`;}).join(' ')} H500 V230 Z" fill="${WOOD}" stroke="${WOODD}"/>`:`<rect x="20" y="150" width="480" height="80" fill="${WOOD}" stroke="${WOODD}"/>`;
+      g+=`<g stroke="${WOODD}" stroke-width=".8" opacity=".6">${[165,180,200,215].map(y=>`<path d="M24 ${y} Q260 ${y-6} 496 ${y}"/>`).join('')}</g>`;
+      cap=s.cut?'side grain: the lines left standing, the whites gouged away':'a plank cut along the grain (side grain)';
+    } else {
+      g+=`<rect x="20" y="150" width="480" height="80" fill="#d9b77b" stroke="${WOODD}"/>`;
+      g+=`<g stroke="${WOODD}" stroke-width=".7" opacity=".55">${Array.from({length:30},(_,i)=>`<circle cx="${40+(i*61)%460}" cy="${170+(i*37)%50}" r="${3+(i%4)}" fill="none"/>`).join('')}</g>`;
+      if(s.cut){let p='';for(let x=40;x<490;x+=13)p+=`<path d="M${x-3} 150 L${x} 160 L${x+3} 150 Z" fill="#fbfbfa"/>`;g+=p;}
+      cap=s.cut?'end grain: narrow cuts that will print white':'end grain of boxwood, polished';
+    }
+    if(s.drawn&&!s.cut)xs.forEach((x,i)=>{g+=`<rect x="${x-(i%3===0?14:8)}" y="148" width="${i%3===0?28:16}" height="2.5" fill="#333"/>`;});
+    if(s.inked){if(k==='wc')xs.forEach((x,i)=>{const w=i%3===0?14:8;g+=`<rect x="${x-w}" y="146" width="${w*2}" height="4" fill="${INK}"/>`;});else{let p='';for(let x=20;x<500;x+=13)p+=`<rect x="${x+3.5}" y="146" width="${Math.min(6,500-x-3.5)}" height="4" fill="${INK}"/>`;g+=p;}}
+    if(s.printed)g+=`<rect x="20" y="136" width="480" height="8" fill="${PAPER}" stroke="${PAPERS}"/><rect x="20" y="94" width="480" height="30" fill="#7d7d78"/>${lab(260,86,'the platen of the common press, with the type')}`;
+  }
+  if(k==='en'||k==='et'||k==='mz'||k==='aq'){
+    let surf='';
+    if(k==='en'&&s.grooves){surf=`M20 150 ${xs.map((x,i)=>{const w=[5,8,4,10,6,3,9,5,7][i];return `H${x-w} L${x} ${150+w*2.4} L${x+w} 150`;}).join(' ')} H500`;}
+    else if(k==='et'&&s.bite){const d=b=>b===1?9:16;surf=`M20 150 ${xs.map((x,i)=>{const dd=(s.stop&&i<3)?9:d(s.bite);return `H${x-5} C${x-5} ${150+dd} ${x+5} ${150+dd} ${x+5} 150`;}).join(' ')} H500`;}
+    else if(k==='mz'&&s.rocked){let p='M20 150';for(let x=20;x<=500;x+=6){const sm=s.scraped&&x>260?Math.min(1,(x-260)/160):0;const dep=(1-sm)*(5+((x*13)%7));p+=` L${x+3} ${150+dep} L${x+6} ${150+(1-sm)*1}`;}surf=p;}
+    else if(k==='aq'&&s.bite){let p='M20 150';for(let x=20;x<=500;x+=7){const stop=s.stop&&x<180;p+=stop?` L${x+7} 150`:` L${x+2} 150 Q${x+3.5} ${157+((x*7)%4)} ${x+5} 150 L${x+7} 150`;}surf=p;}
+    else surf='M20 150 H500';
+    g+=`<path d="${surf} V230 H20 Z" fill="${COPPER}" stroke="${COPPERD}"/>`;
+    if(s.burr)xs.forEach((x,i)=>{const w=[5,8,4,10,6,3,9,5,7][i];g+=`<path d="M${x-w-3} 150 l2 -4 l2 4 M${x+w-1} 150 l2 -4 l2 4" fill="${COPPER}" stroke="${COPPERD}" stroke-width=".8"/>`;});
+    if(s.ground){let gp='';if(s.gaps){let x0=20;xs.forEach(x=>{gp+=`<rect x="${x0}" y="145" width="${x-6-x0}" height="5" fill="#2a2420"/>`;x0=x+6;});gp+=`<rect x="${x0}" y="145" width="${500-x0}" height="5" fill="#2a2420"/>`;}else gp=`<rect x="20" y="145" width="480" height="5" fill="#2a2420"/>`;g+=gp;}
+    if(s.stop&&k==='et')g+=`<path d="M30 144 Q100 128 190 144" fill="#5b4a2a" opacity=".75"/>${lab(110,122,'stopped out')}`;
+    if(s.stop&&k==='aq')g+=`<rect x="20" y="141" width="160" height="6" fill="#5b4a2a" opacity=".75"/>${lab(100,128,'stopped out (stays pale)')}`;
+    if(s.rosin){for(let x=24;x<498;x+=7)g+=`<circle cx="${x+(x%3)}" cy="147" r="2.6" fill="#e3b84e" stroke="#a37f22" stroke-width=".5"/>`;}
+    if(s.acid)g+=`<rect x="14" y="110" width="492" height="38" fill="#9fd19b" opacity=".35"/>${lab(470,104,'acid bath','end')}`;
+    if(s.ink==='all')g+=`<path d="${surf} V140 H20 Z" fill="${INK}" opacity=".95" transform="translate(0 0)"/><rect x="20" y="144" width="480" height="6" fill="${INK}"/>`;
+    if(s.ink==='lines')g+=`<clipPath id="cpI"><rect x="20" y="150.5" width="480" height="40"/></clipPath><path d="${surf} L500 150 Z" fill="${INK}" clip-path="url(#cpI)"/><path d="M20 150.6 H500" stroke="${COPPER}" stroke-width="1.2"/>`;
+    if(s.printed)g+=`<path d="M20 146 H500" stroke="${PAPERS}" stroke-width="5"/><path d="M20 139 H500" stroke="#d6d1c3" stroke-width="9"/><circle cx="260" cy="86" r="40" fill="#9a9a94" stroke="#666"/>${lab(260,36,'roller of the rolling press')}`;
+    cap=k==='en'?(s.grooves?'V-shaped grooves of varying width cut by the burin':'polished copper'):k==='et'?(s.bite?'U-shaped lines bitten by acid; depth depends on the length of the bite':s.gaps?'lines drawn through the ground to the copper':'the ground on the plate'):k==='mz'?(s.scraped?'rough (prints dark) to the left, scraped smooth (prints light) to the right':'the whole surface pitted by the rocker'):(s.bite?'pits bitten between the grains of resin':'grains of resin fused to the plate');
+  }
+  if(k==='li'||k==='cl'){
+    g+=`<rect x="20" y="150" width="480" height="80" fill="${STONE}" stroke="${STONED}"/>`;
+    const img=[[60,40],[150,70],[260,30],[330,90],[450,30]];
+    if(s.drawn)img.forEach(([x,w])=>{g+=`<rect x="${x}" y="147" width="${w}" height="3" fill="#6a5a3a"/>`;});
+    if(s.gum)g+=`<rect x="20" y="146" width="480" height="2" fill="#e6dfc0" opacity=".9"/>`;
+    if(s.damp){for(let x=24;x<496;x+=8){if(!img.some(([a,w])=>x>a-3&&x<a+w+3))g+=`<ellipse cx="${x}" cy="146" rx="4" ry="2.4" fill="#7fb2cf"/>`;}}
+    if(s.inked)img.forEach(([x,w])=>{g+=`<rect x="${x}" y="143" width="${w}" height="4" fill="${k==='cl'?['#d9a400','#c0392b','#2e5fa3','#d9a400','#151515'][img.findIndex(v=>v[0]===x)]:INK}"/>`;});
+    if(s.printed)g+=`<rect x="20" y="134" width="480" height="8" fill="${PAPER}" stroke="${PAPERS}"/><rect x="20" y="128" width="480" height="5" fill="#b8a77f"/><g transform="translate(240 92)"><rect x="0" y="0" width="16" height="34" fill="#6b5a46"/><rect x="-6" y="30" width="28" height="6" fill="#3b3b3b"/></g>${lab(248,84,'scraper press')}`;
+    cap=k==='cl'?'one of several stones, each carrying one colour':s.printed?'printing in the scraper press':s.inked?'ink taken by the greasy drawing only':s.damp?'water held by the blank stone':s.gum?'gum and acid fix the drawing':s.drawn?'drawing in greasy crayon':'limestone, ground flat';
+  }
+  if(k==='ht'){
+    if(s.tool==='camera'&&!s.dots){g+=tool('camera');cap='the process camera: the screen breaks the image into dots';}
+    else{
+      const dots=[];for(let i=0;i<22;i++){const t=i/21;dots.push([36+i*21,2+t*15]);}
+      g+=`<path d="M20 230 V180 ${dots.map(([x,w])=>`H${x-w/2} V150 H${x+w/2} V180`).join(' ')} H500 V230 Z" fill="#b9bdc0" stroke="#7c8084"/><rect x="20" y="230" width="480" height="20" fill="${WOOD}" stroke="${WOODD}"/>`;
+      if(s.acid)g+=`<rect x="14" y="110" width="492" height="38" fill="#9fd19b" opacity=".35"/>${lab(470,104,'acid','end')}`;
+      if(s.inked)dots.forEach(([x,w])=>{g+=`<rect x="${x-w/2}" y="146" width="${w}" height="4" fill="${INK}"/>`;});
+      if(s.printed)g+=`<rect x="20" y="136" width="480" height="8" fill="${PAPER}" stroke="${PAPERS}"/><rect x="20" y="94" width="480" height="30" fill="#7d7d78"/>${lab(260,86,'printed with the type')}`;
+      cap='dots in relief: small in the lights (left), large in the darks (right), mounted type-high on wood';
+    }
+  }
+  if(s.tool&&!(k==='ht'&&s.tool==='camera'))g+=tool(s.tool);
+  return `<svg viewBox="0 0 520 262" role="img" aria-label="${esc(cap)}">${g}${lab(260,254,cap)}</svg>`;
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* =========================================================
+   PRINTS UNDER MAGNIFICATION (canvas)
+   ========================================================= */
+const MW=320,MH=240;
+function toneAt(x,y,v){
+  /* a shaded sphere on a ground with its shadow */
+  const cx=150+(v.dx||0),cy=100,r=70;
+  const nx=(x-cx)/r,ny=(y-cy)/r,d2=nx*nx+ny*ny;
+  if(d2<=1){const nz=Math.sqrt(1-d2),L=[-0.55,-0.6,0.58],ln=Math.hypot(...L);const lam=Math.max(0,(nx*L[0]+ny*L[1]+nz*L[2])/ln);return 0.08+0.82*(1-lam);}
+  const sx=(x-(cx+40))/88,sy=(y-182)/16;
+  if(sx*sx+sy*sy<1&&y>170)return 0.82;
+  if(y>170)return 0.28+(y-170)/240;
+  return 0.06;
+}
+function inSphere(x,y,v){const cx=150+(v.dx||0);return (x-cx)**2+(y-100)**2<=70*70;}
+function render(cv,k,v){
+  v=v||{};const ctx=cv.getContext('2d'),r=rng(v.seed||5);
+  ctx.save();ctx.setTransform(cv.width/MW,0,0,cv.height/MH,0,0);
+  ctx.fillStyle='#f7f2e4';ctx.fillRect(0,0,MW,MH);
+  ctx.lineCap='round';ctx.lineJoin='round';
+  if(k==='wc'){
+    ctx.strokeStyle=INK;
+    for(let y=6;y<MH;y+=7){
+      for(let x=0;x<MW;x+=4){const t=toneAt(x,y,v);if(t>0.45){ctx.lineWidth=2+r()*0.8;ctx.beginPath();ctx.moveTo(x,y+(r()-.5)*1.2);ctx.lineTo(x+4,y+4*0.4+(r()-.5)*1.2);ctx.stroke();}}
+    }
+    ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(190+(v.dx||0),184,74,12,0,0,Math.PI*2);ctx.fill();
+    ctx.lineWidth=3.4;ctx.beginPath();for(let a=0;a<=Math.PI*2+0.05;a+=0.12){const rr=70+(r()-.5)*2.4;const x=150+(v.dx||0)+rr*Math.cos(a),y=100+rr*Math.sin(a);a?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+    ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(0,170);for(let x=0;x<=MW;x+=10)ctx.lineTo(x,170+(r()-.5)*2);ctx.stroke();
+    ctx.globalAlpha=.25;ctx.lineWidth=5;ctx.stroke();ctx.globalAlpha=1;
+  }
+  if(k==='we'){
+    const img=ctx.createImageData(MW,MH);
+    for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+      const t=toneAt(x,y,v),i=(y*MW+x)*4;let ink;
+      if(t<0.1){ink=(y%5===0)?0.55:0;}
+      else{const sp=3.2,ph=inSphere(x,y,v)?(y+Math.sqrt(Math.max(0,4900-(x-150-(v.dx||0))**2))*0.18):y;const d=Math.abs(((ph%sp)+sp)%sp-sp/2);const white=(1-t)*sp*0.55;ink=d<white?0:1;}
+      const c=ink?21:247;img.data[i]=c;img.data[i+1]=ink?21:242;img.data[i+2]=ink?21:228;img.data[i+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+  }
+  if(k==='en'||k==='et'){
+    const eng=k==='en',bite=v.bite||2;
+    const sets=eng?[[Math.PI/2,0.15],[Math.PI/2+Math.PI/3.2,0.55]]:[[Math.PI/4,0.2],[-Math.PI/4,0.5],[Math.PI/10,0.75]];
+    sets.forEach(([ang,th],si)=>{
+      const sp=eng?3.6:4.2,ca=Math.cos(ang),sa=Math.sin(ang);
+      const D=Math.hypot(MW,MH)/2+8;
+      for(let o=-D;o<D;o+=sp){
+        let seg=[];
+        for(let s=-D;s<D;s+=2){
+          const bx=MW/2+o*ca-s*sa,by=MH/2+o*sa+s*ca;
+          let x=bx,y=by;
+          if(eng&&inSphere(x,y,v)){const dx=x-150-(v.dx||0);y+=Math.sqrt(Math.max(0,4900-dx*dx))*0.12-4;}
+          if(!eng){x+=(r()-.5)*0.9;y+=(r()-.5)*0.9;}
+          if(x<-4||y<-4||x>MW+4||y>MH+4){if(seg.length)draw(seg);seg=[];continue;}
+          const t=toneAt(x,y,v);
+          if(t>th){seg.push([x,y,t]);}else{if(seg.length)draw(seg);seg=[];}
+        }
+        if(seg.length)draw(seg);
+      }
+      function draw(seg){
+        if(seg.length<2)return;
+        if(eng){
+          for(let i=1;i<seg.length;i++){const f=Math.min(i,seg.length-1-i)/4,taper=Math.min(1,f);ctx.strokeStyle=INK;ctx.lineWidth=Math.max(0.25,(seg[i][2]-th)*3.4*taper+0.25);ctx.beginPath();ctx.moveTo(seg[i-1][0],seg[i-1][1]);ctx.lineTo(seg[i][0],seg[i][1]);ctx.stroke();}
+        } else {
+          ctx.strokeStyle=INK;ctx.lineWidth=0.55+bite*0.38;ctx.beginPath();seg.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();
+        }
+      }
+    });
+    if(eng){for(let y=4;y<MH;y+=7.2)for(let x=4;x<MW;x+=7.2){const t=toneAt(x,y,v);if(t>0.7){ctx.fillStyle=INK;ctx.beginPath();ctx.arc(x+1.8,y+1.8,0.9,0,7);ctx.fill();}}}
+  }
+  if(k==='mz'||k==='li'||k==='aq'){
+    const img=ctx.createImageData(MW,MH),scr=v.scrape==null?1:v.scrape;
+    /* grain textures */
+    const noise=new Float32Array(MW*MH);for(let i=0;i<noise.length;i++)noise[i]=r();
+    const blur=(a,rad)=>{const b=new Float32Array(a.length);for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){let s=0,n=0;for(let dy=-rad;dy<=rad;dy++)for(let dx=-rad;dx<=rad;dx++){const xx=x+dx,yy=y+dy;if(xx>=0&&yy>=0&&xx<MW&&yy<MH){s+=a[yy*MW+xx];n++;}}b[y*MW+x]=s/n;}return b;};
+    let tex=noise;
+    if(k==='mz')tex=blur(noise,1);
+    if(k==='aq'){const b=blur(noise,2);tex=new Float32Array(b.length);for(let i=0;i<b.length;i++){const vv=(b[i]-0.5)*8;tex[i]=Math.abs(Math.sin(vv*3.1))*0.9+0.05;}}
+    if(k==='li'){const b=blur(noise,1);tex=new Float32Array(b.length);for(let i=0;i<b.length;i++)tex[i]=b[i]*0.6+noise[i]*0.4;}
+    let mn=1,mx=0;for(let i=0;i<tex.length;i++){if(tex[i]<mn)mn=tex[i];if(tex[i]>mx)mx=tex[i];}
+    for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+      let t=toneAt(x,y,v);const i=(y*MW+x)*4,n=(tex[y*MW+x]-mn)/(mx-mn);
+      if(k==='mz')t=1-(1-t)*scr;
+      if(k==='aq')t=Math.round(t*4)/4;
+      const thr=k==='li'?0.15+n*0.85:n;
+      let ink=t>thr?1:0;
+      if(k==='mz'&&ink&&n>t-0.08&&n<t)ink=0.55;
+      const c=Math.round(247-226*ink);img.data[i]=c;img.data[i+1]=Math.round(242-221*ink);img.data[i+2]=Math.round(228-207*ink);img.data[i+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+  }
+  if(k==='ht'){
+    const sp=v.screen||9,a=Math.PI/4,ca=Math.cos(a),sa=Math.sin(a);ctx.fillStyle=INK;
+    for(let i=-60;i<80;i++)for(let j=-60;j<80;j++){
+      const u=i*sp,w=j*sp,x=u*ca-w*sa+MW/2,y=u*sa+w*ca+MH/2;
+      if(x<-sp||y<-sp||x>MW+sp||y>MH+sp)continue;
+      const t=toneAt(x,y,v),rad=sp*0.56*Math.sqrt(t);
+      if(rad>0.25){ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();}
+    }
+  }
+  if(k==='cl'){
+    const L=v.layers||{y:1,r:1,b:1,k:1};
+    const cx=150+(v.dx||0);
+    ctx.globalCompositeOperation='multiply';
+    if(L.b){ctx.fillStyle='#8fb3d9';ctx.fillRect(0,0,MW,170);}
+    if(L.y){ctx.fillStyle='#f2cf3a';ctx.beginPath();ctx.arc(cx,100,70,0,7);ctx.fill();ctx.fillRect(0,170,MW,70);}
+    if(L.r){const g=ctx.createRadialGradient(cx-26,74,10,cx,100,74);g.addColorStop(0,'rgba(220,60,40,0)');g.addColorStop(1,'rgba(200,50,35,.85)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx+1.5,101,70,0,7);ctx.fill();for(let i=0;i<500;i++){const x=r()*MW,y=170+r()*70;ctx.fillStyle='rgba(190,60,40,.5)';ctx.fillRect(x,y,1.4,1.4);}}
+    if(L.b){ctx.fillStyle='rgba(60,90,160,.55)';ctx.beginPath();ctx.ellipse(cx+42,184,80,13,0,0,7);ctx.fill();}
+    ctx.globalCompositeOperation='source-over';
+    if(L.k){ctx.strokeStyle='#1b1b1b';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(cx-1.2,99,70,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(0,170);ctx.lineTo(MW,170);ctx.stroke();}
+    if(!L.y&&!L.r&&!L.b&&!L.k){ctx.fillStyle='#62625e';ctx.font='13px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('Switch on a colour stone',MW/2,MH/2);}
+  }
+  ctx.restore();
+}
+
+/* codex pages */
+function codexSVG(k){
+  const page=(inner,extra)=>`<svg viewBox="0 0 180 230" role="img" aria-label="Page layout">${extra||''}<rect x="10" y="8" width="160" height="214" fill="#fbf8ef" stroke="#cdbf9e"/>${inner}</svg>`;
+  const lines=(x,y,w,n,gap)=>Array.from({length:n},(_,i)=>`<rect x="${x}" y="${y+i*(gap||8)}" width="${w-(i%5===4?w*0.3:0)}" height="2.6" fill="#8c8c86"/>`).join('');
+  const hatch=(x,y,w,h,col)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff" stroke="${col||'#222'}"/>`+Array.from({length:Math.floor(w/4)},(_,i)=>`<line x1="${x+2+i*4}" y1="${y+h*0.45+((i*7)%9)}" x2="${x+2+i*4+3}" y2="${y+h-3}" stroke="${col||'#222'}" stroke-width="${col?0.6:1.4}"/>`).join('')+`<circle cx="${x+w*0.45}" cy="${y+h*0.4}" r="${h*0.22}" fill="none" stroke="${col||'#222'}" stroke-width="${col?0.8:1.8}"/>`;
+  if(k==='ms')return page(`<rect x="28" y="24" width="18" height="18" fill="#2e5fa3"/><text x="37" y="38" text-anchor="middle" font-family="Georgia" font-size="15" fill="#d4a017">Q</text>${lines(52,26,100,2)}<rect x="26" y="50" width="128" height="78" fill="#d4a017"/><rect x="30" y="54" width="120" height="70" fill="#2e5fa3"/><circle cx="90" cy="86" r="18" fill="#c0392b"/><rect x="40" y="104" width="100" height="16" fill="#5e7f3a"/>${lines(28,140,124,9)}`);
+  if(k==='relief')return page(`${lines(28,24,124,6)}${hatch(40,74,100,64)}${lines(28,148,124,8)}`);
+  if(k==='intaglio')return page(`<rect x="26" y="32" width="128" height="150" fill="none" stroke="#cdbf9e" stroke-width="2.4"/><rect x="27.5" y="33.5" width="125" height="147" fill="none" stroke="#efe7d1"/>${hatch(36,42,108,104,'#2a2a2a')}<rect x="56" y="156" width="68" height="2" fill="#6a6a66"/><rect x="40" y="166" width="38" height="1.6" fill="#8c8c86"/><rect x="104" y="166" width="38" height="1.6" fill="#8c8c86"/>`,`<rect x="2" y="8" width="10" height="214" fill="#efe6cf" stroke="#cdbf9e"/>`);
+  if(k==='intaglio2')return page(`<rect x="44" y="18" width="92" height="62" fill="none" stroke="#cdbf9e" stroke-width="2.4"/>${hatch(52,24,76,48,'#2a2a2a')}${lines(28,92,124,15)}`);
+  if(k==='photo'){let d='';for(let i=0;i<14;i++)for(let j=0;j<18;j++){const x=34+i*8.6,y=30+j*8.6,t=0.3+0.6*Math.abs(Math.sin(i*0.5+j*0.3));d+=`<circle cx="${x}" cy="${y}" r="${(2.6*Math.sqrt(t)).toFixed(2)}" fill="#222"/>`;}return page(`<rect x="28" y="24" width="124" height="160" fill="#fff"/>${d}<rect x="60" y="196" width="60" height="2" fill="#6a6a66"/><path d="M10 8 H140 V222 H10 Z" fill="#ffffff" opacity=".55" stroke="#ddd"/>`);}
+  return '';
+}
+
+/* =========================================================
+   RENDERING
+   ========================================================= */
+const S={fam:'intaglio',famStep:0,tl:'',proc:'en',step:0,bite:2,scrape:0.7,screen:9,layers:{y:1,r:1,b:1,k:1},quiz:null};
+const famTag=f=>`<span class="fam" style="--c:${FAM[f].c}">${FAM[f].n}</span>`;
+
+function renderFamilies(){
+  $('#famTabs').innerHTML=['relief','intaglio','plano'].map(f=>`<button class="btn small" role="tab" data-fam="${f}" aria-selected="${f===S.fam}">${FAM[f].n}</button>`).join('');
+  const F=FAMILIES[S.fam];
+  $('#famFig').innerHTML=famSVG(S.fam,S.famStep);
+  $('#famSteps').innerHTML=F.steps.map((t,i)=>`<button class="btn small" data-fstep="${i}" aria-pressed="${i===S.famStep}">${i+1}. ${t}</button>`).join('');
+  $('#famText').innerHTML=`${famTag(S.fam)}<h3 style="margin-top:2px">${FAM[S.fam].n} printing</h3><p style="margin-top:6px">${F.text}</p><p style="margin-top:8px"><b>Processes:</b> ${F.ex}</p><p style="margin-top:8px"><b>On the paper:</b> ${F.look}</p>`;
+}
+function renderTimeline(){
+  $('#tlFilters').innerHTML=[['','Everything'],...Object.entries(FAM).map(([k,v])=>[k,v.n])].map(([k,n])=>`<button class="btn small" role="radio" data-tl="${k}" aria-pressed="${S.tl===k}" aria-checked="${S.tl===k}">${n}</button>`).join('');
+  const ev=EVENTS.filter(e=>!S.tl||e.k===S.tl);
+  $('#tl').innerHTML=ev.map(e=>`<div class="ev" style="--c:${FAM[e.k].c}"><span class="yr">${e.y}</span>${famTag(e.k)}<h3>${e.t}</h3><p>${e.d}</p><p class="src">See ${e.s}.</p></div>`).join('');
+  $('#tlCount').textContent=`${ev.length} entr${ev.length===1?'y':'ies'}${ev.length>3?'. Scroll inside the box to see them all.':'.'}`;
+}
+function procParams(){return {seed:9,bite:S.bite,scrape:S.scrape,screen:S.screen,layers:S.layers};}
+function renderProc(){
+  const P=PROC[S.proc],st=P.steps[S.step];
+  $('#procTabs').innerHTML=PROC_ORDER.map(k=>`<button class="btn small" role="tab" data-proc="${k}" aria-selected="${k===S.proc}"><span class="fam" style="--c:${FAM[PROC[k].fam].c}">${FAM[PROC[k].fam].n}</span>${PROC[k].n}</button>`).join('');
+  $('#procSteps').innerHTML=P.steps.map((x,i)=>`<li><button data-pstep="${i}" class="${i<S.step?'done':''}" ${i===S.step?'aria-current="step"':''}>${x.t}</button></li>`).join('');
+  $('#procFig').innerHTML=procSVG(S.proc,st.s);
+  const last=S.step===P.steps.length-1;$('#printFig').hidden=!last;$('#wsFigs').classList.toggle('solo',!last);
+  $('#procText').innerHTML=`<span class="small muted">${famTag(P.fam)} · ${P.n}, ${P.per} · step ${S.step+1} of ${P.steps.length}</span><h3>${st.t}</h3><p>${st.d}</p>`;
+  $('#btnPrev').disabled=S.step===0;$('#btnNext').disabled=S.step===P.steps.length-1;
+  $('#btnNext').textContent=S.step===P.steps.length-1?'Finished':'Next step';
+  let c='';
+  if(P.ctl==='bite')c=`<label class="ctl">Length of the bite: <b id="biteLab">${['','short','medium','long'][S.bite]}</b><input type="range" min="1" max="3" step="1" value="${S.bite}" id="biteR"></label>`;
+  if(P.ctl==='scrape')c=`<label class="ctl">How much has been scraped and burnished: <b>${Math.round(S.scrape*100)}%</b><input type="range" min="0" max="100" value="${Math.round(S.scrape*100)}" id="scrapeR"></label>`;
+  if(P.ctl==='screen')c=`<label class="ctl">Screen: <b>${S.screen>=12?'coarse, as for newspapers':S.screen>=8?'medium':'fine, as for art paper'}</b><input type="range" min="4" max="16" value="${20-S.screen}" id="screenR" aria-label="Screen ruling, coarse to fine"></label>`;
+  if(P.ctl==='layers')c=`<div class="row" role="group" aria-label="Colour stones">${[['y','Yellow stone'],['r','Red stone'],['b','Blue stone'],['k','Black key stone']].map(([k,n])=>`<button class="btn small" data-layer="${k}" aria-pressed="${!!S.layers[k]}">${n}</button>`).join('')}</div>`;
+  $('#procCtl').innerHTML=c;
+  $('#procPrintCap').textContent=P.cap;
+  render($('#procPrint'),S.proc,procParams());
+}
+function newQuiz(){const k=ID_ORDER[Math.floor(Math.random()*ID_ORDER.length)];S.quiz={k,seed:Math.floor(Math.random()*1e6),dx:Math.round((Math.random()-.5)*40)};render($('#quizCv'),k,{seed:S.quiz.seed,dx:S.quiz.dx,bite:1+Math.floor(Math.random()*3),scrape:0.8,screen:7+Math.floor(Math.random()*6)});
+  $('#quizBtns').innerHTML=ID_ORDER.map(k=>`<button class="btn small" data-quiz="${k}">${PROC[k].n}</button>`).join('');
+  $('#quizFb').className='note';$('#quizFb').textContent='Choose an answer.';}
+function answer(k){const ok=k===S.quiz.k,P=PROC[S.quiz.k];$('#quizFb').className='note '+(ok?'ok':'bad');$('#quizFb').textContent=(ok?'Right. ':`Not quite: this is ${P.n.toLowerCase()}. `)+'Look for: '+LOOK[S.quiz.k].join('; ').toLowerCase()+'.';}
+function renderRef(){
+  $('#refGrid').innerHTML=ID_ORDER.map(k=>`<div class="figure"><canvas width="240" height="180" data-ref="${k}" aria-label="${PROC[k].n} under magnification"></canvas><span class="fam" style="--c:${FAM[PROC[k].fam].c}">${FAM[PROC[k].fam].n}</span><h3>${PROC[k].n}</h3><ul style="margin:0;padding-left:1.1em;font-size:.82rem">${LOOK[k].map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');
+  $$('[data-ref]').forEach((cv,i)=>render(cv,cv.dataset.ref,{seed:30+i,bite:2,scrape:0.8,screen:9}));
+}
+function renderCodex(){
+  $('#codexGrid').innerHTML=CODEX.map(c=>{const f=c.k==='intaglio2'?'intaglio':c.k;return `<div class="figure">${codexSVG(c.k)}${famTag(f)}<h3>${c.t}</h3><p>${c.d}</p></div>`;}).join('');
+}
+function renderSources(){
+  const cols=[[0,5],[1,2,4],[3,6,7]];
+  $('#srcs').innerHTML=cols.map(c=>`<div class="scol">${c.map(i=>{const [h,items]=SOURCES[i];return `<div><h3>${h}</h3><ul>${items.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;}).join('')}</div>`).join('');
+}
+
+/* =========================================================
+   EVENTS
+   ========================================================= */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-fam],[data-fstep],[data-tl],[data-proc],[data-pstep],[data-layer],[data-quiz]');if(!t)return;
+  const d=t.dataset;
+  if(d.fam){S.fam=d.fam;S.famStep=0;renderFamilies();}
+  else if(d.fstep!==undefined){S.famStep=+d.fstep;renderFamilies();}
+  else if(d.tl!==undefined){S.tl=d.tl;renderTimeline();}
+  else if(d.proc){S.proc=d.proc;S.step=0;renderProc();}
+  else if(d.pstep!==undefined){S.step=+d.pstep;renderProc();}
+  else if(d.layer){S.layers[d.layer]=S.layers[d.layer]?0:1;renderProc();}
+  else if(d.quiz){answer(d.quiz);}
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='biteR'){S.bite=+e.target.value;$('#biteLab').textContent=['','short','medium','long'][S.bite];render($('#procPrint'),S.proc,procParams());}
+  if(e.target.id==='scrapeR'){S.scrape=+e.target.value/100;e.target.previousElementSibling.textContent=e.target.value+'%';render($('#procPrint'),S.proc,procParams());}
+  if(e.target.id==='screenR'){S.screen=20-+e.target.value;e.target.previousElementSibling.textContent=S.screen>=12?'coarse, as for newspapers':S.screen>=8?'medium':'fine, as for art paper';render($('#procPrint'),S.proc,procParams());}
+});
+$('#btnPrev').addEventListener('click',()=>{if(S.step>0){S.step--;renderProc();}});
+$('#btnNext').addEventListener('click',()=>{if(S.step<PROC[S.proc].steps.length-1){S.step++;renderProc();}});
+$('#quizNext').addEventListener('click',newQuiz);
+
+renderFamilies();renderTimeline();renderProc();newQuiz();renderRef();renderCodex();renderSources();
+})();
+</script>
+</body>
+</html>
