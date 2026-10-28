@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bookbinding Structures Workbench</title>
+<style>
+:root{
+  --bg:#f1f1ef; --panel:#ffffff; --line:#d8d8d4; --line-2:#bcbcb6; --text:#1e1e1e; --muted:#62625e;
+  --accent:#2f5f8f; --soft:#edf1f5; --thread:#b3362a; --calf:#8b5a33; --paper:#f6f1e4;
+  --serif:Georgia,'Times New Roman',Times,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans);
+  padding:20px max(16px,env(safe-area-inset-right,0px)) 56px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font:600 1.65rem/1.2 var(--serif);margin:0}
+h2{font:600 1.15rem/1.3 var(--serif);margin:0}
+h3{font:600 .95rem/1.3 var(--sans);margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+header{display:flex;flex-direction:column;gap:8px}
+header p{max-width:78ch}
+nav.jump{display:flex;flex-wrap:wrap;gap:6px}
+nav.jump a{font-size:.88rem;color:var(--text);text-decoration:none;border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:4px 10px}
+nav.jump a:hover{border-color:#777}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0;scroll-margin-top:12px}
+.panel>.intro{max-width:80ch}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.between{justify-content:space-between}
+input,select{font:inherit;color:var(--text);padding:5px 8px;border:1px solid var(--line-2);border-radius:4px;background:#fff}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:6px 12px}
+.btn:hover:not(:disabled){border-color:#777}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:#264e76}
+.btn.small{padding:3px 9px;font-size:.84rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn[aria-pressed="true"],.btn[aria-selected="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+svg text{font-family:var(--sans)}
+
+/* periods */
+.timeline{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+@media(max-width:760px){.timeline{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.timeline button{border:1px solid var(--line);background:#fafaf9;border-radius:5px;padding:8px 10px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.timeline button .d{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.timeline button .n{font-weight:600;font-size:.9rem;line-height:1.25}
+.timeline button[aria-selected="true"]{border-color:var(--accent);background:var(--soft)}
+.timeline button[aria-selected="true"] .n{color:var(--accent)}
+.pcard{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr);gap:20px}
+@media(max-width:760px){.pcard{grid-template-columns:minmax(0,1fr)}}
+.pfig{display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.pfig svg{max-width:100%;height:auto}
+.pbody{display:flex;flex-direction:column;gap:12px;min-width:0}
+.pbody .sum{max-width:75ch}
+table.struct{border-collapse:collapse;width:100%;font-size:.9rem}
+table.struct th{text-align:left;font-weight:600;vertical-align:top;padding:6px 12px 6px 0;width:9.5em;color:var(--text);border-top:1px solid var(--line)}
+table.struct td{padding:6px 0;vertical-align:top;border-top:1px solid var(--line)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media(max-width:760px){.cols{grid-template-columns:minmax(0,1fr)}}
+.box{border:1px solid var(--line);border-radius:5px;padding:10px 12px;background:#fafaf9;font-size:.9rem}
+.box ul{margin:6px 0 0;padding-left:1.15em}
+.box li+li{margin-top:3px}
+
+/* sewing */
+.sewgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,330px);gap:16px;align-items:start}
+@media(max-width:900px){.sewgrid{grid-template-columns:minmax(0,1fr)}}
+.figure{border:1px solid var(--line);border-radius:5px;background:#fbfbfa;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.figure svg{width:100%;height:auto;display:block}
+.figure .cap{font-size:.82rem;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{display:inline-block;width:18px;height:0;border-top:2px solid}
+.sewtypes{display:flex;flex-wrap:wrap;gap:6px}
+.trace{fill:none;stroke:#f0a62a;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.8s ease-in-out forwards}
+@keyframes draw{0%{stroke-dashoffset:1;opacity:1}80%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+.newq{animation:drop .5s ease-out}
+@keyframes drop{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.trace{animation:none;opacity:0}.newq{animation:none}}
+
+/* build */
+.buildtabs{display:flex;flex-wrap:wrap;gap:6px}
+.buildgrid{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.buildgrid{grid-template-columns:minmax(0,1fr)}}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:3px}
+ol.steps li button{width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:4px;padding:5px 8px 5px 2.3em;position:relative;font-size:.9rem;color:var(--muted)}
+ol.steps li button::before{counter-increment:s;content:counter(s);position:absolute;left:6px;top:5px;width:1.45em;height:1.45em;border-radius:50%;background:#e4e4e0;color:var(--text);font-size:.76rem;text-align:center;line-height:1.45em;font-weight:600}
+ol.steps li button.done{color:var(--text)}
+ol.steps li button.done::before{background:#cfd9e3}
+ol.steps li button[aria-current="step"]{border-color:var(--accent);background:var(--soft);color:var(--accent);font-weight:600}
+ol.steps li button[aria-current="step"]::before{background:var(--accent);color:#fff}
+.bfigs{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
+@media(max-width:640px){.bfigs{grid-template-columns:minmax(0,1fr)}}
+.steptext{display:flex;flex-direction:column;gap:8px}
+.steptext h3{font:600 1.05rem var(--serif)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.chip{border:1px solid var(--line-2);background:#fff;border-radius:12px;padding:1px 10px;font-size:.8rem}
+button.chip:hover{border-color:var(--accent);color:var(--accent)}
+
+/* glossary */
+.gfilters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.gitem{border:1px solid var(--line);border-radius:5px;padding:10px 12px;background:#fcfcfb;display:flex;flex-direction:column;gap:4px;scroll-margin-top:12px}
+.gitem.flash{border-color:var(--accent);background:var(--soft)}
+.gitem h3{font:600 1rem var(--serif)}
+.gitem .k{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.gitem p{font-size:.88rem}
+.gitem .when{font-size:.8rem;color:var(--muted)}
+.none{padding:20px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:5px}
+
+/* sources */
+.srcs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media(max-width:760px){.srcs{grid-template-columns:minmax(0,1fr)}}
+.srcs ul{margin:6px 0 0;padding-left:1.1em;font-size:.9rem}
+.srcs li+li{margin-top:6px}
+.srcs a{color:var(--accent)}
+footer{font-size:.84rem;color:var(--muted);max-width:90ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Bookbinding Structures Workbench</h1>
+  <p class="muted">How books were bound in the West, from the Coptic codex to the publisher's cloth case. Pick a period to see its structure and materials, watch quires being sewn, then follow a binding step by step from folded sheets to finished book.</p>
+  <nav class="jump" aria-label="Sections">
+    <a href="#periods">1. Periods</a><a href="#sewing">2. The sewing frame</a><a href="#build">3. From quires to bound book</a><a href="#glossary">4. Materials, tools and terms</a><a href="#sources">Sources</a>
+  </nav>
+</header>
+
+<section class="panel" id="periods">
+  <h2>1. Periods</h2>
+  <p class="intro muted small">Dates are approximate and practice varied by region and by the price of the binding. The structure table follows the order in which a binder works: sewing first, covering and decoration last.</p>
+  <div class="timeline" role="tablist" id="timeline" aria-label="Periods"></div>
+  <div class="pcard" id="pcard"></div>
+</section>
+
+<section class="panel" id="sewing">
+  <h2>2. The sewing frame</h2>
+  <p class="intro small">Sewing holds the quires together, and in most Western structures it also joins the text block to the boards. Choose a sewing method, then sew quire by quire. The spine view looks at the backs of the folds, with the head of the book on the left. Thread inside a fold is dashed; thread on the outside of the spine is solid.</p>
+  <div class="sewtypes" id="sewTypes" role="radiogroup" aria-label="Sewing method"></div>
+  <div class="sewgrid">
+    <div class="figure">
+      <div id="spineFig"></div>
+      <div class="row between">
+        <div class="row">
+          <button class="btn primary" id="btnSewNext">Sew the next quire</button>
+          <button class="btn" id="btnSewAll">Sew them all</button>
+          <button class="btn" id="btnSewReset">Start again</button>
+        </div>
+        <span class="small muted" id="sewCount" role="status"></span>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="border-color:var(--thread)"></i>thread on the spine</span>
+        <span><i class="sw" style="border-color:var(--thread);border-top-style:dashed"></i>thread inside the fold</span>
+        <span><i class="sw" style="border-color:#8a6b3c;border-top-width:5px"></i>sewing support</span>
+        <span><i class="sw" style="border-color:#f0a62a;border-top-width:3px"></i>path of the needle</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="figure"><div id="sewHead"></div><span class="cap">Looking down on the head of the book: each quire is a stack of folded sheets, spine to the left.</span></div>
+      <div class="box" id="sewDesc"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="build">
+  <h2>3. From quires to bound book</h2>
+  <p class="intro small">Binders divide the work into forwarding (sewing, shaping and covering) and finishing (decoration). Choose a structure and step through it. The large drawing is a section through the head of the book; the smaller one shows the outside.</p>
+  <div class="buildtabs" id="buildTabs" role="tablist" aria-label="Structure"></div>
+  <div class="buildgrid">
+    <ol class="steps" id="stepList"></ol>
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="bfigs">
+        <div class="figure"><div id="buildHead"></div><span class="cap">Section through the head, spine to the left</span></div>
+        <div class="figure"><div id="buildOut"></div><span class="cap" id="buildOutCap"></span></div>
+      </div>
+      <div class="steptext" id="stepText"></div>
+      <div class="row">
+        <button class="btn" id="btnPrev">Previous step</button>
+        <button class="btn primary" id="btnNext">Next step</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="glossary">
+  <h2>4. Materials, tools and terms</h2>
+  <div class="gfilters">
+    <input id="gSearch" type="search" placeholder="Search, e.g. kettle, morocco" aria-label="Search the glossary" autocomplete="off">
+    <select id="gCat" aria-label="Kind"><option value="">Everything</option><option value="Material">Materials</option><option value="Tool">Tools</option><option value="Structure">Structure and terms</option></select>
+    <select id="gPer" aria-label="Period"><option value="">All periods</option></select>
+    <span class="small muted" id="gCount"></span>
+  </div>
+  <div class="gloss" id="gloss"></div>
+</section>
+
+<section class="panel" id="sources">
+  <h2>Sources</h2>
+  <div class="srcs">
+    <div>
+      <h3>Main references</h3>
+      <ul>
+        <li>Philippa Marks, <i>The British Library Guide to Bookbinding: History and Techniques</i> (1998). A good short introduction.</li>
+        <li>David Pearson, <i>English Bookbinding Styles 1450–1800</i> (2005). The best practical guide to dating and describing ordinary trade bindings.</li>
+        <li>Mirjam Foot, <i>The History of Bookbinding as a Mirror of Society</i> (1998), and her collected <i>Studies in the History of Bookbinding</i>.</li>
+        <li>Howard Nixon and Mirjam Foot, <i>The History of Decorated Bookbinding in England</i> (1992).</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Further reading</h3>
+      <ul>
+        <li>Bernard Middleton, <i>A History of English Craft Bookbinding Technique</i> (1963, later revised). The standard account of English technique from the 16th century onward.</li>
+        <li>E. P. Goldschmidt, <i>Gothic &amp; Renaissance Bookbindings</i> (1928).</li>
+        <li>Anthony Hobson, <i>Humanists and Bookbinders</i> (1989). Italian Renaissance gold-tooling and its spread.</li>
+        <li>Douglas Ball, <i>Victorian Publishers' Bindings</i> (1985). The shift to cloth and edition binding.</li>
+        <li>Matt Roberts and Don Etherington, <i>Bookbinding and the Conservation of Books: A Dictionary of Descriptive Terminology</i> (1982), <a href="https://cool.culturalheritage.org/don/" target="_blank" rel="noopener">online at cool.culturalheritage.org/don</a>.</li>
+        <li>Princeton University Library, Hand Bookbinding exhibition, on <a href="https://static-prod.lib.princeton.edu/visual_materials/hb/cases/earlysewing/index.html" target="_blank" rel="noopener">early</a> and <a href="https://static-prod.lib.princeton.edu/visual_materials/hb/cases/latersewing/index.html" target="_blank" rel="noopener">later sewing</a>.</li>
+        <li>Ligatus, <a href="https://lob.is.ed.ac.uk/" target="_blank" rel="noopener">Language of Bindings thesaurus</a>, for standard terms.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<footer>The diagrams are teaching schematics, not measured drawings: proportions are exaggerated so the thread, supports and boards can be seen. Dates summarise the standard accounts above and should be checked against them for any particular binding.</footer>
+</div>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* =========================================================
+   PERIODS
+   ========================================================= */
+const PERIODS=[
+ {id:'late',name:'Late Antique, Coptic and Insular',dates:'c. 200–800',cover:'coptic',sew:'link',build:'coptic',
+  sum:'The codex replaced the roll in the first centuries AD. The earliest surviving codex bindings, mostly from Egypt, are sewn without supports: each quire is linked to the one before by a chain of loops, and the boards are tied on with thread. The same unsupported structure reached the British Isles, where the St Cuthbert Gospel of about 700 still has its original binding.',
+  rows:[
+   ['Sewing','Link (chain) stitch through the fold, with no supports. The earliest codices are a single large quire sewn with a simple stitch through the fold.'],
+   ['Supports','None.'],
+   ['Boards','Wood, or board built up from layers of waste papyrus pasted together. Some single-quire codices, such as those found at Nag Hammadi (4th century), have limp leather covers instead.'],
+   ['Board attachment','Thread or cord through holes near the spine edge of the board, tied into the sewing.'],
+   ['Spine','Flat. Boards are cut flush with the leaves, with no squares.'],
+   ['Covering','Goatskin or sheepskin.'],
+   ['Decoration','Blind lines and small stamps; sometimes cut-out leather over a coloured ground, or raised decoration.'],
+   ['Fastenings','Wrapping straps, sometimes with a toggle of bone or wood.'],
+   ['Edges and endleaves','Plain edges; no separate endleaves in the earliest examples.']],
+  look:['No sewing supports: the sewing shows on the spine as chains of loops.','Boards attached by thread rather than by laced supports.','Boards flush with the leaves (no squares).'],
+  ex:'The St Cuthbert Gospel (British Library, Add MS 89000), made at Wearmouth-Jarrow around 700, is the oldest intact European bookbinding: red goatskin over boards with raised decoration, sewn without supports in the Coptic manner.'},
+ {id:'roman',name:'Carolingian and Romanesque',dates:'c. 800–1200',cover:'romanesque',sew:'split',build:'medieval',
+  sum:'Supported sewing appears. Quires are sewn round strips of alum-tawed skin running across the spine, and the ends of these supports are laced into heavy wooden boards. Sewing round supports and lacing them into the boards becomes the basis of Western hand binding for the next thousand years.',
+  rows:[
+   ['Sewing','Herringbone sewing round split supports, from kettle stitch to kettle stitch.'],
+   ['Supports','Split thongs: strips of alum-tawed skin slit along their length, the thread passing round each half.'],
+   ['Boards','Thick wooden boards, cut flush with the leaves; edges square or only slightly shaped.'],
+   ['Board attachment','Thongs pass through tunnels in the board edge into channels cut in the board, and are wedged with wooden pegs.'],
+   ['Spine','Flat. Endbands sewn with the primary sewing, often ending in tabs that project beyond the head and tail.'],
+   ['Covering','Alum-tawed skin, white or pale; sometimes a loose outer cover (chemise).'],
+   ['Decoration','Mostly plain. In the twelfth century a group of bindings from England and northern France is blind-stamped with small figurative stamps.'],
+   ['Fastenings','Strap-and-pin: a strap from one board fastens over a pin on the other.'],
+   ['Edges and endleaves','Plain edges; parchment endleaves, sometimes reused manuscript leaves.']],
+  look:['Flat spine with tabs at head and tail.','Boards flush with the text block, with pegged lacing visible where the covering has worn.','Strap-and-pin fastening, or the holes left by one.','Herringbone sewing where the spine is exposed.'],
+  ex:'Twelfth-century monastic bindings in tawed skin over oak boards survive in many English cathedral and college libraries, often with their strap-and-pin fastenings.'},
+ {id:'gothic',name:'Gothic',dates:'c. 1200–1500',cover:'gothic',sew:'double',build:'medieval',
+  sum:'With universities, a commercial book trade and, from the 1450s, printing, bindings become more numerous and more uniform. Quires are sewn on double supports; boards gain bevelled edges and small squares; tanned calf is decorated in blind; and metal fittings protect covers that may lie flat on a lectern or hang from a chain.',
+  rows:[
+   ['Sewing','All along, round double supports in a figure of eight, often packed (wound round the supports between stations); kettle stitches at head and tail.'],
+   ['Supports','Double thongs of alum-tawed skin, or single thongs; cords on many continental bindings by the fifteenth century.'],
+   ['Boards','Wood, usually oak in England and often beech in Germany, with bevelled or chamfered edges.'],
+   ['Board attachment','Laced through tunnels and channels and pegged; some fifteenth-century German bindings take the supports over the board edge into holes and channels.'],
+   ['Spine','Flat or slightly rounded; parchment strips (often manuscript waste) across the spine as linings; sewn endbands with tie-downs.'],
+   ['Covering','Tanned calf for most; alum-tawed skin, including pigskin in German lands; sheep for cheaper work.'],
+   ['Decoration','Blind tooling: fillets dividing the cover into compartments filled with small stamps; panel stamps and rolls in the fifteenth century. Gold tooling begins in Italy at the end of the period.'],
+   ['Fastenings','Clasps with metal catches (which board carries the catch varies by region); brass bosses and cornerpieces; staples for chains in chained libraries.'],
+   ['Edges and endleaves','Plain or coloured edges, titles sometimes written on the fore-edge; parchment or paper endleaves, often waste.']],
+  look:['Double raised bands on the spine.','Bevelled wooden boards; nail holes from lost bosses, catches or chain staples.','Blind-tooled compartments of small stamps, or a panel stamp.','Manuscript waste in linings and pastedowns.'],
+  ex:'English fifteenth-century bindings of calf over bevelled oak boards, with blind-stamped compartments and two clasps, are common in college and cathedral libraries.'},
+ {id:'ren',name:'Renaissance and the printed book',dates:'c. 1450–1600',cover:'renaissance',sew:'raised',build:'limp',
+  sum:'Printing multiplies books, and binders look for cheaper and quicker ways to bind them. Pasteboard replaces wood, first in Italy; contact with Islamic binding brings goatskin and gold tooling. Limp parchment bindings and plain trade bindings appear alongside fine bindings for collectors.',
+  rows:[
+   ['Sewing','All along on single or double supports; some cheaper continental bindings already sewn on recessed cords by the late fifteenth century.'],
+   ['Supports','In England, alum-tawed thongs throughout the century; cords increasingly on the Continent, and in England from late in the century.'],
+   ['Boards','Pasteboard (sheets of waste paper pasted together) gradually replaces wood; wood lingers for large books.'],
+   ['Board attachment','Supports laced through holes in the pasteboard and pasted down; still pegged into channels on wooden boards.'],
+   ['Spine','Increasingly rounded; raised bands; linings of printed or manuscript waste.'],
+   ['Covering','Calf for most bindings; goatskin ("morocco" or "turkey") for fine work; limp parchment for cheaper books.'],
+   ['Decoration','Gold tooling with heated brass tools and gold leaf, adopted in Italy in the later fifteenth century under Islamic influence and reaching England by the 1520s–30s. Rolls and panels in blind remain usual for ordinary work; centre-and-corner designs in the later sixteenth century.'],
+   ['Fastenings','Clasps on large books; ties of ribbon or leather on smaller ones.'],
+   ['Edges and endleaves','Gilt and gauffered (tooled) edges on fine bindings; waste paper and parchment, a rich source of fragments, in endleaves and linings.']],
+  look:['Pasteboard: look at worn corners for layers of waste paper.','Gold tooling, or blind rolls and panels.','Ties, or the slits they left.','Printed or manuscript waste inside the boards.'],
+  ex:'Bindings for the French collector Jean Grolier (c. 1479–1565), in goatskin with gold-tooled interlacing, are the best-known fine bindings of the century; ordinary books of the same years are far more often in plain calf or limp parchment.'},
+ {id:'trade',name:'Hand-press trade binding',dates:'c. 1600–1800',cover:'trade',sew:'raised',build:'trade',
+  sum:'Most books are sold in sheets or in simple trade bindings, bound in calf over pasteboard by commercial binders. The structure becomes standard: sewn on cords, rounded and backed, boards laced on, and calf drawn on tight to the spine. Styles change quickly enough to help with dating.',
+  rows:[
+   ['Sewing','All along, or two-on (two sheets on) for thin quires; recessed (sawn-in) cords common on cheaper work by the later eighteenth century.'],
+   ['Supports','Hemp cords, which replace thongs in English binding during the late sixteenth and seventeenth centuries.'],
+   ['Boards','Pasteboard; later millboard.'],
+   ['Board attachment','Cord ends frayed out, laced through holes in the boards, and pasted and hammered flat.'],
+   ['Spine','Rounded and backed, glued and lined; tight back with raised bands, or a smooth spine with false bands over recessed cords. Hollow backs appear late in the period.'],
+   ['Covering','Calf: plain, sprinkled or mottled; reversed calf (flesh side out) for cheap and legal books; sheep for the cheapest; goatskin for fine work. Late in the period, books are often issued in temporary paper-covered boards.'],
+   ['Decoration','Blind fillets and panels on covers; gold tooling on spines; title labels of red or black leather, normal from the late seventeenth century. Fine bindings follow fashions such as the Restoration "cottage roof" design.'],
+   ['Fastenings','Clasps disappear from ordinary books during the seventeenth century.'],
+   ['Edges and endleaves','Sprinkled edges (often red); gilt edges on fine work; plain or marbled endpapers.']],
+  look:['Raised bands, or a smooth spine with false bands and recessed cords.','A gilt-lettered spine label.','Sprinkled edges and marbled endpapers.','Slips of the cords visible under the pastedowns.'],
+  ex:'A typical example is an English octavo of about 1700 in sprinkled calf with a blind panel on the covers, raised bands, a red morocco label and red sprinkled edges.'},
+ {id:'ind',name:'Industrial: publishers’ cloth and case binding',dates:'c. 1800–1900',cover:'cloth',sew:'machine',build:'case',
+  sum:'Publishers take over binding for whole editions. Bookcloth (about 1825) and case binding split a binding into two parts made separately and joined at the end: the sewn book block and a ready-made case. Gold blocking on cloth began in 1832; machines for folding, sewing, cutting and case-making followed.',
+  rows:[
+   ['Sewing','By hand on tapes or sawn-in cords; by machine through the fold later in the century; wire stitching for cheap work. Rubber-adhesive ("caoutchouc") binding from the 1830s soon failed.'],
+   ['Supports','Tapes, or none: the book block is held to its case by mull (open-weave cloth) glued over the spine.'],
+   ['Boards','Millboard and strawboard.'],
+   ['Board attachment','No lacing. The case is joined to the book only by the mull and the pasted-down endpapers ("casing in").'],
+   ['Spine','Rounded and backed, lined with mull and paper; hollow back; machine-made endbands stuck on.'],
+   ['Covering','Bookcloth (dyed cotton filled with starch and embossed with a grain); paper boards; leather for library and fine bindings.'],
+   ['Decoration','Blind and gilt blocking from engraved brass blocks in an arming press; lettering blocked on the spine; pictorial covers later in the century. Paper dust jackets survive from 1829.'],
+   ['Fastenings','None.'],
+   ['Edges and endleaves','Cut by guillotine; plain, sprinkled or gilt (often top edge only); coloured or patterned endpapers, sometimes with publishers’ advertisements.']],
+  look:['The grain of the cloth and the blocking.','Mull visible at the inner hinge.','A hollow back that lifts away from the spine when the book is opened.','Boards attached without any lacing.'],
+  ex:'John Murray’s 1832–33 edition of Byron’s Works is usually cited as the first with gold blocked directly onto publishers’ cloth. The Arts and Crafts revival, notably T. J. Cobden-Sanderson’s Doves Bindery (1893), reacted against machine binding by returning to hand sewing and tooling.'}
+];
+
+/* =========================================================
+   SEWING METHODS
+   ========================================================= */
+const SEW={
+ link:{name:'Link stitch (unsupported)',per:'Coptic and Insular, c. 200–800',sup:'none',st:[64,176,320,464,576],
+  how:'The thread runs along the inside of the fold and comes out at each station. There it loops round the stitch joining the two quires below before going back in, so each station builds a chain down the spine. There are no supports, and no frame is needed.',
+  why:'It gives a flexible book that opens flat, but the boards can only be tied on with thread.'},
+ split:{name:'Herringbone on split thongs',per:'Carolingian and Romanesque, c. 800–1200',sup:'split',
+  how:'Each support is a strip of alum-tawed skin slit down its length. The thread comes out on one side of the thong, passes round one half and catches the loop of the quire below, then round the other half and back in. The crossing stitches build a herringbone pattern up the thong.',
+  why:'The thongs are strong and their ends can be laced deep into wooden boards.'},
+ double:{name:'Packed sewing on double supports',per:'Gothic, c. 1200–1500',sup:'double',
+  how:'Each station has a pair of thongs or cords. The thread comes out, goes round both in a figure of eight and goes back in. In packed sewing it is also wound round the supports between quires, filling the space completely.',
+  why:'Very strong, and it gives the prominent double bands of medieval spines.'},
+ raised:{name:'All along on raised cords',per:'Standard hand sewing, 16th–19th centuries',sup:'raised',
+  how:'One quire at a time, from the kettle stitch at one end to the kettle stitch at the other. At each cord the thread comes out, passes round the cord and goes back into the same fold. The kettle stitch at each end links the quire to the one below.',
+  why:'Sound and simple; the cords stand proud of the spine and show as raised bands under the leather.'},
+ twoon:{name:'Two-on (two sheets on)',per:'Trade binding, 17th–19th centuries',sup:'raised',pair:true,
+  how:'Two quires are sewn in one pass. The thread goes into the first quire, out round the first cord and into the second quire, out round the next cord and back into the first, and so on. Each quire is held at only some of the stations.',
+  why:'It halves the thread in the spine, so thin quires do not swell, and saves time. It is weaker than sewing all along.'},
+ recessed:{name:'Recessed (sawn-in) cords',per:'Cheaper continental work from the late 15th century; common in England by the later 18th',sup:'recessed',
+  how:'Grooves are sawn across the backs of the quires and the cords sit in them. The thread runs along the inside of each fold and simply passes over the cord where it lies in the groove. Only the kettle stitches show on the spine.',
+  why:'Quick to sew, and it gives a smooth spine, onto which false bands or a hollow back can be added.'},
+ tapes:{name:'On tapes',per:'From the 18th century; usual for later hand-sewn case bindings',sup:'tapes',
+  how:'Flat linen tapes replace cords. The thread comes out on one side of the tape, crosses over it and goes back in on the other side, without going round it.',
+  why:'Tapes add no bulk to the spine and are glued to the boards or under the endpapers instead of being laced.'},
+ machine:{name:'Machine sewing through the fold',per:'Later 19th century onward',sup:'none',st:[110,240,400,530],
+  how:'Book-sewing machines, notably Smyth’s, sew each section through its fold with needles and hooks and lock it to the section before. There are no supports. (Simplified here: the machine actually uses several threads and loops.)',
+  why:'Fast and cheap for edition binding; the block is held into its case by glue, mull and endpapers.'},
+ stab:{name:'Stab-stitching (side sewing)',per:'Pamphlets and cheap tracts, 16th–19th centuries',sup:'none',whole:true,st:[150,320,490],
+  how:'The thread is passed through holes stabbed right through the whole block near the spine, not through the folds.',
+  why:'Quick, but the book will not open flat. Stab holes in the inner margins of a bound book often show it was once a stitched pamphlet.'},
+ adhesive:{name:'Adhesive ("perfect") binding',per:'Experiments from the 1830s; widespread in the 20th century',sup:'none',whole:true,
+  how:'There is no sewing. The folds are cut off and the separate leaves are held together by a layer of glue on the spine.',
+  why:'The cheapest method. Early rubber adhesives perished and the leaves fell out; modern adhesives made it the normal binding for paperbacks.'}
+};
+const SEW_ORDER=['link','split','double','raised','twoon','recessed','tapes','machine','stab','adhesive'];
+
+/* =========================================================
+   STRUCTURES TO BUILD
+   ========================================================= */
+const BUILDS={
+ coptic:{name:'Coptic codex',per:0,sew:'link',board:'wood',sq:0,cover:'leather',style:'coptic',steps:[
+  {t:'Fold the quires',d:'Sheets of papyrus or parchment are folded in half and nested into quires. The earliest codices were often a single large quire; later ones use several.',s:{},k:['quire','parchment']},
+  {t:'Pierce the sewing stations',d:'Holes are pierced through the folds at matching positions along the spine: the sewing stations, often in pairs.',s:{stations:true},k:['station','awl']},
+  {t:'Sew with link stitch',d:'Each quire is sewn through its fold and linked to the one before by looping round the earlier stitch at every station. No supports and no frame are needed.',s:{sew:'link'},k:['linkstitch','thread']},
+  {t:'Attach the boards',d:'Boards of wood, or of waste papyrus pasted in layers, are tied on with thread through holes near their spine edge and linked into the sewing. They are cut flush with the leaves.',s:{boards:true,lace:true},k:['woodboard']},
+  {t:'Cover in leather',d:'Goatskin or sheepskin is pasted over the boards and spine and turned in at the edges.',s:{cover:true},k:['goat','paste']},
+  {t:'Decorate and fasten',d:'The covers are tooled in blind with lines and small stamps, sometimes with cut-out leather over a coloured ground. A strap wrapped round the closed book keeps it shut.',s:{dec:true,fit:true},k:['handtool']}]},
+ medieval:{name:'Medieval board binding',per:2,sew:'double',board:'wood',sq:4,cover:'leather',style:'gothic',steps:[
+  {t:'Fold, gather and check',d:'Sheets are folded into quires and gathered in order, checked by catchwords or quire signatures. Endleaves of parchment are added at each end.',s:{},k:['quire','folder','parchment']},
+  {t:'Mark up and pierce the stations',d:'Positions for the kettle stitches and supports are marked across the backs of the quires and pierced.',s:{stations:true},k:['station','awl']},
+  {t:'Sew on the frame',d:'Double thongs of alum-tawed skin are stretched on the sewing frame. Each quire is sewn all along, the thread passing round both thongs in a figure of eight and often packed round them, with a kettle stitch at head and tail.',s:{sew:'double'},k:['frame','tawed','thread','kettle','supports']},
+  {t:'Sew the endbands',d:'Primary endbands are sewn over a core of tawed skin or cord at head and tail, tied down into the quires. They strengthen the ends of the spine and can be laced into the boards.',s:{endband:true},k:['endband']},
+  {t:'Line the spine',d:'Strips of parchment, often cut from discarded manuscripts, may be pasted across the spine between the supports.',s:{lining:true},k:['lining','waste']},
+  {t:'Shape the boards',d:'Oak boards are cut to size, their edges bevelled, and tunnels and channels cut to receive the thongs.',s:{boards:true},k:['woodboard']},
+  {t:'Lace on the boards',d:'The thong ends pass through tunnels in the board edge, run along channels in the board and are wedged with wooden pegs. Book and boards are now one structure.',s:{lace:true},k:['lacing']},
+  {t:'Cover',d:'Dampened leather, usually tanned calf or alum-tawed skin, is pasted, drawn over boards and spine, and turned in at the edges.',s:{cover:true},k:['calf','tawed','turnin','paste']},
+  {t:'Tool in blind',d:'Fillets divide the cover into compartments, which are filled with impressions of small heated stamps; later, rolls and panel stamps speed the work.',s:{dec:true},k:['handtool','fillet','panel']},
+  {t:'Fit the metalwork',d:'Clasps hold the boards closed and keep the parchment flat; bosses and cornerpieces protect the leather when the book lies flat. Books for a chained library get a staple for the chain.',s:{fit:true},k:['clasp']}]},
+ limp:{name:'Limp parchment binding',per:3,sew:'raised',board:'none',sq:6,cover:'parchment',style:'limp',steps:[
+  {t:'Fold and gather',d:'The printed sheets are folded and gathered into quires in signature order.',s:{},k:['quire','folder']},
+  {t:'Sew on supports',d:'The quires are sewn on thongs or cords, often fewer than on a board binding, with kettle stitches at head and tail.',s:{stations:true,sew:'raised'},k:['frame','supports','kettle']},
+  {t:'Sew the endbands',d:'Simple endbands are sewn at head and tail, their tie-downs often in coloured thread.',s:{endband:true},k:['endband']},
+  {t:'Line the spine',d:'Strips of parchment or waste paper may be pasted across the spine between the supports.',s:{lining:true},k:['lining','waste']},
+  {t:'Prepare the cover',d:'A sheet of parchment is folded round the book with turn-ins at the fore-edge and often at head and tail. There are no boards, though a paper lining sometimes stiffens it.',s:{cover:true},k:['parchment','turnin']},
+  {t:'Lace the supports through the cover',d:'The ends of the supports pass out through slits in the parchment along each joint and back in again. Often this lacing is all that holds book and cover together.',s:{lace:true},k:['lacing']},
+  {t:'Ties and titling',d:'Ties of alum-tawed skin or ribbon keep the book closed and the parchment from cockling. The title is written in ink on the spine.',s:{dec:true,fit:true},k:['ties']}]},
+ trade:{name:'Calf trade binding',per:4,sew:'raised',board:'paste',sq:8,cover:'leather',style:'trade',steps:[
+  {t:'Fold, gather and collate',d:'Sheets are folded, gathered in signature order and collated against the signatures. Endleaves are added at each end.',s:{},k:['quire','folder','signature']},
+  {t:'Sew on raised cords',d:'Hemp cords are stretched on the sewing frame and the quires are sewn all along, or two-on if the quires are thin, with kettle stitches at head and tail.',s:{stations:true,sew:'raised'},k:['frame','cord','thread','kettle']},
+  {t:'Glue up and round',d:'Glue is worked into the spine and the book is hammered into a curve, so that the spine is convex and the fore-edge concave.',s:{glue:true,round:true},k:['paste','hammer']},
+  {t:'Back',d:'Clamped between backing boards in the lying press, the outer quires are hammered over to form shoulders. The boards will sit in these joints and hinge there.',s:{back:true},k:['backing','press','hammer']},
+  {t:'Endbands and linings',d:'Endbands are sewn at head and tail and the spine is lined with paper or parchment between the cords.',s:{endband:true,lining:true},k:['endband','lining']},
+  {t:'Lace on the boards',d:'Pasteboards are cut to size. The cord ends are frayed out, laced through holes punched near the joint, then pasted and hammered flat.',s:{boards:true,lace:true},k:['pasteboard','lacing']},
+  {t:'Cut and colour the edges',d:'The edges are trimmed with a plough in the lying press and sprinkled with red, or occasionally gilt.',s:{trim:true},k:['plough','sprinkle']},
+  {t:'Cover in calf',d:'Calf is pared thin at the edges, pasted and drawn on tight over the boards and spine. The bands are nipped up and headcaps formed, and the leather is turned in.',s:{cover:true},k:['calf','paring','tightback','turnin']},
+  {t:'Paste down the endpapers',d:'The outer endleaf is pasted to the inside of each board, over the turn-ins and cord slips.',s:{endp:true},k:['pastedown']},
+  {t:'Finish',d:'Covers are tooled with fillets in blind and the spine in gold. A leather label is lettered with the title.',s:{dec:true,fit:true},k:['fillet','gold','pallet']}]},
+ case:{name:'Publisher’s case binding',per:5,sew:'machine',board:'case',sq:10,cover:'cloth',style:'cloth',steps:[
+  {t:'Fold and gather',d:'Sheets are folded (by machine later in the century) and gathered in signature order.',s:{},k:['quire','signature']},
+  {t:'Sew',d:'Sections are sewn through the fold by machine, or by hand on tapes. No supports are laced into boards.',s:{sew:'machine'},k:['sewmachine','tapes']},
+  {t:'Cut the edges',d:'The book block is trimmed on three edges in a guillotine.',s:{trim:true},k:['guillotine']},
+  {t:'Glue up, round and back',d:'The spine is glued, rounded and backed, by hand or by machine, to form shoulders for the case.',s:{glue:true,round:true,back:true},k:['paste','backing']},
+  {t:'Line the spine',d:'Mull (open-weave cloth) is glued over the spine and extends onto both sides; paper goes over it. Machine-made endbands are stuck on.',s:{mull:true,lining:true,endband:true},k:['mull','endband']},
+  {t:'Make the case',d:'Separately, two boards and a strip of card for the spine are glued to bookcloth, which is turned in. The case is a complete cover with no book in it.',s:{boards:true,cover:true},k:['bookcloth','millboard']},
+  {t:'Block the case',d:'Lettering and ornament are blocked in gold and blind from engraved brass blocks in an arming press.',s:{dec:true},k:['arming']},
+  {t:'Case in',d:'Paste is applied to the endpapers and the book is dropped into the case. The mull and pasted-down endpapers are all that join book and case, and the spine of the case stands free of the book: a hollow back.',s:{endp:true,cased:true,fit:true},k:['casing','tightback','pastedown']}]}
+};
+const BUILD_ORDER=['coptic','medieval','limp','trade','case'];
+
+/* =========================================================
+   GLOSSARY. periods: indices into PERIODS
+   ========================================================= */
+const GLOSS=[
+ // materials
+ {id:'parchment',n:'Parchment and vellum',c:'Material',p:[0,1,2,3,4,5],d:'Animal skin (calf, sheep or goat) soaked in lime, scraped and dried under tension, but not tanned. Strictly, vellum is calfskin, though the two words are often used loosely. Used for leaves, limp covers, spine linings and endband cores.'},
+ {id:'tawed',n:'Alum-tawed skin',c:'Material',p:[1,2,3],d:'Skin treated with alum and salt, usually with egg yolk and flour, rather than tanned. White and very strong; used for sewing thongs, straps and Romanesque and German covers.'},
+ {id:'calf',n:'Calf',c:'Material',p:[2,3,4,5],d:'Vegetable-tanned calfskin, smooth and good for tooling. The usual covering leather in England from the late Middle Ages to the nineteenth century, finished plain, sprinkled, mottled or reversed.'},
+ {id:'goat',n:'Goatskin (morocco)',c:'Material',p:[0,3,4,5],d:'Hard-wearing leather with a marked grain. Imported through North Africa and the Levant (hence "morocco" and "turkey") and used for fine bindings from the sixteenth century.'},
+ {id:'sheep',n:'Sheepskin',c:'Material',p:[0,2,4],d:'Cheaper, softer and weaker than calf, with little grain; tanned sheep is called basil. Used for cheap bindings.'},
+ {id:'pig',n:'Pigskin',c:'Material',p:[2,3],d:'Thick and tough, with hair follicles in groups of three. Often alum-tawed, especially in German bindings of the fifteenth and sixteenth centuries.'},
+ {id:'woodboard',n:'Wooden boards',c:'Material',p:[0,1,2,3],d:'The usual boards before printing: oak in England, beech in much of Germany. Cut with tunnels and channels for lacing, and often bevelled.'},
+ {id:'pasteboard',n:'Pasteboard',c:'Material',p:[3,4],d:'Board made by pasting sheets of paper, often printed or manuscript waste, together. Replaced wood from the late fifteenth century in Italy and through the sixteenth century elsewhere.'},
+ {id:'millboard',n:'Millboard and strawboard',c:'Material',p:[4,5],d:'Millboard is a dense board made from old rope and fibres, used from the eighteenth century. Strawboard, made from straw pulp, was a cheap nineteenth-century board for cases.'},
+ {id:'thread',n:'Linen thread',c:'Material',p:[0,1,2,3,4,5],d:'The usual sewing thread; silk was used for decorative endbands.'},
+ {id:'cord',n:'Hemp cord',c:'Material',p:[3,4,5],d:'Twisted cord used for sewing supports, replacing thongs in English binding from the late sixteenth century.'},
+ {id:'tapes',n:'Tapes',c:'Material',p:[4,5],d:'Flat strips of linen used as sewing supports. They add no bulk to the spine and are glued rather than laced to the boards.'},
+ {id:'mull',n:'Mull (super)',c:'Material',p:[5],d:'Open-weave cotton cloth glued over the spine of a case binding and onto the boards. With the endpapers it holds book and case together.'},
+ {id:'bookcloth',n:'Bookcloth',c:'Material',p:[5],d:'Dyed cotton filled with starch so that it can be glued without stains, often embossed with a grain. Introduced for publishers’ bindings around 1825.'},
+ {id:'marbled',n:'Marbled paper',c:'Material',p:[4,5],d:'Paper decorated by laying it on colours floating on a size. Used for endpapers and covers, in English bindings from the seventeenth century.'},
+ {id:'waste',n:'Binding waste',c:'Material',p:[1,2,3,4],d:'Discarded manuscript or printed leaves reused as linings, endleaves, pastedowns and board layers. Many otherwise lost texts survive only as binding waste.'},
+ {id:'paste',n:'Paste and glue',c:'Material',p:[0,1,2,3,4,5],d:'Wheat-starch paste for leather and paper; animal glue (from hide or bone) for spines and cases.'},
+ {id:'gold',n:'Gold leaf and glaire',c:'Material',p:[3,4,5],d:'Gold beaten very thin. In gold tooling it is laid over a size of glaire (beaten egg white) and fixed by a heated tool.'},
+ // tools
+ {id:'folder',n:'Bone folder',c:'Tool',p:[0,1,2,3,4,5],d:'A flat blade of bone for folding sheets and creasing.'},
+ {id:'awl',n:'Awl',c:'Tool',p:[0,1,2,3,4],d:'A point for piercing sewing stations and holes in boards.'},
+ {id:'frame',n:'Sewing frame',c:'Tool',p:[1,2,3,4,5],d:'A bed with two uprights and a crossbar. The supports are stretched between the crossbar and the bed so that the quires can be sewn round them.'},
+ {id:'press',n:'Lying press and standing press',c:'Tool',p:[3,4,5],d:'The lying press holds a book on its side for backing and edge cutting; the large standing press squeezes finished books between boards.'},
+ {id:'plough',n:'Plough',c:'Tool',p:[3,4],d:'A blade carried on a frame that slides along the cheeks of the lying press, used to trim the edges of the text block.'},
+ {id:'hammer',n:'Backing hammer',c:'Tool',p:[3,4,5],d:'A broad-faced hammer for rounding the spine and backing it to form shoulders.'},
+ {id:'backing',n:'Backing boards',c:'Tool',p:[3,4,5],d:'Wedge-shaped boards set either side of the spine in the lying press, over which the outer quires are hammered to form the shoulders.'},
+ {id:'paring',n:'Paring knife',c:'Tool',p:[2,3,4,5],d:'A broad knife used to thin leather at the edges and turn-ins so that it folds neatly.'},
+ {id:'handtool',n:'Hand tools and stamps',c:'Tool',p:[0,1,2,3,4,5],d:'Small engraved brass tools, heated and pressed into damp leather to leave an impression, either blind or through gold leaf.'},
+ {id:'fillet',n:'Fillet and roll',c:'Tool',p:[2,3,4],d:'Wheels run across the leather: a fillet gives one or more straight lines, a roll a repeating pattern. Rolls came into use in the later fifteenth century.'},
+ {id:'panel',n:'Panel stamp',c:'Tool',p:[2,3],d:'A large engraved block impressed in a press to decorate a whole cover at once, much used in the Low Countries and England in the late fifteenth and early sixteenth centuries.'},
+ {id:'pallet',n:'Pallet and gouge',c:'Tool',p:[3,4,5],d:'A pallet is a short straight tool for lines across the spine; a gouge prints a curve.'},
+ {id:'arming',n:'Arming (blocking) press',c:'Tool',p:[5],d:'A press that stamps a heated engraved brass block onto a cloth case, in gold or blind. Gold blocking on cloth began in 1832.'},
+ {id:'guillotine',n:'Guillotine',c:'Tool',p:[5],d:'A machine with a heavy blade for cutting the edges of book blocks, replacing the plough in edition work in the nineteenth century.'},
+ {id:'sewmachine',n:'Book-sewing machine',c:'Tool',p:[5],d:'A machine that sews sections through the fold, notably Smyth’s, which came into use in the later nineteenth century.'},
+ // structure and terms
+ {id:'quire',n:'Quire (gathering, section)',c:'Structure',p:[0,1,2,3,4,5],d:'A group of folded leaves sewn through a common fold; the basic unit of the book block.'},
+ {id:'signature',n:'Signature',c:'Structure',p:[3,4,5],d:'The letter or number printed at the foot of the first leaves of a quire, used to put the quires in order. See the Collational Formula Workbench.'},
+ {id:'station',n:'Sewing station',c:'Structure',p:[0,1,2,3,4,5],d:'A point on the fold where the thread passes through.'},
+ {id:'kettle',n:'Kettle stitch',c:'Structure',p:[1,2,3,4,5],d:'The linking stitch at the head and tail station, where the thread is looped round the stitch of the quire below before passing into the next quire.'},
+ {id:'supports',n:'Sewing supports',c:'Structure',p:[1,2,3,4,5],d:'Thongs, cords or tapes running across the spine, round which the quires are sewn; their ends usually attach the boards.'},
+ {id:'linkstitch',n:'Link stitch',c:'Structure',p:[0,5],d:'Sewing without supports in which each quire is linked to the one before at every station.'},
+ {id:'endband',n:'Endband',c:'Structure',p:[0,1,2,3,4,5],d:'A band at the head and tail of the spine. A primary endband is sewn through the quires over a core; later, decorative bands were made separately and stuck on.'},
+ {id:'lining',n:'Spine lining',c:'Structure',p:[2,3,4,5],d:'Parchment, paper or cloth adhered to the spine to strengthen it and spread the stress of opening.'},
+ {id:'lacing',n:'Lacing in',c:'Structure',p:[1,2,3,4],d:'Attaching boards by passing the ends of the supports through tunnels, channels or holes in the boards.'},
+ {id:'turnin',n:'Turn-in',c:'Structure',p:[0,1,2,3,4,5],d:'The margin of covering material folded over the edges of the boards onto their inner faces.'},
+ {id:'pastedown',n:'Pastedown and flyleaf',c:'Structure',p:[2,3,4,5],d:'The pastedown is the endleaf pasted to the inside of the board; the flyleaf is the free leaf next to it.'},
+ {id:'tightback',n:'Tight back and hollow back',c:'Structure',p:[4,5],d:'In a tight back the covering is stuck directly to the spine; in a hollow back the spine of the cover is separate, so it arches away when the book is opened.'},
+ {id:'casing',n:'Case binding',c:'Structure',p:[5],d:'A binding whose cover (the case) is made separately and attached to the sewn book block afterwards by mull and endpapers. The standard publishers’ binding from the nineteenth century.'},
+ {id:'squares',n:'Squares and joints',c:'Structure',p:[2,3,4,5],d:'Squares are the edges of the boards projecting beyond the leaves. Joints are the hinges where boards meet spine, formed on the shoulders made by backing.'},
+ {id:'clasp',n:'Clasps, bosses and cornerpieces',c:'Structure',p:[2,3],d:'Metal fittings: clasps hold the book shut; bosses and cornerpieces protect a book lying flat. Which board carries the catch varies by region and helps to place a binding.'},
+ {id:'ties',n:'Ties',c:'Structure',p:[3,4],d:'Pairs of ribbons or leather thongs used instead of clasps to keep smaller books closed.'},
+ {id:'sprinkle',n:'Sprinkled and gilt edges',c:'Structure',p:[3,4,5],d:'Edges spattered with colour, usually red, are typical of trade bindings; gilt edges, sometimes also tooled (gauffered), are found on fine work.'}
+];
+
+/* =========================================================
+   DRAWING: spine view of sewing
+   ========================================================= */
+const TH='#b3362a',SUPC='#8a6b3c',PAPER='#f6f1e4',PAPERS='#cdbf9d';
+const NQ=8,QH=24,SV_TOP=34,SV_W=640,SV_H=SV_TOP+NQ*QH+36,KH=64,KT=576,SUPS=[176,320,464];
+const bandY=i=>SV_TOP+(NQ-1-i)*QH;
+const ycOf=i=>bandY(i)+QH/2;
+const P=(x,y)=>`${x.toFixed(1)} ${y.toFixed(1)}`;
+const pathOf=pts=>'M'+pts.map(p=>P(p[0],p[1])).join(' L');
+
+function quireThread(type,i){
+  const out={hid:[],vis:[],trace:[]},y=ycOf(i),yp=i>0?ycOf(i-1):null,dir=i%2===0?1:-1;
+  const T=out.trace;
+  if(type==='link'||type==='machine'){
+    const st=(SEW[type].st).slice();if(dir<0)st.reverse();
+    const dip=type==='link'?0.75:0.6;
+    let cur=st[0]-dir*14;T.push([cur,y]);
+    st.forEach((x,k)=>{
+      const a=x-dir*3,b=x+dir*3;
+      out.hid.push([cur,a,y]);
+      if(i>0){out.vis.push(`M${P(a,y)} C${P(a-dir*7,y+QH*dip)} ${P(b+dir*7,y+QH*dip)} ${P(b,y)}`);T.push([a,y],[x,y+QH*dip*0.75],[b,y]);}
+      else{out.vis.push(`M${P(a,y)} L${P(b,y)}`);T.push([a,y],[b,y]);}
+      cur=b;
+    });
+    out.hid.push([cur,cur+dir*14,y]);T.push([cur+dir*14,y]);
+    return out;
+  }
+  const off={raised:9,twoon:9,double:15,split:11,tapes:17,recessed:0}[type];
+  const kS=dir>0?KH:KT,kE=dir>0?KT:KH,Ss=dir>0?SUPS.slice():SUPS.slice().reverse();
+  if(i>0){out.vis.push(`M${P(kS,yp)} Q${P(kS-dir*9,(y+yp)/2)} ${P(kS,y)}`);T.push([kS,yp],[kS-dir*6,(y+yp)/2]);}
+  T.push([kS,y]);
+  let cur=kS;
+  Ss.forEach(s=>{
+    if(!off){T.push([s,y]);return;}
+    const a=s-dir*off,b=s+dir*off;
+    out.hid.push([cur,a,y]);
+    let pts;
+    if(type==='raised'||type==='twoon')pts=[[a,y],[s,y-4],[b,y]];
+    else if(type==='double')pts=[[a,y],[s-6,y-4],[s,y+3],[s+6,y-4],[b,y]];
+    else if(type==='split')pts=[[a,y],[s-3.5,y+QH*0.42],[s,y-2],[s+3.5,y+QH*0.42],[b,y]];
+    else pts=[[a,y-1],[b,y-1]];
+    if(dir<0&&(type==='double'||type==='split'))pts=pts.map(([px,py])=>[px,py]);
+    out.vis.push(pathOf(pts));T.push(...pts);
+    if(type==='double'){[s-6,s+6].forEach(c=>{out.vis.push(`M${P(c-3.5,y+7)} L${P(c+3.5,y+5)} M${P(c-3.5,y-7)} L${P(c+3.5,y-9)}`);});}
+    cur=b;
+  });
+  out.hid.push([cur,kE,y]);T.push([kE,y]);
+  if(i>0){out.vis.push(`M${P(kE,y)} C${P(kE+dir*11,y)} ${P(kE+dir*11,yp+3)} ${P(kE+dir*2,yp+2)} L${P(kE,y-1)}`);T.push([kE+dir*9,(y+yp)/2],[kE+dir*2,yp+2],[kE,y]);}
+  return out;
+}
+function pairThread(p){
+  /* two-on: quires A (2p) and B (2p+1) sewn in one pass, alternating at each cord */
+  const out={hid:[],vis:[],trace:[]},A=2*p,B=2*p+1,yA=ycOf(A),yB=ycOf(B),dir=p%2===0?1:-1,T=out.trace;
+  const kS=dir>0?KH:KT,kE=dir>0?KT:KH,Ss=dir>0?SUPS.slice():SUPS.slice().reverse(),off=9;
+  if(p>0){const yp=ycOf(A-1);out.vis.push(`M${P(kS,yp)} Q${P(kS-dir*9,(yA+yp)/2)} ${P(kS,yA)}`);T.push([kS,yp]);}
+  let cur=kS,inA=true;T.push([kS,yA]);
+  Ss.forEach(s=>{
+    const a=s-dir*off,b=s+dir*off,y1=inA?yA:yB,y2=inA?yB:yA;
+    out.hid.push([cur,a,y1]);out.vis.push(pathOf([[a,y1],[s,(y1+y2)/2-2],[b,y2]]));T.push([a,y1],[s,(y1+y2)/2-2],[b,y2]);
+    cur=b;inA=!inA;
+  });
+  const yl=inA?yA:yB;out.hid.push([cur,kE,yl]);T.push([kE,yl]);
+  /* kettle stitches tie both quires at the end, and into the quire below */
+  const yBelow=A>0?ycOf(A-1):null;
+  out.vis.push(`M${P(kE,yB)} C${P(kE+dir*11,yB)} ${P(kE+dir*11,yA)} ${P(kE,yA)}`);
+  if(yBelow!==null)out.vis.push(`M${P(kE,yA)} C${P(kE+dir*11,yA)} ${P(kE+dir*11,yBelow+2)} ${P(kE+dir*2,yBelow+2)}`);
+  /* start kettle for the first quire of the pair */
+  out.vis.push(`M${P(kS,yA)} C${P(kS-dir*8,yA)} ${P(kS-dir*8,yB)} ${P(kS,yB)}`);
+  T.push([kE+dir*9,(yA+yB)/2],[kE,yA]);
+  return out;
+}
+function spineView(type,n,o){
+  o=o||{};
+  const S=type?SEW[type]:null,sup=S?S.sup:'none',whole=S&&S.whole;
+  let g='';
+  const framed=type&&sup!=='none';
+  /* frame */
+  if(framed&&!o.noFrame){
+    g+=`<rect x="20" y="8" width="600" height="12" rx="3" fill="#a07a4c" stroke="#6e5130"/>`;
+    g+=`<rect x="12" y="${SV_H-26}" width="616" height="14" rx="3" fill="#a07a4c" stroke="#6e5130"/>`;
+    g+=`<rect x="20" y="8" width="10" height="${SV_H-26}" fill="#8e6a40"/><rect x="610" y="8" width="10" height="${SV_H-26}" fill="#8e6a40"/>`;
+    g+=`<text x="320" y="${SV_H-4}" font-size="10" text-anchor="middle" fill="#62625e">sewing frame: the supports are stretched between the crossbar and the bed</text>`;
+  } else if(!o.noFrame){
+    g+=`<rect x="12" y="${SV_H-26}" width="616" height="10" rx="3" fill="#d9d2c2"/>`;
+    g+=`<text x="320" y="${SV_H-4}" font-size="10" text-anchor="middle" fill="#62625e">${type?'no sewing frame needed: there are no supports':'quires gathered, not yet sewn'}</text>`;
+  }
+  g+=`<text x="40" y="${SV_TOP-8}" font-size="10" fill="#62625e">head</text><text x="600" y="${SV_TOP-8}" font-size="10" text-anchor="end" fill="#62625e">tail</text>`;
+  const shown=o.all?NQ:n;
+  /* quires */
+  for(let i=0;i<shown;i++){
+    const y=bandY(i),isNew=o.anim&&(whole?true:(S&&S.pair?i>=n-2:i===n-1));
+    g+=`<g class="${isNew&&o.anim?'newq':''}"><rect x="40" y="${y+2}" width="560" height="${QH-4}" rx="2" fill="${PAPER}" stroke="${PAPERS}"/>`;
+    if(type==='adhesive'){for(let k=1;k<6;k++)g+=`<line x1="42" x2="598" y1="${y+2+k*(QH-4)/6}" y2="${y+2+k*(QH-4)/6}" stroke="#ddd3bd" stroke-width=".6"/>`;}
+    else g+=`<line x1="44" x2="596" y1="${y+QH/2}" y2="${y+QH/2}" stroke="#e7dfca" stroke-width="1"/>`;
+    g+=`<text x="34" y="${y+QH/2+3.5}" font-size="9" text-anchor="end" fill="#8a8a86">${i+1}</text></g>`;
+  }
+  if(o.stations&&!type){
+    for(let i=0;i<shown;i++)[KH,...SUPS.flatMap(s=>[s-9,s+9]),KT].forEach(x=>{g+=`<circle cx="${x}" cy="${ycOf(i)}" r="1.6" fill="#6b5b45"/>`;});
+  }
+  if(!type){return svgWrap(g,o);}
+  /* threads */
+  let hid='',vis='',trace=null;
+  const sewnN=sup!=='none'||type==='link'||type==='machine'?(whole?NQ:n):n;
+  if(type==='stab'){
+    if(n>0)S.st.forEach(x=>{hid+=`<path d="M${P(x,bandY(NQ-1)+3)} L${P(x,bandY(0)+QH-3)}" />`;});
+    if(n>0&&o.anim)trace=[[S.st[0],bandY(0)+QH-3],[S.st[0],bandY(NQ-1)+3],[S.st[1],bandY(NQ-1)+3],[S.st[1],bandY(0)+QH-3],[S.st[2],bandY(0)+QH-3],[S.st[2],bandY(NQ-1)+3]];
+  } else if(type==='adhesive'){
+    if(n>0)g+=`<rect x="40" y="${bandY(NQ-1)+2}" width="560" height="${NQ*QH-4}" fill="#d9a441" opacity=".28"/>`;
+  } else if(S.pair){
+    for(let p=0;p<n/2;p++){const t=pairThread(p);
+      t.hid.forEach(([a,b,y])=>{hid+=`<path d="M${P(a,y)} L${P(b,y)}"/>`;});t.vis.forEach(d=>{vis+=`<path d="${d}"/>`;});
+      if(o.anim&&p===n/2-1)trace=t.trace;}
+  } else {
+    for(let i=0;i<sewnN;i++){const t=quireThread(type,i);
+      t.hid.forEach(([a,b,y])=>{hid+=`<path d="M${P(a,y)} L${P(b,y)}"/>`;});t.vis.forEach(d=>{vis+=`<path d="${d}"/>`;});
+      if(o.anim&&i===sewnN-1)trace=t.trace;}
+  }
+  g+=`<g fill="none" stroke="${TH}" stroke-width="1.3" stroke-dasharray="3 3" opacity=".8">${hid}</g>`;
+  /* supports */
+  const y0=framed&&!o.noFrame?20:bandY(NQ-1)-4,y1=framed&&!o.noFrame?SV_H-26:bandY(0)+QH+4;
+  SUPS.forEach(s=>{
+    if(sup==='raised')g+=`<line x1="${s}" x2="${s}" y1="${y0}" y2="${y1}" stroke="${SUPC}" stroke-width="7" stroke-linecap="round"/><line x1="${s-1.5}" x2="${s-1.5}" y1="${y0}" y2="${y1}" stroke="#b39466" stroke-width="1.5"/>`;
+    if(sup==='double')[s-6,s+6].forEach(c=>{g+=`<line x1="${c}" x2="${c}" y1="${y0}" y2="${y1}" stroke="#e4d9be" stroke-width="5.5"/><line x1="${c+2.2}" x2="${c+2.2}" y1="${y0}" y2="${y1}" stroke="#b9ab88" stroke-width="1"/>`;});
+    if(sup==='split')g+=`<rect x="${s-7}" y="${y0}" width="14" height="${y1-y0}" fill="#e6dcc2" stroke="#b9ab88"/><line x1="${s}" x2="${s}" y1="${y0+6}" y2="${y1-6}" stroke="#9b8c69" stroke-width="1"/>`;
+    if(sup==='tapes')g+=`<rect x="${s-13}" y="${y0}" width="26" height="${y1-y0}" fill="#e9e3d3" stroke="#b8af98"/>`;
+    if(sup==='recessed')g+=`<line x1="${s}" x2="${s}" y1="${y0}" y2="${y1}" stroke="#6d5b44" stroke-width="6"/><line x1="${s}" x2="${s}" y1="${y0}" y2="${y1}" stroke="${SUPC}" stroke-width="3.6"/>`;
+  });
+  g+=`<g fill="none" stroke="${TH}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${vis}</g>`;
+  if(type==='stab'&&n>0)S.st.forEach(x=>{g+=`<circle cx="${x}" cy="${bandY(NQ-1)+3}" r="2.4" fill="${TH}"/>`;});
+  if(trace&&trace.length>1)g+=`<path class="trace" pathLength="1" d="${pathOf(trace)}"/>`;
+  return svgWrap(g,o);
+}
+function svgWrap(g,o){
+  return `<svg viewBox="0 0 ${SV_W} ${SV_H}" role="img" aria-label="${esc(o.label||'Spine view of the quires')}">${g}</svg>`;
+}
+
+/* =========================================================
+   DRAWING: section through the head
+   ========================================================= */
+function headView(s){
+  const N=7,sx=104,fx=396,top=88,bot=212,band=(bot-top)/N;
+  const R=s.round?13:0;
+  const tt=j=>(j-(N-1)/2)/((N-1)/2);
+  const xf=j=>sx-R*(1-tt(j)**2);
+  const xe=j=>(s.trim?fx-5:fx)-(s.round?7*(1-tt(j)**2):0);
+  const yc=j=>top+band*(j+.5);
+  const dyOf=j=>!s.back?0:(j===0?-6:j===N-1?6:j===1?-2.5:j===N-2?2.5:0);
+  const fp=j=>[xf(j),yc(j)+dyOf(j)];
+  const contour=off=>{const pts=[];for(let j=0;j<N;j++){const [x,y]=fp(j);pts.push([x+off,y]);}return pts;};
+  const sewT=s.sew,sup=sewT?SEW[sewT].sup:'none',cut=sewT==='adhesive';
+  let g='',quires='';
+  /* quires */
+  for(let j=0;j<N;j++){
+    const x=xf(j),y0=yc(j),dy=dyOf(j),y=y0+dy;
+    let q='';
+    [2.5,5.5,8.5].forEach(d=>{
+      q+=cut?`<path d="M${P(x+3,y-d)} L${P(x+34,y0-d)} H${xe(j)} M${P(x+3,y+d)} L${P(x+34,y0+d)} H${xe(j)}" stroke="#a89a78" stroke-width="1" fill="none"/>`
+            :`<path d="M${P(xe(j),y0-d)} H${x+34} L${P(x+d,y-d)} A${d} ${d} 0 0 0 ${P(x+d,y+d)} L${P(x+34,y0+d)} H${xe(j)}" stroke="#a89a78" stroke-width="1" fill="none"/>`;
+    });
+    /* thread at this station */
+    if(sewT&&!cut&&sewT!=='stab'){
+      const showLoop=!(sewT==='twoon'&&j%2===1);
+      q+=`<circle cx="${(x+1.8).toFixed(1)}" cy="${y.toFixed(1)}" r="1.5" fill="${TH}"/>`;
+      if((sup==='raised'||sup==='double'||sup==='split'||sup==='tapes')&&showLoop){
+        const xs=x-(sup==='tapes'?3:7);
+        q+=`<path d="M${P(x+1.8,y)} C${P(xs+2,y-7)} ${P(xs-6,y-6)} ${P(xs-5,y)} C${P(xs-5,y+6)} ${P(xs+2,y+7)} ${P(x+1.8,y+1)}" fill="none" stroke="${TH}" stroke-width="1.2"/>`;
+      }
+    }
+    quires+=q;
+  }
+  /* glue, linings, mull: drawn behind the supports */
+  if(s.glue||cut)g+=`<path d="${pathOf(contour(cut?-2:-0.6))}" fill="none" stroke="#d9a441" stroke-width="${cut?5:2}" opacity=".75" stroke-linecap="round"/>`;
+  if(s.lining)g+=`<path d="${pathOf(contour(-2.6))}" fill="none" stroke="#e1d3ac" stroke-width="2.4" stroke-linecap="round"/>`;
+  /* boards */
+  const bt={wood:13,paste:6,case:5,none:0}[s.board]||0;
+  const hasB=s.boards&&s.board!=='none';
+  const caseLoose=s.board==='case'&&!s.cased;
+  const bx=s.board==='case'?sx+16:(s.back?fp(0)[0]+13:sx+4),bxe=fx+(s.sq||0);
+  const yInT=top-3,yOutT=yInT-bt,yInB=bot+3,yOutB=yInB+bt;
+  let boards='',lace='',cover='',caseG='';
+  if(hasB){
+    const bfill=s.board==='wood'?'#b88a55':s.board==='paste'?'#9b9483':'#8f8778';
+    const shape=(y1,y2)=>s.board==='wood'?`<path d="M${bx} ${y1} H${bxe} V${y2} H${bx} Z" fill="${bfill}" stroke="#6e5130"/>`:`<rect x="${bx}" y="${Math.min(y1,y2)}" width="${bxe-bx}" height="${Math.abs(y2-y1)}" fill="${bfill}" stroke="#5f5a4e"/>`;
+    boards+=shape(yOutT,yInT)+shape(yInB,yOutB);
+    if(s.board==='wood'){boards+=`<path d="M${bxe-12} ${yOutT} L${bxe} ${yOutT+5}" stroke="#6e5130" fill="none"/><path d="M${bxe-12} ${yOutB} L${bxe} ${yOutB-5}" stroke="#6e5130" fill="none"/>`;}
+  }
+  /* supports along the spine, and their lacing */
+  const supOff={raised:-7,double:-7,split:-7,tapes:-3,recessed:1}[sup];
+  let sups='';
+  if(supOff!==undefined&&sewT){
+    const pts=contour(supOff),[x0,y0]=pts[0],[x9,y9]=pts[N-1];
+    const ends=[[x0,y0-band*.55],[x9,y9+band*.55]];
+    const full=[ends[0],...pts,ends[1]];
+    const col=sup==='split'||sup==='double'?'#e4d9be':sup==='tapes'?'#e9e3d3':SUPC;
+    const w=sup==='tapes'?2.4:sup==='recessed'?4:sup==='split'?5:6.5;
+    sups+=`<path d="${pathOf(full)}" fill="none" stroke="${sup==='split'||sup==='double'||sup==='tapes'?'#a99a76':'#6d5130'}" stroke-width="${w+1.6}" stroke-linecap="round" stroke-linejoin="round"/><path d="${pathOf(full)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if(s.lace){
+      [[1,ends[0],yInT,yOutT],[-1,ends[1],yInB,yOutB]].forEach(([sg,[ex,ey],yIn,yOut])=>{
+        let d='',dh='';
+        if(s.board==='wood'){
+          const ym=(yIn+yOut)/2;
+          d=`M${P(ex,ey)} Q${P(ex,ym)} ${P(bx,ym)}`;dh=`M${P(bx,ym)} H${bx+34}`;
+          d+=` M${P(bx+34,ym)} L${P(bx+36,yOut)} H${bx+54}`;
+          lace+=`<circle cx="${bx+54}" cy="${(yOut+sg*-0.5).toFixed(1)}" r="2.6" fill="#7a5a32" stroke="#4d3a1f"/>`;
+        } else if(s.board==='paste'){
+          d=`M${P(ex,ey)} Q${P(ex,yOut-sg*3)} ${P(bx+3,yOut-sg*1.5)} H${bx+18}`;dh=`M${P(bx+19,yOut)} V${yIn}`;
+          d+=` M${P(bx+19,yIn+sg*1.5)} H${bx+31}`;dh+=` M${P(bx+32,yIn)} V${yOut}`;
+          d+=` M${P(bx+32,yOut-sg*1.5)} H${bx+44}`;
+          lace+=[0,1,2].map(k=>`<path d="M${bx+44} ${(yOut-sg*1.5).toFixed(1)} l7 ${(sg*-(k-1)*2.2).toFixed(1)}" stroke="${col}" stroke-width="1.6" fill="none"/>`).join('');
+        } else if(s.board==='none'){
+          const yc0=sg>0?top-7:bot+7;
+          d=`M${P(ex,ey)} Q${P(ex+4,yc0)} ${P(sx+12,yc0-sg*4)} H${sx+30} M${P(sx+38,yc0+sg*3)} H${sx+48}`;
+          dh=`M${P(sx+30,yc0-sg*4)} L${P(sx+38,yc0+sg*3)}`;
+        }
+        if(d)lace+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="${Math.max(2.2,w-1)}" stroke-linecap="round"/>`;
+        if(dh)lace+=`<path d="${dh}" fill="none" stroke="${col}" stroke-width="${Math.max(2,w-2)}" stroke-dasharray="3 2"/>`;
+      });
+    }
+  }
+  /* unsupported sewing: chains between quires; Coptic boards tied on with thread */
+  if(sewT==='link'||sewT==='machine'){
+    for(let j=1;j<N;j++){const [x1,y1]=fp(j),[x2,y2]=fp(j-1);
+      sups+=`<path d="M${P(x1+1.8,y1)} C${P(x1-6,y1-2)} ${P(x2-6,y2+2)} ${P(x2+1.8,y2)}" fill="none" stroke="${TH}" stroke-width="1.2"/>`;}
+    if(s.lace&&hasB){
+      [[fp(0),yInT,yOutT],[fp(N-1),yInB,yOutB]].forEach(([[x,y],yIn,yOut])=>{
+        lace+=`<path d="M${P(x+1.8,y)} C${P(x-8,y)} ${P(bx-4,(yIn+yOut)/2)} ${P(bx+6,yOut)} M${P(bx+8,yOut)} L${P(bx+10,yIn)}" fill="none" stroke="${TH}" stroke-width="1.4"/>`;
+      });
+    }
+  }
+  if(sewT==='stab'){sups+=`<path d="M${sx+24} ${top-4} V${bot+4}" stroke="${TH}" stroke-width="1.8"/><circle cx="${sx+24}" cy="${top-4}" r="2.4" fill="${TH}"/>`;}
+  /* mull */
+  if(s.mull){
+    const pts=contour(-4.5),[x0,y0]=pts[0],[x9,y9]=pts[N-1];
+    sups+=`<path d="M${bx+44} ${yInT+1.5} H${x0+8} Q${P(x0,yInT+1.5)} ${P(x0,y0)} ${pathOf(pts).replace('M','L')} Q${P(x9,yInB-1.5)} ${P(x9+8,yInB-1.5)} H${bx+44}" fill="none" stroke="#9c947f" stroke-width="1.6" stroke-dasharray="3 2"/>`;
+  }
+  /* covering */
+  if(s.cover){
+    const mat=s.coverMat,colr={leather:'#8b5a33',parchment:'#e8dcb8',cloth:'#2f4b3c'}[mat],edge={leather:'#5c3a1f',parchment:'#b5a47b',cloth:'#1e3327'}[mat];
+    const hollow=s.board==='case',off=hollow?-17:(sup==='raised'||sup==='double'||sup==='split'?-12:-5);
+    const pts=contour(off),[x0,y0]=pts[0],[x9,y9]=pts[N-1];
+    let d;
+    if(hasB){
+      const t=1.8;
+      d=`M${bxe-18} ${yInT-t+0.5} H${bxe+t} V${yOutT-t} H${bx} Q${P(x0,yOutT-t)} ${P(x0,y0)} ${pathOf(pts).replace('M','L')} Q${P(x9,yOutB+t)} ${P(bx,yOutB+t)} H${bxe+t} V${yInB+t-0.5} H${bxe-18}`;
+    } else {
+      const yT=top-7,yB=bot+7,xr=fx+(s.sq||0);
+      d=`M${xr-20} ${yT+4} H${xr} V${yT} H${sx+6} Q${P(x0,yT)} ${P(x0,y0)} ${pathOf(pts).replace('M','L')} Q${P(x9,yB)} ${P(sx+6,yB)} H${xr} V${yB-4} H${xr-20}`;
+    }
+    cover+=`<path d="${d}" fill="none" stroke="${edge}" stroke-width="${mat==='parchment'?3.6:4.6}" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${colr}" stroke-width="${mat==='parchment'?2.2:3.2}" stroke-linejoin="round"/>`;
+    if(hollow){const st=contour(-13);cover+=`<path d="${pathOf(st)}" fill="none" stroke="#bdb39b" stroke-width="1.6"/>`;}
+  }
+  /* endpapers */
+  let endp='';
+  if(s.endp&&hasB){endp=`<path d="M${bx+3} ${yInT+1.2} H${bxe-8} M${bx+3} ${yInB-1.2} H${bxe-8}" stroke="#efe6cf" stroke-width="2.2"/><path d="M${bx+3} ${yInT+1.2} H${bxe-8} M${bx+3} ${yInB-1.2} H${bxe-8}" stroke="#c9bd9c" stroke-width=".6"/>`;}
+  if(caseLoose){caseG=`<g opacity=".6" transform="translate(-10 0)">${boards}${cover}</g>`;boards='';cover='';}
+  const body=quires+g+sups+boards+lace+endp+cover+caseG;
+  const labels=`<text x="${sx-40}" y="${bot+46}" font-size="10" fill="#62625e">spine</text><text x="${fx-10}" y="${bot+46}" font-size="10" fill="#62625e" text-anchor="end">fore-edge</text>`+(caseLoose?`<text x="${sx+30}" y="${top-28}" font-size="10" fill="#62625e">case made separately, not yet attached</text>`:'');
+  return `<svg viewBox="40 40 400 225" role="img" aria-label="Section through the head of the book">${body}${labels}</svg>`;
+}
+
+/* =========================================================
+   DRAWING: the outside (front cover and spine)
+   ========================================================= */
+let svgSeq=0;
+function coverSVG(style,o){
+  o=o||{};const id='c'+(++svgSeq);
+  const base={coptic:'#6b3022',romanesque:'#e4d9bd',gothic:'#7a4a2a',renaissance:'#5a3320',trade:'#8a5a34',limp:'#efe5c6',cloth:'#2f4b3c'}[style];
+  const dark={coptic:'#3c140c',romanesque:'#a8976c',gothic:'#47280f',renaissance:'#2e180c',trade:'#4f2e14',limp:'#b8a678',cloth:'#1c3024'}[style];
+  const GOLD='#d2ad4b',BRASS='#b8913a';
+  let defs='',g='';
+  if(style==='trade'){
+    let dots='';const r=(k)=>((Math.sin(k*12.9898)*43758.5453)%1+1)%1;
+    for(let k=0;k<70;k++)dots+=`<circle cx="${(r(k)*20).toFixed(1)}" cy="${(r(k+99)*20).toFixed(1)}" r="${(0.5+r(k+7)*0.9).toFixed(2)}" fill="#3a2010" opacity=".55"/>`;
+    defs+=`<pattern id="${id}s" width="20" height="20" patternUnits="userSpaceOnUse">${dots}</pattern>`;
+  }
+  if(style==='cloth')defs+=`<pattern id="${id}s" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 4 L4 0" stroke="#24402f" stroke-width=".8"/></pattern>`;
+  const tex=(x,y,w,h)=>(style==='trade'||style==='cloth')?`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${id}s)"/>`:'';
+  /* spine and board */
+  const tabs=style==='romanesque'?`<path d="M8 14 Q23 -2 38 14 Z M8 256 Q23 272 38 256 Z" fill="${base}" stroke="${dark}"/>`:'';
+  g+=tabs+`<rect x="6" y="12" width="34" height="246" rx="${style==='limp'||style==='cloth'?8:3}" fill="${base}" stroke="${dark}"/>${tex(6,12,34,246)}<rect x="6" y="12" width="34" height="246" rx="3" fill="#000" opacity=".08"/>`;
+  g+=`<rect x="40" y="12" width="168" height="246" rx="2" fill="${base}" stroke="${dark}"/>${tex(40,12,168,246)}`;
+  if(style==='limp')g+=`<path d="M200 14 V256" stroke="#d8cba3" stroke-width="3"/>`;
+  /* raised bands */
+  const bands={gothic:[70,135,200],renaissance:[60,105,150,195],trade:[52,90,128,166,204]}[style]||[];
+  bands.forEach(y=>{
+    if(style==='gothic')g+=`<rect x="6" y="${y-6}" width="34" height="5" rx="2" fill="${base}" stroke="${dark}"/><rect x="6" y="${y+1}" width="34" height="5" rx="2" fill="${base}" stroke="${dark}"/>`;
+    else g+=`<rect x="6" y="${y-3}" width="34" height="6" rx="2.5" fill="${base}" stroke="${dark}"/>`;
+  });
+  if(style==='limp')[70,135,200].forEach(y=>{g+=`<rect x="38" y="${y-3}" width="9" height="6" fill="#e4d9be" stroke="#a99a76"/>`;});
+  if(o.dec){
+    if(style==='coptic'){
+      g+=`<rect x="50" y="22" width="148" height="226" fill="none" stroke="${dark}" stroke-width="1.6"/><rect x="56" y="28" width="136" height="214" fill="none" stroke="${dark}" stroke-width="1"/>`;
+      g+=`<g fill="none" stroke="${dark}" stroke-width="2"><circle cx="124" cy="135" r="30"/><ellipse cx="124" cy="135" rx="44" ry="16" transform="rotate(45 124 135)"/><ellipse cx="124" cy="135" rx="44" ry="16" transform="rotate(-45 124 135)"/></g>`;
+      for(let k=0;k<12;k++){const a=k*Math.PI/6;g+=`<circle cx="${(124+52*Math.cos(a)).toFixed(1)}" cy="${(135+52*Math.sin(a)).toFixed(1)}" r="2.4" fill="${dark}"/>`;}
+    }
+    if(style==='romanesque'){
+      g+=`<rect x="52" y="24" width="144" height="222" fill="none" stroke="${dark}" stroke-width="1.4"/>`;
+      for(let r=0;r<6;r++)for(let c=0;c<4;c++){const x=70+c*36,y=46+r*36;g+=`<circle cx="${x}" cy="${y}" r="8" fill="none" stroke="${dark}"/><circle cx="${x}" cy="${y}" r="2.5" fill="${dark}"/>`;}
+    }
+    if(style==='gothic'){
+      g+=`<g fill="none" stroke="${dark}" stroke-width="1.2"><rect x="48" y="20" width="152" height="230"/><rect x="52" y="24" width="144" height="222"/><rect x="62" y="34" width="124" height="202"/></g>`;
+      g+=`<clipPath id="${id}k"><rect x="62" y="34" width="124" height="202"/></clipPath><g clip-path="url(#${id}k)" stroke="${dark}" stroke-width="1.2">`;
+      for(let k=-6;k<=8;k++){g+=`<line x1="${62+k*31}" y1="34" x2="${62+k*31+202}" y2="236"/><line x1="${62+k*31}" y1="236" x2="${62+k*31+202}" y2="34"/>`;}
+      g+=`</g>`;
+      for(let r=0;r<7;r++)for(let c=0;c<5;c++){const x=62+c*31-15.5+31*((r%2)?0.5:0)+15.5,y=34+r*31+15.5;if(x>66&&x<182&&y<232)g+=`<path d="M${x} ${y-4} l3 4 l-3 4 l-3 -4 z" fill="${dark}"/>`;}
+    }
+    if(style==='renaissance'){
+      g+=`<g fill="none" stroke="${GOLD}"><rect x="49" y="21" width="150" height="228" stroke-width="1.3"/><rect x="53" y="25" width="142" height="220" stroke-width=".8"/></g>`;
+      g+=`<g fill="${GOLD}"><path d="M124 100 C140 115 150 125 150 135 C150 145 140 155 124 170 C108 155 98 145 98 135 C98 125 108 115 124 100 Z" fill="none" stroke="${GOLD}" stroke-width="1.6"/><path d="M124 112 C134 122 138 128 138 135 C138 142 134 148 124 158 C114 148 110 142 110 135 C110 128 114 122 124 112 Z"/><circle cx="124" cy="92" r="3"/><circle cx="124" cy="178" r="3"/></g>`;
+      [[53,25,0],[195,25,90],[195,245,180],[53,245,270]].forEach(([x,y,a])=>{g+=`<path d="M0 0 h24 a24 24 0 0 1 -24 24 z M6 6 h10 a10 10 0 0 1 -10 10 z" fill="${GOLD}" fill-rule="evenodd" transform="translate(${x} ${y}) rotate(${a})"/>`;});
+      bands.forEach(y=>{g+=`<line x1="8" x2="38" y1="${y-4}" y2="${y-4}" stroke="${GOLD}"/><line x1="8" x2="38" y1="${y+4}" y2="${y+4}" stroke="${GOLD}"/>`;});
+      [36,82,128,172,226].forEach(y=>{g+=`<circle cx="23" cy="${y}" r="3" fill="${GOLD}"/>`;});
+    }
+    if(style==='trade'){
+      g+=`<g fill="none" stroke="${dark}" stroke-width="1.1"><rect x="47" y="19" width="154" height="232"/><rect x="50" y="22" width="148" height="226"/><rect x="74" y="50" width="100" height="170"/></g>`;
+      g+=`<rect x="50" y="22" width="148" height="226" fill="#2a1406" opacity=".12"/><rect x="74" y="50" width="100" height="170" fill="${base}"/>${tex(74,50,100,170)}<rect x="74" y="50" width="100" height="170" fill="none" stroke="${dark}" stroke-width="1.1"/>`;
+      [[74,50],[174,50],[174,220],[74,220]].forEach(([x,y])=>{g+=`<path d="M${x} ${y-6} l4 6 l-4 6 l-4 -6 z" fill="${dark}"/>`;});
+      bands.forEach(y=>{g+=`<line x1="8" x2="38" y1="${y-4.5}" y2="${y-4.5}" stroke="${GOLD}"/><line x1="8" x2="38" y1="${y+4.5}" y2="${y+4.5}" stroke="${GOLD}"/>`;});
+      g+=`<rect x="8" y="95" width="30" height="31" fill="#8e2a20"/><g stroke="${GOLD}" stroke-width="1.4"><line x1="13" x2="33" y1="104" y2="104"/><line x1="15" x2="31" y1="111" y2="111"/><line x1="13" x2="33" y1="118" y2="118"/></g>`;
+      [70,148,186,230].forEach(y=>{g+=`<path d="M23 ${y-4} l3 4 l-3 4 l-3 -4 z" fill="${GOLD}"/>`;});
+    }
+    if(style==='limp'){g+=`<text transform="translate(27 200) rotate(-90)" font-family="Georgia,serif" font-style="italic" font-size="15" fill="#5b3b1d">Opera omnia</text>`;}
+    if(style==='cloth'){
+      g+=`<g fill="none" stroke="${dark}" stroke-width="2"><rect x="50" y="22" width="148" height="226"/><rect x="56" y="28" width="136" height="214" stroke-width="1"/></g>`;
+      g+=`<g fill="${GOLD}"><circle cx="124" cy="135" r="20" fill="none" stroke="${GOLD}" stroke-width="2"/>`;
+      for(let k=0;k<8;k++){g+=`<ellipse cx="124" cy="${135-27}" rx="3" ry="7" transform="rotate(${k*45} 124 135)"/>`;}
+      g+=`<circle cx="124" cy="135" r="6"/></g>`;
+      g+=`<g fill="${GOLD}"><rect x="12" y="26" width="22" height="2"/><rect x="12" y="242" width="22" height="2"/><rect x="11" y="70" width="24" height="4"/><rect x="13" y="78" width="20" height="4"/><rect x="11" y="86" width="24" height="4"/><circle cx="23" cy="150" r="5"/><rect x="14" y="214" width="18" height="3"/></g>`;
+    }
+  }
+  if(o.fit){
+    if(style==='coptic')g+=`<rect x="208" y="129" width="10" height="12" fill="${dark}"/><circle cx="214" cy="135" r="4" fill="#d9cfb2" stroke="${dark}"/>`;
+    if(style==='romanesque')g+=`<rect x="182" y="127" width="34" height="16" rx="2" fill="#cdbf98" stroke="${dark}"/><circle cx="178" cy="135" r="5" fill="${BRASS}" stroke="#7c5f1f"/>`;
+    if(style==='gothic'){
+      [[64,36],[184,36],[184,234],[64,234],[124,135]].forEach(([x,y])=>{g+=`<circle cx="${x}" cy="${y}" r="7" fill="${BRASS}" stroke="#7c5f1f"/><circle cx="${x-2}" cy="${y-2}" r="2" fill="#e9cf7f"/>`;});
+      [[40,12,1,1],[208,12,-1,1],[208,258,-1,-1],[40,258,1,-1]].forEach(([x,y,sx,sy])=>{g+=`<path d="M${x} ${y} h${sx*22} l${-sx*22} ${sy*22} z" fill="${BRASS}" opacity=".85" stroke="#7c5f1f"/>`;});
+      [80,190].forEach(y=>{g+=`<rect x="196" y="${y-6}" width="22" height="12" fill="${dark}"/><rect x="186" y="${y-5}" width="13" height="10" fill="${BRASS}" stroke="#7c5f1f"/>`;});
+    }
+    if(style==='renaissance'||style==='limp'){
+      const c=style==='limp'?'#e4d9be':'#3d6b4f',e=style==='limp'?'#a99a76':'#244331';
+      [85,185].forEach(y=>{g+=`<path d="M206 ${y} q6 -4 12 2 q-6 4 -12 4" fill="${c}" stroke="${e}"/>`;});
+    }
+  }
+  return `<svg viewBox="0 0 220 272" width="220" height="272" role="img" aria-label="Outside of the binding: spine and front cover"><defs>${defs}</defs>${g}</svg>`;
+}
+
+/* =========================================================
+   STATE AND RENDERING
+   ========================================================= */
+const st={period:0,sew:'raised',sewN:3,build:'trade',step:5};
+const GL=Object.fromEntries(GLOSS.map(x=>[x.id,x]));
+
+function renderPeriods(){
+  $('#timeline').innerHTML=PERIODS.map((p,i)=>`<button role="tab" data-period="${i}" aria-selected="${i===st.period}"><span class="d">${p.dates}</span><span class="n">${p.name}</span></button>`).join('');
+  const p=PERIODS[st.period],sw=SEW[p.sew],b=BUILDS[p.build];
+  $('#pcard').innerHTML=`
+   <div class="pfig">${coverSVG(p.cover,{dec:true,fit:true})}<span class="small muted">A typical binding of the period, drawn schematically: spine on the left, front cover on the right.</span></div>
+   <div class="pbody">
+     <div><h2>${p.name}</h2><span class="small muted">${p.dates}</span></div>
+     <p class="sum">${p.sum}</p>
+     <table class="struct"><tbody>${p.rows.map(([k,v])=>`<tr><th scope="row">${k}</th><td>${v}</td></tr>`).join('')}</tbody></table>
+     <div class="cols">
+       <div class="box"><h3>What to look for</h3><ul>${p.look.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+       <div class="box"><h3>Example</h3><p style="margin-top:6px">${p.ex}</p></div>
+     </div>
+     <div class="row">
+       <button class="btn" data-gosew="${p.sew}">Watch the sewing: ${sw.name.toLowerCase()}</button>
+       <button class="btn" data-gobuild="${p.build}">Build a ${b.name.toLowerCase()}</button>
+     </div>
+   </div>`;
+}
+
+function renderSew(anim){
+  const S=SEW[st.sew];
+  $('#sewTypes').innerHTML=SEW_ORDER.map(k=>`<button class="btn small" role="radio" data-sew="${k}" aria-pressed="${k===st.sew}" aria-checked="${k===st.sew}">${SEW[k].name}</button>`).join('');
+  $('#spineFig').innerHTML=spineView(st.sew,st.sewN,{anim,label:`Spine view: ${S.name}, ${st.sewN} quires sewn`});
+  const full=st.sewN>=NQ;
+  $('#btnSewNext').disabled=full;$('#btnSewAll').disabled=full;
+  $('#btnSewNext').textContent=S.whole?'Sew the whole block':S.pair?'Sew the next two quires':'Sew the next quire';
+  $('#sewCount').textContent=st.sewN?`${st.sewN} of ${NQ} quires sewn`:'Nothing sewn yet';
+  $('#sewHead').innerHTML=headView({sew:st.sewN?st.sew:null,glue:st.sew==='adhesive'&&st.sewN>0});
+  const used=PERIODS.filter(p=>p.sew===st.sew).map(p=>p.name);
+  $('#sewDesc').innerHTML=`<h3>${S.name}</h3><p class="small muted" style="margin-top:2px">${S.per}</p><p style="margin-top:8px">${S.how}</p><p style="margin-top:8px">${S.why}</p>${used.length?`<p class="small muted" style="margin-top:8px">Shown for: ${used.join('; ')}.</p>`:''}`;
+}
+function sewNext(all){
+  const S=SEW[st.sew];
+  if(S.whole||all)st.sewN=NQ;else st.sewN=Math.min(NQ,st.sewN+(S.pair?2:1));
+  renderSew(true);
+}
+function setSew(k){st.sew=k;st.sewN=SEW[k].whole?0:(SEW[k].pair?2:1);renderSew(false);}
+
+function buildState(){
+  const b=BUILDS[st.build],s={board:b.board,sq:b.sq,coverMat:b.cover};
+  for(let i=0;i<=st.step;i++)Object.assign(s,b.steps[i].s);
+  if(s.sew===undefined)s.sew=null;
+  return s;
+}
+function renderBuild(){
+  const b=BUILDS[st.build],step=b.steps[st.step],s=buildState();
+  $('#buildTabs').innerHTML=BUILD_ORDER.map(k=>`<button class="btn small" role="tab" data-build="${k}" aria-selected="${k===st.build}">${BUILDS[k].name}</button>`).join('');
+  $('#stepList').innerHTML=b.steps.map((x,i)=>`<li><button data-step="${i}" class="${i<st.step?'done':''}" ${i===st.step?'aria-current="step"':''}>${x.t}</button></li>`).join('');
+  $('#buildHead').innerHTML=headView(s);
+  if(s.cover){
+    $('#buildOut').innerHTML=coverSVG(b.style,{dec:!!s.dec,fit:!!s.fit});
+    $('#buildOutCap').textContent=s.board==='case'&&!s.cased?'The case, before the book is cased in':'The outside: spine and front cover';
+  } else {
+    $('#buildOut').innerHTML=spineView(s.sew,s.sew?NQ:NQ,{all:true,stations:!!s.stations&&!s.sew,noFrame:true,label:'Spine view of the book block'});
+    $('#buildOutCap').textContent=s.sew?'The sewn spine, before covering':'The backs of the folded quires';
+  }
+  const chips=(step.k||[]).filter(k=>GL[k]).map(k=>`<button class="chip" data-gloss="${k}">${GL[k].n}</button>`).join('');
+  $('#stepText').innerHTML=`<span class="small muted">${b.name} · step ${st.step+1} of ${b.steps.length}</span><h3>${step.t}</h3><p>${step.d}</p>${chips?`<div class="chips"><span class="small muted">Materials and tools:</span>${chips}</div>`:''}`;
+  $('#btnPrev').disabled=st.step===0;
+  $('#btnNext').disabled=st.step===b.steps.length-1;
+  $('#btnNext').textContent=st.step===b.steps.length-1?'Finished':'Next step';
+}
+
+function renderGloss(){
+  const q=$('#gSearch').value.trim().toLowerCase(),c=$('#gCat').value,per=$('#gPer').value;
+  const items=GLOSS.filter(x=>(!c||x.c===c)&&(per===''||x.p.includes(+per))&&(!q||(x.n+' '+x.d).toLowerCase().includes(q)));
+  $('#gloss').innerHTML=items.length?items.map(x=>`<div class="gitem" id="g-${x.id}"><span class="k">${x.c==='Structure'?'Structure and terms':x.c}</span><h3>${x.n}</h3><p>${x.d}</p><span class="when">${x.p.length===PERIODS.length?'All periods':x.p.map(i=>PERIODS[i].name).join('; ')}</span></div>`).join(''):'<div class="none">Nothing matches. Try another word, or clear the filters.</div>';
+  $('#gCount').textContent=`${items.length} of ${GLOSS.length}`;
+}
+function showGloss(id){
+  $('#gSearch').value='';$('#gCat').value='';$('#gPer').value='';renderGloss();
+  const el=document.getElementById('g-'+id);if(!el)return;
+  el.scrollIntoView({block:'center'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),1800);
+}
+
+/* =========================================================
+   EVENTS
+   ========================================================= */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-period],[data-sew],[data-gosew],[data-gobuild],[data-build],[data-step],[data-gloss]');if(!t)return;
+  const d=t.dataset;
+  if(d.period!==undefined){st.period=+d.period;renderPeriods();}
+  else if(d.sew){setSew(d.sew);}
+  else if(d.gosew){setSew(d.gosew);$('#sewing').scrollIntoView();}
+  else if(d.gobuild){st.build=d.gobuild;st.step=0;renderBuild();$('#build').scrollIntoView();}
+  else if(d.build){st.build=d.build;st.step=0;renderBuild();}
+  else if(d.step!==undefined){st.step=+d.step;renderBuild();}
+  else if(d.gloss){showGloss(d.gloss);}
+});
+$('#timeline').addEventListener('keydown',e=>{
+  if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+  st.period=(st.period+(e.key==='ArrowRight'?1:-1)+PERIODS.length)%PERIODS.length;renderPeriods();
+  $(`[data-period="${st.period}"]`).focus();
+});
+$('#btnSewNext').addEventListener('click',()=>sewNext(false));
+$('#btnSewAll').addEventListener('click',()=>sewNext(true));
+$('#btnSewReset').addEventListener('click',()=>{st.sewN=0;renderSew(false);});
+$('#btnPrev').addEventListener('click',()=>{if(st.step>0){st.step--;renderBuild();}});
+$('#btnNext').addEventListener('click',()=>{if(st.step<BUILDS[st.build].steps.length-1){st.step++;renderBuild();}});
+$('#gPer').innerHTML+=PERIODS.map((p,i)=>`<option value="${i}">${p.name}</option>`).join('');
+['gSearch','gCat','gPer'].forEach(id=>$('#'+id).addEventListener('input',renderGloss));
+
+renderPeriods();renderSew(false);renderBuild();renderGloss();
+})();
+</script>
+</body>
+</html>
