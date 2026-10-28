@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bibliographical Description Workbench</title>
+<style>
+:root{
+  --bg:#f1f1ef; --panel:#ffffff; --line:#d8d8d4; --line-2:#bcbcb6; --text:#1e1e1e; --muted:#62625e;
+  --accent:#2f5f8f; --soft:#edf1f5; --ed:#2f5f8f; --copy:#8a4b12; --copy-soft:#f7efe6; --ok:#3d7a3d; --warn:#8a5600; --warn-bg:#fdf6e7;
+  --serif:Georgia,'Times New Roman',Times,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans);
+  padding:20px max(16px,env(safe-area-inset-right,0px)) 56px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font:600 1.65rem/1.2 var(--serif);margin:0}
+h2{font:600 1.12rem/1.3 var(--serif);margin:0}
+h3{font:600 .92rem/1.3 var(--sans);margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+header{display:flex;flex-direction:column;gap:8px}
+header p{max-width:85ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0;scroll-margin-top:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.between{justify-content:space-between}
+input,select,textarea{font:inherit;color:var(--text);padding:6px 8px;border:1px solid var(--line-2);border-radius:4px;background:#fff;width:100%;min-width:0}
+textarea{resize:vertical;min-height:4.2em;line-height:1.45}
+textarea.mono,input.mono{font-family:var(--serif)}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:6px 12px;width:auto}
+.btn:hover:not(:disabled){border-color:#777}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:#264e76}
+.btn.small{padding:3px 9px;font-size:.84rem}
+.btn.tiny{padding:1px 7px;font-size:.8rem;font-family:var(--serif)}
+.btn[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.btn.warn{border-color:#c98a2b;color:#7a4b00}
+
+.toolbar{padding:8px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.modes{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.areanav{display:flex;flex-wrap:wrap;gap:4px}
+.areanav a{font-size:.8rem;color:var(--text);text-decoration:none;border:1px solid var(--line-2);background:#fff;border-radius:12px;padding:2px 9px;white-space:nowrap}
+.areanav a:hover{border-color:#777}
+.areanav a .n{color:var(--muted);margin-right:3px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,520px);gap:16px;align-items:start}
+@media(max-width:1100px){.layout{grid-template-columns:minmax(0,1fr)}}
+.form{display:flex;flex-direction:column;gap:14px;min-width:0}
+.area-h{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;justify-content:space-between}
+.area-h h2 .num{color:var(--muted);font-weight:400;margin-right:6px}
+.tag{font-size:.74rem;border-radius:10px;padding:1px 8px;border:1px solid;white-space:nowrap}
+.tag.ed{color:var(--ed);border-color:#b5c7da;background:var(--soft)}
+.tag.copy{color:var(--copy);border-color:#e0c3a4;background:var(--copy-soft)}
+.tag.both{color:#555;border-color:#ccc;background:#f6f6f4}
+details.guide{border:1px solid var(--line);border-radius:5px;background:#fafaf9;font-size:.9rem}
+details.guide summary{cursor:pointer;padding:6px 10px;font-weight:600;font-size:.86rem;color:var(--accent)}
+details.guide .in{padding:2px 12px 10px;display:flex;flex-direction:column;gap:6px;max-width:78ch}
+details.guide ul{margin:0;padding-left:1.15em}
+details.guide li+li{margin-top:3px}
+.ex{font-family:var(--serif);background:#fff;border:1px solid var(--line);border-radius:4px;padding:4px 8px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:.84rem;color:var(--muted);min-width:0}
+label.f .copyonly{color:var(--copy)}
+label.chk{display:flex;gap:8px;align-items:center;font-size:.88rem}
+label.chk input{width:auto}
+.dims{display:flex;align-items:center;gap:6px}
+.dims input{width:6em}
+.hint{font-size:.8rem;color:var(--muted)}
+.check{font-size:.86rem;border-radius:4px;padding:6px 10px;background:#f6f6f4;border:1px solid var(--line)}
+.check.ok{background:#eef6ee;border-color:#c4dcc4;color:#2f5d2f}
+.check.bad{background:var(--warn-bg);border-color:#ecd7a8;color:#5b3d00}
+.tools{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.tools .sep{width:1px;height:20px;background:var(--line-2);margin:0 4px}
+.tprender{border:1px solid var(--line);border-radius:5px;background:#fffdf8;padding:12px;font:1rem/1.6 var(--serif);text-align:center;min-height:3em}
+.tprender.inline{text-align:left}
+.sc{font-variant:small-caps;letter-spacing:.03em}
+.bl{font-family:'UnifrakturMaguntia','Old English Text MT','Old English',fantasy,var(--serif);font-weight:700}
+.red{color:#b22222}
+.brk{color:#666;font-style:normal}
+.vs{color:#9a9a96;margin:0 .15em}
+
+/* repeatable lists */
+.list{display:flex;flex-direction:column;gap:8px}
+.item{border:1px solid var(--line);border-radius:5px;padding:10px;background:#fcfcfb;display:flex;flex-direction:column;gap:8px}
+.item .itop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.item .itop b{font-size:.84rem;color:var(--muted);font-weight:600}
+.empty{padding:12px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:5px;font-size:.88rem}
+
+/* preview */
+.preview{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+@media(max-width:1100px){.preview{position:static;max-height:none}}
+.desc{font:15px/1.6 var(--serif);display:flex;flex-direction:column;gap:9px}
+.desc .hd{font-weight:700;font-size:1.05rem}
+.desc .lbl{font-variant:small-caps;letter-spacing:.04em;font-weight:700;margin-right:.35em}
+.desc .sect{border-top:1px solid var(--line);padding-top:9px;margin-top:3px;font:600 .8rem var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--copy)}
+.desc .sect.ed{color:var(--ed)}
+.desc sup{font-size:.68em;line-height:0}
+.desc .tp{padding-left:1.2em}
+.desc .missing{color:#a0a09a;font-style:italic;font-family:var(--sans);font-size:.85rem}
+.exportrow{display:flex;flex-wrap:wrap;gap:6px}
+.msg{font-size:.84rem;color:var(--muted);min-height:1.2em}
+.confirm{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--warn-bg);border:1px solid #ecd7a8;border-radius:5px;padding:6px 10px;font-size:.88rem}
+.srcs ul{margin:6px 0 0;padding-left:1.1em;font-size:.9rem}
+.srcs li+li{margin-top:5px}
+footer{font-size:.84rem;color:var(--muted);max-width:95ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Bibliographical Description Workbench</h1>
+  <p class="muted">A guide to describing a hand-press book fully, following Bowers, Tanselle and Gaskell. Fill in the twelve areas; the description on the right is assembled as you type. Each area is marked as describing the <span class="tag ed">edition (ideal copy)</span> or <span class="tag copy">this copy</span>, and the preview can show either description or both together.</p>
+</header>
+
+<div class="toolbar">
+  <div class="modes" role="radiogroup" aria-label="Description to show">
+    <span class="small muted">Show:</span>
+    <button class="btn small" data-mode="ideal" aria-pressed="true">Ideal copy</button>
+    <button class="btn small" data-mode="copy" aria-pressed="false">This copy</button>
+    <button class="btn small" data-mode="full" aria-pressed="false">Both</button>
+  </div>
+  <nav class="areanav" aria-label="Areas">
+    <a href="#a0"><span class="n">0</span>Book</a><a href="#a1"><span class="n">1</span>Title page</a><a href="#a2"><span class="n">2</span>Formula</a><a href="#a3"><span class="n">3</span>Signing, pagination</a><a href="#a4"><span class="n">4</span>Plates</a><a href="#a5"><span class="n">5</span>Measurements</a><a href="#a6"><span class="n">6</span>Paper</a><a href="#a7"><span class="n">7</span>Provenance</a><a href="#a8"><span class="n">8</span>Ornaments</a><a href="#a9"><span class="n">9</span>Running titles</a><a href="#a10"><span class="n">10</span>Binding</a><a href="#a11"><span class="n">11</span>Edition</a><a href="#a12"><span class="n">12</span>Other notes</a><a href="#preview"><span class="n">→</span>Preview</a>
+  </nav>
+</div>
+
+<div class="panel">
+  <div class="row between">
+    <h2>Ideal copy and this copy</h2>
+    <div class="row">
+      <button class="btn small" id="btnExample">Load the practice example</button>
+      <button class="btn small warn" id="btnClear">Clear everything</button>
+    </div>
+  </div>
+  <div id="confirmBox"></div>
+  <p class="small" style="max-width:100ch">An <b>ideal copy</b> description describes the edition (or a particular impression or issue) as the printer and publisher intended it to be issued, reconstructed from as many copies as you can examine. A copy that lacks a leaf does not change the formula; the lack is recorded as an imperfection of that copy. Bowers set out the concept, and Tanselle refined it as a historical reconstruction of the form or forms in which the book was published. A <b>copy description</b> records what is particular to one copy: its size after trimming, imperfections, binding, provenance and annotations. A full record gives the ideal copy first and then notes on each copy examined.</p>
+  <p class="small muted">Your work is saved in this browser as you type. Use Save file to keep a copy or move it to another computer.</p>
+</div>
+
+<div class="layout">
+<div class="form" id="form">
+
+<section class="panel" id="a0">
+  <div class="area-h"><h2><span class="num">0</span>The book</h2><span class="tag ed">Edition</span></div>
+  <p class="small muted">A short heading identifies the edition before the full description begins.</p>
+  <div class="grid2">
+    <label class="f">Author or heading <input name="author" placeholder="e.g. Hartwell, Thomas"></label>
+    <label class="f">Short title <input name="shortTitle" placeholder="e.g. A treatise of the art of printing"></label>
+    <label class="f">Place and printer or publisher <input name="imprint" placeholder="e.g. London: for T. Hartwell"></label>
+    <label class="f">Date <input name="date" placeholder="e.g. 1703"></label>
+  </div>
+  <label class="f">Edition, impression or issue described <input name="edStatement" placeholder="e.g. First edition, first issue"></label>
+</section>
+
+<section class="panel" id="a1">
+  <div class="area-h"><h2><span class="num">1</span>Quasi-facsimile transcription of the title page</h2><span class="tag ed">Edition</span></div>
+  <details class="guide"><summary>How to transcribe</summary><div class="in">
+    <ul>
+      <li>Transcribe every word exactly as printed: spelling, punctuation and capitalisation, with nothing omitted or corrected.</li>
+      <li>Mark each line ending with a vertical stroke <span class="ex">|</span>.</li>
+      <li>Distinguish the founts: roman, <i>italic</i>, <span class="sc">small capitals</span> and black letter. Use the buttons below, or another convention stated in your introduction.</li>
+      <li>Describe anything that is not type in square brackets: <span class="ex">[rule]</span>, <span class="ex">[double rule]</span>, <span class="ex">[ornament]</span>, <span class="ex">[printer's device]</span>, <span class="ex">[woodcut]</span>, with a reference where possible (for devices, McKerrow).</li>
+      <li>Keep i/j and u/v as printed. Keep or normalise long s (ſ) and ligatures, and say which you have done. Mark words printed in red.</li>
+      <li>Transcribe half-titles, divisional title pages and colophons the same way.</li>
+    </ul>
+  </div></details>
+  <div class="tools" aria-label="Transcription tools">
+    <button class="btn tiny" data-ins="|" title="Line ending">|</button>
+    <span class="sep"></span>
+    <button class="btn tiny" data-wrap="i" title="Italic"><i>italic</i></button>
+    <button class="btn tiny" data-wrap="sc" title="Small capitals"><span class="sc">Small caps</span></button>
+    <button class="btn tiny" data-wrap="bl" title="Black letter">Black letter</button>
+    <button class="btn tiny" data-wrap="red" title="Printed in red"><span class="red">red</span></button>
+    <button class="btn tiny" data-wrap="sup" title="Superior letters">sup</button>
+    <span class="sep"></span>
+    <button class="btn tiny" data-ins="[rule]">[rule]</button>
+    <button class="btn tiny" data-ins="[double rule]">[double rule]</button>
+    <button class="btn tiny" data-ins="[ornament]">[ornament]</button>
+    <button class="btn tiny" data-ins="[printer's device]">[device]</button>
+    <span class="sep"></span>
+    <button class="btn tiny" data-ins="ſ" title="long s">ſ</button><button class="btn tiny" data-ins="æ">æ</button><button class="btn tiny" data-ins="œ">œ</button><button class="btn tiny" data-ins="Æ">Æ</button><button class="btn tiny" data-ins="&amp;">&amp;</button><button class="btn tiny" data-ins="ꝑ" title="p with stroke (per)">ꝑ</button><button class="btn tiny" data-ins="ã" title="a with tilde">ã</button><button class="btn tiny" data-ins="ẽ" title="e with tilde">ẽ</button><button class="btn tiny" data-ins="õ" title="o with tilde">õ</button><button class="btn tiny" data-ins="ũ" title="u with tilde">ũ</button><button class="btn tiny" data-ins="VV" title="Two Vs for W">VV</button><button class="btn tiny" data-ins="¶">¶</button><button class="btn tiny" data-ins="☞" title="Manicule">☞</button><button class="btn tiny" data-ins="❧" title="Hedera">❧</button><button class="btn tiny" data-ins="—">—</button>
+  </div>
+  <textarea name="tp" id="tp" class="mono" rows="7" placeholder="A | TREATISE | OF THE | [i]ART[/i] of PRINTING, | [rule] | ..."></textarea>
+  <div class="row between"><span class="hint">Tags: [i]…[/i] italic, [sc]…[/sc] small capitals, [bl]…[/bl] black letter, [red]…[/red] red, [sup]…[/sup] superior.</span>
+    <div class="row"><button class="btn small" data-tpview="lines" aria-pressed="true">Line by line</button><button class="btn small" data-tpview="inline" aria-pressed="false">As in a description</button></div></div>
+  <div class="tprender" id="tpRender" aria-live="polite"></div>
+  <label class="f">Other title pages, half-title, colophon <textarea name="tpOther" class="mono" rows="3" placeholder="e.g. Half-title (A1r): A | TREATISE | OF | PRINTING."></textarea></label>
+</section>
+
+<section class="panel" id="a2">
+  <div class="area-h"><h2><span class="num">2</span>Format and collational formula</h2><span class="tag ed">Edition</span></div>
+  <details class="guide"><summary>How to write the formula</summary><div class="in">
+    <ul>
+      <li>Give the format from the evidence of chain lines and watermarks, not from size: 2°, 4°, 8°, 12°. Note quiring or half-sheet imposition, as in 4° (in 8s).</li>
+      <li>Write the register of gatherings in Bowers's notation: the 23-letter alphabet (no J, U or W), a superior figure for the leaves in each gathering, ranges such as B–M<sup>8</sup>, 2A for doubled letters, and a superior figure before the letter for a repeated series (<sup>2</sup>A).</li>
+      <li>Use π for unsigned preliminaries outside the series and χ for unsigned gatherings elsewhere. Print an inferred signature in italic, or in square brackets.</li>
+      <li>Show alterations after the gathering: (±A3) for a cancel, (−N4) for a leaf removed, (A2+χ1) for a leaf inserted.</li>
+      <li>Describe the ideal copy. Separately printed plates are not part of the formula; list them under Plates.</li>
+    </ul>
+    <p>Type superscripts with a caret: <span class="ex">A^4 B–M^8 N^4</span> becomes A<sup>4</sup> B–M<sup>8</sup> N<sup>4</sup>. For a fuller tool, use the Collational Formula Workbench.</p>
+  </div></details>
+  <div class="grid2">
+    <label class="f">Format
+      <select name="format"><option value="">Choose…</option><option>2°</option><option>4°</option><option>8°</option><option>12°</option><option>16°</option><option>24°</option><option value="other">Other</option></select></label>
+    <label class="f">Quiring or imposition note <input name="formatNote" placeholder="e.g. in 8s; half-sheet imposition"></label>
+  </div>
+  <label class="f">Formula <input name="formula" class="mono" placeholder="e.g. A^4 B–M^8 N^4"></label>
+  <div class="check" id="formulaCheck"></div>
+</section>
+
+<section class="panel" id="a3">
+  <div class="area-h"><h2><span class="num">3</span>Signing statement, pagination and contents</h2><span class="tag ed">Edition</span></div>
+  <details class="guide"><summary>How to record signing, pagination and contents</summary><div class="in">
+    <ul>
+      <li>Signing statement: $ and the number of leaves normally signed in each gathering, with exceptions in parentheses: <span class="ex">$4 signed (−A1, N3–4)</span>. Record missigning in words: <span class="ex">K3 signed K2</span>.</li>
+      <li>Give the total of leaves, then the pagination as printed. Unnumbered pages go in square brackets, either as a count, <span class="ex">[8]</span>, or as inferred numbers, <span class="ex">[i–viii]</span>. Keep roman numerals as printed, and use ff. for a book numbered by leaves.</li>
+      <li>Record errors after the pagination: <span class="ex">(p. 89 misnumbered 98)</span>.</li>
+      <li>Contents: list the parts of the book leaf by leaf, by signature, with recto and verso: <span class="ex">A1r title; A1v blank; A2r–A4v The Preface</span>. Note blanks, which belong to the ideal copy even when a copy lacks them.</li>
+    </ul>
+  </div></details>
+  <label class="f">Signing statement <input name="signing" class="mono" placeholder="e.g. $4 signed (−A1, N3–4)"></label>
+  <label class="f">Pagination <input name="pagination" class="mono" placeholder="e.g. pp. [8] 1–176 [8]"></label>
+  <label class="f">Errors in pagination <input name="pagErrors" class="mono" placeholder="e.g. p. 89 misnumbered 98"></label>
+  <div class="check" id="pagCheck"></div>
+  <label class="f">Contents <textarea name="contents" class="mono" rows="5" placeholder="A1r title; A1v blank; A2r–A3v dedication; A4r–v contents; B1r–N3v text; N4 blank"></textarea></label>
+</section>
+
+<section class="panel" id="a4">
+  <div class="area-h"><h2><span class="num">4</span>Inserted plates</h2><span class="tag ed">Edition</span></div>
+  <details class="guide"><summary>How to describe plates</summary><div class="in">
+    <ul>
+      <li>Plates are leaves printed separately, usually from engraved or etched copper, and inserted. They are not counted in the formula.</li>
+      <li>For each plate give its subject, where it is placed (frontispiece, facing p. 64, after K4), the process, the size of the plate-mark (height × width in mm), and any signatures of artist or engraver as printed (<i>pinx.</i>, <i>delin.</i>, <i>sculp.</i>).</li>
+      <li>Note folding plates, plates printed on both sides, and plates that copies commonly lack.</li>
+    </ul>
+  </div></details>
+  <div class="list" id="list-plates"></div>
+  <button class="btn small" data-add="plates">Add a plate</button>
+  <label class="f">General note on plates <input name="platesNote" placeholder="e.g. 2 engraved plates; directions to the binder on N4v"></label>
+</section>
+
+<section class="panel" id="a5">
+  <div class="area-h"><h2><span class="num">5</span>Measurements and format</h2><span class="tag both">Edition and copy</span></div>
+  <details class="guide"><summary>What to measure</summary><div class="in">
+    <ul>
+      <li>Leaf size belongs to the copy, since every binder trimmed differently. Give height × width in millimetres and say whether the edges are cut, trimmed or uncut.</li>
+      <li>Type measurements belong to the edition. Give the depth of 20 lines of solid text, from the foot of one line to the foot of the line twenty lines below, and the size of the type page on a named page.</li>
+      <li>Name the typeface and type style (roman, italic, black letter) of the text, and the number of lines in a full page.</li>
+    </ul>
+  </div></details>
+  <div class="grid3">
+    <label class="f"><span class="copyonly">Leaf size of this copy (mm)</span><span class="dims"><input name="leafH" inputmode="decimal" placeholder="height" aria-label="Leaf height in mm"> × <input name="leafW" inputmode="decimal" placeholder="width" aria-label="Leaf width in mm"></span></label>
+    <label class="f"><span class="copyonly">Edges of this copy</span><select name="edges"><option value="">Choose…</option><option>cut</option><option>trimmed</option><option>uncut</option><option>partly unopened</option></select></label>
+    <label class="f">20-line measure (mm) <input name="twenty" inputmode="decimal" placeholder="e.g. 82"></label>
+  </div>
+  <div class="grid3">
+    <label class="f">Type page (mm, h × w) <input name="typePage" placeholder="e.g. 150 × 88"></label>
+    <label class="f">Measured on page <input name="measuredOn" placeholder="e.g. C4r (p. 23)"></label>
+    <label class="f">Lines in a full page <input name="lines" placeholder="e.g. 36"></label>
+  </div>
+  <label class="f">Typeface and type <input name="typeface" placeholder="e.g. roman text, pica size; italic for quotations"></label>
+</section>
+
+<section class="panel" id="a6">
+  <div class="area-h"><h2><span class="num">6</span>Paper</h2><span class="tag both">Edition and copy</span></div>
+  <details class="guide"><summary>How to describe the paper</summary><div class="in">
+    <ul>
+      <li>Say whether the paper is laid or wove. Wove paper appears in England from the 1750s.</li>
+      <li>Chain-line direction confirms the format: normally vertical in folio and octavo, horizontal in quarto and ordinary duodecimo. Measure the distance between chain lines in millimetres.</li>
+      <li>Describe the watermark and any countermark, where they fall in the gathering, and compare them with repertories such as Briquet, Heawood or Gravell.</li>
+      <li>Record each paper stock separately with the gatherings it is used for. A change of paper can show interrupted printing, a cancel, or sheets reissued from another impression.</li>
+      <li>The leaf size gives only a minimum for the size of the sheet, because the leaves have been trimmed.</li>
+    </ul>
+  </div></details>
+  <div class="grid2">
+    <label class="f">Laid or wove <select name="paperKind"><option value="">Choose…</option><option>laid</option><option>wove</option><option>laid and wove</option></select></label>
+    <label class="f">Colour and quality <input name="paperQuality" placeholder="e.g. good white paper, slightly browned; fine-paper copies known"></label>
+  </div>
+  <div class="check" id="sheetCheck"></div>
+  <h3>Paper stocks</h3>
+  <div class="list" id="list-stocks"></div>
+  <button class="btn small" data-add="stocks">Add a paper stock</button>
+  <label class="f"><span class="copyonly">Paper in this copy (variations, large paper, stains)</span><input name="paperCopy" placeholder="e.g. gathering N on a different stock from all other copies seen"></label>
+</section>
+
+<section class="panel" id="a7">
+  <div class="area-h"><h2><span class="num">7</span>Provenance</h2><span class="tag copy">This copy</span></div>
+  <details class="guide"><summary>What to record</summary><div class="in">
+    <ul>
+      <li>Record all evidence of ownership and use: inscriptions, bookplates, stamps, shelfmarks, prices and sale codes, annotations, and the binding itself.</li>
+      <li>Transcribe inscriptions exactly, say where they are (title, upper margin; front pastedown), and date them by hand if they are undated.</li>
+      <li>Identify owners where you can and give your evidence. Note evidence that has been removed: erasures, a bookplate taken out, a torn-away corner.</li>
+      <li>List provenance in chronological order, earliest first.</li>
+    </ul>
+  </div></details>
+  <div class="list" id="list-prov"></div>
+  <button class="btn small" data-add="prov">Add a provenance entry</button>
+</section>
+
+<section class="panel" id="a8">
+  <div class="area-h"><h2><span class="num">8</span>Ornaments, initials and devices</h2><span class="tag ed">Edition</span></div>
+  <details class="guide"><summary>How to describe ornaments</summary><div class="in">
+    <ul>
+      <li>Record headpieces, tailpieces, factotums, decorated initials, printers' devices and type ornaments, with their location, size (height × width in mm) and a short description.</li>
+      <li>Identify them from standard references (McKerrow for devices) and from other books by the same printer. Woodcut blocks crack and wear, so the state of a block can help to date a printing and to identify an unnamed printer.</li>
+    </ul>
+  </div></details>
+  <div class="list" id="list-orn"></div>
+  <button class="btn small" data-add="orn">Add an ornament</button>
+</section>
+
+<section class="panel" id="a9">
+  <div class="area-h"><h2><span class="num">9</span>Running titles, catchwords and press figures</h2><span class="tag ed">Edition</span></div>
+  <details class="guide"><summary>How to record running titles</summary><div class="in">
+    <ul>
+      <li>Transcribe the running titles (headlines) on versos and rectos, noting where they change.</li>
+      <li>Variant settings and damaged types in the running titles can show how many skeleton formes were used and the order in which sheets went through the press. This is the basis of Bowers's skeleton-forme analysis.</li>
+      <li>Note irregular catchwords, and, for eighteenth-century English books, the press figures and where they appear.</li>
+    </ul>
+  </div></details>
+  <div class="list" id="list-rt"></div>
+  <button class="btn small" data-add="rt">Add a running-title sequence</button>
+  <label class="f">Skeleton formes, catchwords and press figures <textarea name="rtNotes" rows="3" placeholder="e.g. Two skeletons, distinguished by the broken T in TREATISE; press figures: B8v-1, C7r-2 …"></textarea></label>
+</section>
+
+<section class="panel" id="a10">
+  <div class="area-h"><h2><span class="num">10</span>Binding</h2><span class="tag copy">This copy</span></div>
+  <details class="guide"><summary>How to describe a binding</summary><div class="in">
+    <ul>
+      <li>Hand-press bindings belong to the copy. Publishers' edition bindings, such as cloth from the later 1820s on, belong to the edition; tick the box below if that applies.</li>
+      <li>Work from the inside out or the outside in, consistently: covering material and colour; boards; decoration of the covers (fillets, rolls, panels, tools, in blind or gilt); spine (bands, compartments, labels, lettering); edges; endleaves; sewing and structure where visible; fastenings; condition and repairs.</li>
+      <li>Say whether the binding is contemporary, and why. Record any binder's ticket or stamp. The Bookbinding Structures Workbench gives the terms.</li>
+    </ul>
+  </div></details>
+  <label class="chk"><input type="checkbox" name="edBinding"> This is a publisher's edition binding (describe it as part of the edition)</label>
+  <div class="grid2">
+    <label class="f">Date <input name="bDate" placeholder="e.g. contemporary English binding, c. 1703"></label>
+    <label class="f">Covering <input name="bCover" placeholder="e.g. sprinkled calf"></label>
+    <label class="f">Boards <input name="bBoards" placeholder="e.g. pasteboard"></label>
+    <label class="f">Covers <input name="bCovers" placeholder="e.g. blind double fillet border and panel"></label>
+    <label class="f">Spine <input name="bSpine" placeholder="e.g. five raised bands; red morocco label lettered in gilt"></label>
+    <label class="f">Edges <input name="bEdges" placeholder="e.g. sprinkled red"></label>
+    <label class="f">Endleaves <input name="bEnds" placeholder="e.g. plain white endleaves"></label>
+    <label class="f">Sewing and structure <input name="bSewing" placeholder="e.g. sewn on five cords, laced into boards"></label>
+    <label class="f">Fastenings and fittings <input name="bFittings" placeholder="e.g. none"></label>
+    <label class="f">Binder <input name="bBinder" placeholder="e.g. unsigned"></label>
+  </div>
+  <label class="f">Condition and repairs <input name="bCondition" placeholder="e.g. joints cracked; rebacked, original spine laid down"></label>
+</section>
+
+<section class="panel" id="a11">
+  <div class="area-h"><h2><span class="num">11</span>Notes on the edition</h2><span class="tag ed">Edition</span></div>
+  <details class="guide"><summary>What belongs here</summary><div class="in">
+    <ul>
+      <li>The printing and publication history: printer and publisher (from the imprint, colophon, registers such as the Stationers' Register, newspaper advertisements and term catalogues), date and price.</li>
+      <li>The edition's relation to others: reprints, page-for-page resettings, shared standing type.</li>
+      <li>Impressions, issues and states, with the evidence for each: cancels, variant title pages, press corrections. Keep Bowers's and Tanselle's distinctions between edition, impression, issue and state.</li>
+    </ul>
+  </div></details>
+  <label class="f">Printing and publication <textarea name="edNotes" rows="4"></textarea></label>
+  <label class="f">Issues, states and variants <textarea name="edVariants" rows="3"></textarea></label>
+</section>
+
+<section class="panel" id="a12">
+  <div class="area-h"><h2><span class="num">12</span>References, copies and other notes</h2><span class="tag both">Edition and copy</span></div>
+  <details class="guide"><summary>References and copies</summary><div class="in">
+    <ul>
+      <li>Cite the standard catalogues: the ESTC citation number (a letter prefix and number), and STC (to 1640) or Wing (1641–1700) numbers where they apply; specialist bibliographies; and library catalogue records.</li>
+      <li>An ideal-copy description lists the copies examined, with their locations and shelfmarks.</li>
+      <li>For this copy, record where it is, its shelfmark, and its imperfections: leaves lacking, damaged or supplied from another copy.</li>
+    </ul>
+  </div></details>
+  <div class="grid2">
+    <label class="f">ESTC citation number <input name="estc" placeholder="e.g. T123456"></label>
+    <label class="f">Other references <input name="refs" placeholder="e.g. Wing H1234; Foxon S567"></label>
+  </div>
+  <label class="f">Copies examined <textarea name="copies" rows="3" placeholder="e.g. L (C.123.a.4); O (Vet. A3 f.12); CtY"></textarea></label>
+  <div class="grid2">
+    <label class="f"><span class="copyonly">This copy: location</span><input name="copyLoc" placeholder="e.g. Private collection"></label>
+    <label class="f"><span class="copyonly">This copy: shelfmark</span><input name="copyShelf"></label>
+  </div>
+  <label class="f"><span class="copyonly">Imperfections of this copy</span><input name="imperfections" placeholder="e.g. lacks N4 (blank); title soiled"></label>
+  <label class="f">Other notes <textarea name="otherNotes" rows="3"></textarea></label>
+</section>
+</div>
+
+<aside class="panel preview" id="preview" aria-label="Description preview">
+  <div class="row between"><h2 id="pvTitle">Ideal copy description</h2><div class="modes" role="radiogroup" aria-label="Description to show"><button class="btn small" data-mode="ideal" aria-pressed="true">Ideal copy</button><button class="btn small" data-mode="copy" aria-pressed="false">This copy</button><button class="btn small" data-mode="full" aria-pressed="false">Both</button></div></div>
+  <div class="desc" id="desc"></div>
+  <div class="exportrow">
+    <button class="btn small" id="btnCopy">Copy text</button>
+    <button class="btn small" id="btnHtml">Download as web page</button>
+    <button class="btn small" id="btnTxt">Download as text</button>
+    <button class="btn small" id="btnSave">Save file</button>
+    <label class="btn small" style="cursor:pointer">Open saved file<input type="file" id="fileOpen" accept=".json,application/json" hidden></label>
+  </div>
+  <p class="msg" id="exMsg" role="status"></p>
+</aside>
+</div>
+
+<section class="panel srcs">
+  <h2>Sources</h2>
+  <ul>
+    <li>Fredson Bowers, <i>Principles of Bibliographical Description</i> (Princeton, 1949; reprinted with an introduction by G. Thomas Tanselle, 1994). The basis of the collational formula, the signing statement, the ideal-copy concept and the order of a full description.</li>
+    <li>G. Thomas Tanselle, <i>Descriptive Bibliography</i> (Charlottesville: Bibliographical Society of the University of Virginia, 2020), which draws together and extends his essays on description, among them "The Concept of Ideal Copy" (<i>Studies in Bibliography</i> 33, 1980).</li>
+    <li>Philip Gaskell, <i>A New Introduction to Bibliography</i> (Oxford, 1972), especially the chapter on bibliographical description and its sample descriptions.</li>
+  </ul>
+</section>
+<footer>The practice example is invented for teaching: no such book, owner or catalogue number exists. Conventions differ between bibliographers on points such as long s and the use of italic for inferred signatures; whichever you choose, say so in your introduction and apply it consistently.</footer>
+</div>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const KEY='bibdesc-workbench-v1';
+
+/* ---------- repeatable lists ---------- */
+const LISTS={
+ plates:{label:'Plate',fields:[
+   {k:'subject',l:'Subject',ph:'e.g. Portrait of the author'},
+   {k:'position',l:'Position',ph:'e.g. frontispiece, facing title'},
+   {k:'process',l:'Process',type:'select',opts:['','engraving','etching','engraving and etching','mezzotint','woodcut','wood engraving','lithograph','other']},
+   {k:'size',l:'Plate-mark (mm, h × w)',ph:'e.g. 160 × 98'},
+   {k:'signed',l:'Signatures as printed',ph:'e.g. J. Sturt sculp.',mono:1},
+   {k:'note',l:'Notes',ph:'e.g. folding; often lacking'}]},
+ stocks:{label:'Paper stock',fields:[
+   {k:'gatherings',l:'Gatherings',ph:'e.g. A–M'},
+   {k:'chain',l:'Chain lines',type:'select',opts:['','vertical','horizontal']},
+   {k:'interval',l:'Chain-line interval (mm)',ph:'e.g. 25'},
+   {k:'mark',l:'Watermark',ph:'e.g. pot with initials PD'},
+   {k:'counter',l:'Countermark',ph:'e.g. none'},
+   {k:'ref',l:'Reference',ph:'e.g. cf. Heawood 3626'}]},
+ prov:{label:'Provenance',fields:[
+   {k:'kind',l:'Kind',type:'select',opts:['','inscription','bookplate','stamp','shelfmark','price or sale code','annotations','binding evidence','sale or catalogue record','other']},
+   {k:'where',l:'Location in the book',ph:'e.g. title, upper margin'},
+   {k:'text',l:'Transcription or description',ph:'e.g. "Tho: Ridley his Book 1712"',mono:1},
+   {k:'date',l:'Date',ph:'e.g. 1712; or early 18th century'},
+   {k:'ident',l:'Identification and evidence',ph:'e.g. Thomas Ridley of Hexham, d. 1740'}]},
+ orn:{label:'Ornament',fields:[
+   {k:'kind',l:'Kind',type:'select',opts:['','headpiece','tailpiece','factotum','decorated initial','printer’s device','type ornament','other']},
+   {k:'where',l:'Location',ph:'e.g. A2r'},
+   {k:'size',l:'Size (mm, h × w)',ph:'e.g. 22 × 86'},
+   {k:'desc',l:'Description',ph:'e.g. woodcut band of acanthus with a central mask'},
+   {k:'ref',l:'Reference and state',ph:'e.g. crack at lower left'}]},
+ rt:{label:'Running titles',fields:[
+   {k:'pages',l:'Pages or leaves',ph:'e.g. pp. 1–176'},
+   {k:'verso',l:'Verso',ph:'e.g. [i]The Art[/i]',mono:1},
+   {k:'recto',l:'Recto',ph:'e.g. [i]of Printing.[/i]',mono:1},
+   {k:'note',l:'Notes',ph:'e.g. "Printiug" on D3r'}]}
+};
+const blank=()=>({plates:[],stocks:[],prov:[],orn:[],rt:[]});
+let D=blank(),mode='ideal',tpView='lines';
+
+/* ---------- transcription markup ---------- */
+function markup(src,lines){
+  let h=esc(src);
+  h=h.replace(/\[(i|sc|bl|red|sup)\]([\s\S]*?)\[\/\1\]/g,(m,t,inner)=>t==='i'?`<i>${inner}</i>`:t==='sup'?`<sup>${inner}</sup>`:`<span class="${t}">${inner}</span>`);
+  h=h.replace(/\[([^\]\n]{1,80})\]/g,'<span class="brk">[<i>$1</i>]</span>');
+  if(lines)return h.split(/\s*\|\s*/).map(l=>l.trim()).filter((l,i,a)=>l||i<a.length-1).join('<br>');
+  return h.replace(/\s*\|\s*/g,' <span class="vs">|</span> ');
+}
+const plainTags=s=>String(s||'');
+const supify=s=>esc(s).replace(/\^(\d+)/g,'<sup>$1</sup>');
+const SUPD={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const supText=s=>String(s||'').replace(/\^(\d+)/g,(m,d)=>d.split('').map(c=>SUPD[c]).join(''));
+
+/* ---------- formula parser: count leaves in Bowers's notation ---------- */
+const ALPHA='ABCDEFGHIKLMNOPQRSTVXYZ';
+function sigOrd(lbl){
+  let m=lbl.match(/^([A-Za-z])\1+$/);if(m){const i=ALPHA.indexOf(m[1].toUpperCase());return i<0?null:(lbl.length-1)*23+i;}
+  m=lbl.match(/^(\d*)([A-Za-z])$/);if(!m)return null;
+  const i=ALPHA.indexOf(m[2].toUpperCase());return i<0?null:((+m[1]||1)-1)*23+i;
+}
+function parseFormula(f){
+  if(!f||!f.trim())return null;
+  let s=f.trim().replace(/^[^:]*°[^:]*:\s*/,'');
+  const back={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9'};
+  s=s.replace(/([⁰¹²³⁴⁵⁶⁷⁸⁹]+)(?=[A-Za-z*¶†§πχ\[])/g,'').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g,m=>'^'+m.split('').map(c=>back[c]).join(''));
+  const re=/\[?([^\s^()\[\]]+?)\]?\^(\d+)(\(([^)]*)\))?/g;let m,leaves=0,gatherings=0,unsure=[],parts=0;
+  while((m=re.exec(s))){
+    parts++;const lbl=m[1].replace(/[\[\]]/g,''),n=+m[2];
+    let count=1;const rg=lbl.split(/[–—-]/);
+    if(rg.length===2){
+      const a=sigOrd(rg[0]),b=sigOrd(rg[1]);
+      if(a!==null&&b!==null&&b>=a)count=b-a+1;else{unsure.push(lbl);}
+    }
+    gatherings+=count;leaves+=count*n;
+    if(m[4]){let sign='';m[4].split(',').forEach(raw=>{const it=raw.trim();if(!it)return;
+      if(/^[−-]/.test(it))sign='-';else if(/^±/.test(it))sign='±';else if(/\+/.test(it))sign='+';
+      if(sign==='-')leaves--;else if(sign==='+')leaves+=(it.match(/\+/g)||[]).length;});}
+  }
+  return parts?{leaves,gatherings,unsure}:{leaves:0,gatherings:0,unsure:[],bad:true};
+}
+function romanVal(r){const v={i:1,v:5,x:10,l:50,c:100,d:500,m:1000};let t=0;r=r.toLowerCase();for(let i=0;i<r.length;i++){const a=v[r[i]],b=v[r[i+1]]||0;if(!a)return null;t+=a<b?-a:a;}return t;}
+const numVal=x=>/^\d+$/.test(x)?+x:romanVal(x);
+function parsePagination(p){
+  if(!p||!p.trim())return null;
+  let s=p.replace(/\([^)]*\)/g,' '),leavesMode=/\bff?\./.test(s)&&!/\bpp?\./.test(s);
+  s=s.replace(/\b(pp|p|ff|f)\./g,' ');
+  let total=0,ok=true;
+  s.split(/[\s,;]+/).filter(Boolean).forEach(tok=>{
+    const br=tok.match(/^\[(\d+)\]$/);if(br){total+=+br[1];return;}
+    const t=tok.replace(/[\[\]]/g,'');
+    const rg=t.split(/[–—-]/);
+    if(rg.length===2){const a=numVal(rg[0]),b=numVal(rg[1]);if(a!=null&&b!=null&&b>=a){total+=b-a+1;return;}}
+    if(rg.length===1&&numVal(t)!=null){total+=1;return;}
+    ok=false;
+  });
+  return {pages:leavesMode?total*2:total,leavesMode,count:total,ok};
+}
+
+/* ---------- state binding ---------- */
+function load(){try{const s=localStorage.getItem(KEY);if(s){const o=JSON.parse(s);D=Object.assign(blank(),o.D||{});mode=o.mode||'ideal';}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({D,mode}));}catch(e){}}
+function fillForm(){
+  $$('#form [name]').forEach(el=>{const v=D[el.name];if(el.type==='checkbox')el.checked=!!v;else el.value=v==null?'':v;});
+  Object.keys(LISTS).forEach(renderList);
+}
+function renderList(id){
+  const L=LISTS[id],arr=D[id]||[],box=$('#list-'+id);
+  box.innerHTML=arr.length?arr.map((it,i)=>`<div class="item"><div class="itop"><b>${L.label} ${i+1}</b><span class="row"><button class="btn small" data-up="${id}:${i}" ${i===0?'disabled':''} aria-label="Move up">↑</button><button class="btn small" data-del="${id}:${i}" aria-label="Remove ${L.label} ${i+1}">Remove</button></span></div>
+    <div class="grid3">${L.fields.map(f=>`<label class="f">${f.l}${f.type==='select'?`<select data-li="${id}:${i}:${f.k}">${f.opts.map(o=>`<option value="${esc(o)}" ${it[f.k]===o?'selected':''}>${o||'Choose…'}</option>`).join('')}</select>`:`<input data-li="${id}:${i}:${f.k}" value="${esc(it[f.k]||'')}" placeholder="${esc(f.ph||'')}" class="${f.mono?'mono':''}">`}</label>`).join('')}</div></div>`).join('')
+    :`<div class="empty">None recorded.</div>`;
+}
+
+/* ---------- checks shown under the fields ---------- */
+const CHAIN={'2°':'vertical','4°':'horizontal','8°':'vertical','12°':'horizontal','16°':'horizontal','24°':'vertical'};
+function renderChecks(){
+  const fr=parseFormula(D.formula),pg=parsePagination(D.pagination);
+  const fc=$('#formulaCheck');
+  if(!fr){fc.className='check';fc.textContent='Type a formula to count its leaves.';}
+  else if(fr.bad){fc.className='check bad';fc.textContent='No gatherings recognised. Write each as signature, caret and leaves: A^4 B–M^8.';}
+  else{fc.className='check'+(fr.unsure.length?' bad':' ok');
+    fc.textContent=`${fr.gatherings} gathering${fr.gatherings===1?'':'s'}, ${fr.leaves} leaves (${fr.leaves*2} pages), counting the 23-letter alphabet.`+(fr.unsure.length?` Could not count the range ${fr.unsure.join(', ')}; check the letters.`:'');}
+  const pc=$('#pagCheck');
+  if(!pg){pc.className='check';pc.textContent='Type the pagination to check it against the formula.';}
+  else{
+    let t=`The pagination accounts for ${pg.leavesMode?pg.count+' leaves':pg.pages+' pages'}.`,cls='check';
+    if(!pg.ok){t+=' Some parts could not be read; write ranges as 1–176 and unnumbered pages as [8].';cls+=' bad';}
+    else if(fr&&!fr.bad){
+      if(pg.pages===fr.leaves*2){t+=` This matches the formula (${fr.leaves} leaves).`;cls+=' ok';}
+      else{t+=` The formula gives ${fr.leaves} leaves, or ${fr.leaves*2} pages: a difference of ${Math.abs(fr.leaves*2-pg.pages)} pages. Plates should not be in either; unnumbered blanks belong in both.`;cls+=' bad';}
+    }
+    pc.className=cls;pc.textContent=t;
+  }
+  const sc=$('#sheetCheck'),h=parseFloat(D.leafH),w=parseFloat(D.leafW),f=D.format;
+  let msg='';
+  if(f&&CHAIN[f])msg+=`In ${f}, chain lines are normally ${CHAIN[f]}. `;
+  const first=(D.stocks||[]).find(x=>x.chain);
+  if(first&&f&&CHAIN[f]&&first.chain!==CHAIN[f])msg+=`Your first stock has ${first.chain} chain lines: check the format, or whether the sheet was cut before folding. `;
+  if(h&&w&&f){
+    let L=null,S=null;
+    if(f==='2°'){S=h;L=2*w;}else if(f==='4°'){L=2*h;S=2*w;}else if(f==='8°'){S=2*h;L=4*w;}
+    if(L)msg+=`From this copy's leaves the sheet was at least ${Math.round(Math.max(L,S))} × ${Math.round(Math.min(L,S))} mm before trimming.`;
+    else msg+='Working out the sheet size from a duodecimo or smaller leaf depends on the imposition.';
+  }
+  sc.className='check'+(first&&f&&CHAIN[f]&&first.chain!==CHAIN[f]?' bad':'');
+  sc.textContent=msg||'Choose a format and enter the leaf size to see the expected chain-line direction and the minimum sheet size.';
+  sc.hidden=false;
+  $('#tpRender').className='tprender'+(tpView==='inline'?' inline':'');
+  $('#tpRender').innerHTML=D.tp?markup(D.tp,tpView==='lines'):'<span class="muted small">The transcription will be shown here.</span>';
+}
+
+/* ---------- assembling the description ---------- */
+function blocks(){
+  const B=[],has=v=>v!=null&&String(v).trim()!=='';
+  const join=(a,sep)=>a.filter(has).join(sep||'; ');
+  const add=(scope,label,html,text)=>{if(has(text))B.push({scope,label,html,text});};
+  const sect=(scope,title)=>B.push({scope,sect:title});
+  const fr=parseFormula(D.formula);
+  /* heading */
+  const head=join([D.author,D.shortTitle,join([D.imprint,D.date],', ')],'. ');
+  if(has(head))B.push({scope:'both',head:true,html:esc(head)+'.'+(has(D.edStatement)?` <span class="muted">${esc(D.edStatement)}</span>`:''),text:head+'.'+(has(D.edStatement)?' '+D.edStatement:'')});
+  sect('ed','The edition (ideal copy)');
+  if(has(D.tp))B.push({scope:'ed',tp:true,html:markup(D.tp,false),text:plainTags(D.tp)});
+  else B.push({scope:'ed',missing:'Title page not yet transcribed (area 1).'});
+  add('ed','Other titles',markup(D.tpOther||'',false),D.tpOther);
+  /* collation */
+  const fmt=has(D.format)?(D.format==='other'?'':D.format)+(has(D.formatNote)?` (${D.formatNote})`:''):'';
+  const formH=has(D.formula)?supify(D.formula.replace(/^[^:]*°[^:]*:\s*/,'')):'',formT=has(D.formula)?supText(D.formula.replace(/^[^:]*°[^:]*:\s*/,'')):'';
+  const leaves=fr&&!fr.bad?`${fr.leaves} leaves`:'';
+  const pag=has(D.pagination)?D.pagination+(has(D.pagErrors)?` (${D.pagErrors})`:''):'';
+  if(has(formH)||has(fmt)){
+    const h=join([(fmt?esc(fmt)+': ':'')+formH,esc(D.signing||''),join([leaves,esc(pag)],', ')]);
+    const t=join([(fmt?fmt+': ':'')+formT,D.signing,join([leaves,pag],', ')]);
+    add('ed','Collation',h+'.',t+'.');
+  } else B.push({scope:'ed',missing:'No format or collational formula yet (areas 2 and 3).'});
+  /* plates */
+  const pl=(D.plates||[]).map(p=>join([join([p.position,p.subject],': '),p.process,has(p.size)?`plate-mark ${p.size} mm`:'',has(p.signed)?`signed ${p.signed}`:'',p.note],', '));
+  if(pl.some(has)||has(D.platesNote)){const cap=x=>has(D.platesNote)?x.charAt(0).toUpperCase()+x.slice(1):x,ph=cap(pl.filter(has).map(x=>markup(x,false)).join('; ')),pt=cap(pl.filter(has).join('; ')),nt=has(D.platesNote)?String(D.platesNote).replace(/\.?\s*$/,'.'):'';add('ed','Plates',join([esc(nt),ph],' '),join([nt,pt],' '));}
+  add('ed','Contents',esc(D.contents),D.contents);
+  /* running titles */
+  const rts=(D.rt||[]).map(r=>({h:join([has(r.pages)?esc(r.pages)+':':'',join([markup(r.verso||'',false),markup(r.recto||'',false)],' <span class="vs">|</span> '),has(r.note)?`— ${esc(r.note)}`:''],' '),t:join([has(r.pages)?r.pages+':':'',join([r.verso,r.recto],' | '),has(r.note)?`— ${r.note}`:''],' ')})).filter(x=>has(x.t));
+  if(rts.length||has(D.rtNotes))add('ed','RT',join([...rts.map(x=>x.h),esc(D.rtNotes)]),join([...rts.map(x=>x.t),D.rtNotes]));
+  /* typography */
+  const ty=join([has(D.twenty)?`20 ll. = ${D.twenty} mm`+(has(D.measuredOn)?`, measured on ${D.measuredOn}`:''):'',has(D.typePage)?`type page ${D.typePage} mm`:'',has(D.lines)?`${D.lines} ll.`:'',D.typeface]);
+  add('ed','Type',esc(ty),ty);
+  const orn=(D.orn||[]).map(o=>join([o.where,o.kind,has(o.size)?`${o.size} mm`:'',o.desc,o.ref],', ')).filter(has);
+  if(orn.length)add('ed','Ornaments',esc(orn.join('; ')),orn.join('; '));
+  /* paper */
+  const st=(D.stocks||[]).map((s,i)=>join([has(s.gatherings)?`${s.gatherings}:`:'',join([has(s.chain)?`chain lines ${s.chain}`+(has(s.interval)?`, ${s.interval} mm apart`:''):'',has(s.mark)?`watermark ${s.mark}`:'',has(s.counter)?`countermark ${s.counter}`:'',s.ref],', ')],' ')).filter(has);
+  const pap=join([join([D.paperKind,D.paperQuality],', '),...st]);
+  add('ed','Paper',esc(pap),pap);
+  /* edition binding */
+  const bind=join([D.bDate,join([D.bCover,has(D.bBoards)?`over ${D.bBoards}`:''],' '),D.bCovers,D.bSpine,has(D.bEdges)?`edges ${D.bEdges}`:'',D.bEnds,D.bSewing,has(D.bFittings)?`fastenings: ${D.bFittings}`:'',has(D.bBinder)?`binder: ${D.bBinder}`:'',D.bCondition]);
+  if(D.edBinding)add('ed','Binding',esc(bind),bind);
+  add('ed','Notes',esc(join([D.edNotes,D.edVariants],' ')),join([D.edNotes,D.edVariants],' '));
+  const refs=join([has(D.estc)?`ESTC ${D.estc}`:'',D.refs]);
+  if(has(refs))add('ed','References',esc(refs),refs);else B.push({scope:'ed',missing:'No references yet: add the ESTC number (area 12).'});
+  add('ed','Copies examined',esc(D.copies),D.copies);
+  add('ed','Other notes',esc(D.otherNotes),D.otherNotes);
+  /* this copy */
+  sect('copy','This copy');
+  const loc=join([D.copyLoc,D.copyShelf],', ');
+  add('copy','Copy',esc(loc),loc);
+  if(mode==='copy'&&(has(formT)||has(fmt))){add('copy','Collation of the edition',(fmt?esc(fmt)+': ':'')+formH,(fmt?fmt+': ':'')+formT);}
+  const size=has(D.leafH)&&has(D.leafW)?`${D.leafH} × ${D.leafW} mm`+(has(D.edges)?`, edges ${D.edges}`:''):(has(D.edges)?`edges ${D.edges}`:'');
+  add('copy','Leaf size',esc(size),size);
+  add('copy','Imperfections',esc(D.imperfections),D.imperfections);
+  add('copy','Paper',esc(D.paperCopy),D.paperCopy);
+  if(!D.edBinding)add('copy','Binding',esc(bind),bind);
+  const prov=(D.prov||[]).map(p=>join([join([p.where,p.kind],', ')+(has(p.text)?`: ${p.text}`:''),p.date,p.ident],'; ')).filter(has).map(x=>x.charAt(0).toUpperCase()+x.slice(1));
+  if(prov.length)add('copy','Provenance',prov.map(esc).join('. ')+'.',prov.join('. ')+'.');
+  return B;
+}
+function renderPreview(){
+  const want=mode==='ideal'?'ed':mode;const B=blocks().filter(b=>mode==='full'||b.scope==='both'||b.scope===want);
+  $('#pvTitle').textContent={ideal:'Ideal copy description',copy:'Copy description',full:'Full record: edition and copy'}[mode];
+  const out=[];
+  B.forEach((b,i)=>{
+    if(b.sect){if(mode==='full')out.push(`<div class="sect ${b.scope==='ed'?'ed':''}">${b.sect}</div>`);return;}
+    if(b.head){out.push(`<div class="hd">${b.html}</div>`);return;}
+    if(b.missing){out.push(`<div class="missing">${b.missing}</div>`);return;}
+    if(b.tp){out.push(`<div><span class="lbl">Title:</span>${b.html}</div>`);return;}
+    out.push(`<div><span class="lbl">${b.label}:</span>${b.html}</div>`);
+  });
+  const any=B.some(b=>b.html||b.text);
+  $('#desc').innerHTML=out.length&&any?out.join(''):'<div class="missing">Nothing to show yet. Fill in the areas on the left, or load the practice example.</div>';
+}
+function plainText(){
+  const want=mode==='ideal'?'ed':mode;const B=blocks().filter(b=>mode==='full'||b.scope==='both'||b.scope===want);
+  return B.filter(b=>!b.missing).map(b=>b.sect?(mode==='full'?`\n${b.sect.toUpperCase()}`:null):b.head?b.text:b.tp?`Title: ${b.text}`:`${b.label}: ${b.text}`).filter(x=>x!=null).join('\n');
+}
+function renderAll(){renderChecks();renderPreview();$$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode));}
+
+/* ---------- practice example (invented) ---------- */
+const EXAMPLE={
+ author:'Hartwell, Thomas',shortTitle:'A treatise of the art of printing',imprint:'London: printed for the author, and sold by J. Netherby',date:'1703',edStatement:'First edition.',
+ tp:'A | TREATISE | OF THE | [i]ART[/i] of PRINTING, | [rule] | Shewing the manner of Compoſing, | Impoſing, and Preſs-work; | WITH | A Deſcription of the [i]Letters[/i]. | [rule] | By [sc]Thomas Hartwell[/sc], Printer. | [double rule] | [ornament] | [double rule] | [i]LONDON:[/i] | Printed for the AUTHOR, and are to be | ſold by [i]J. Netherby[/i] at the [i]Globe[/i] | in [i]Little Britain[/i]. [red]1703.[/red]',
+ tpOther:'Half-title (A1r): A | TREATISE | OF | PRINTING.',
+ format:'8°',formatNote:'',formula:'A^4 B–M^8 N^4',
+ signing:'$4 signed (−A1–2, N3–4)',pagination:'pp. [8] 1–176 [8]',pagErrors:'p. 89 misnumbered 98',
+ contents:'A1r half-title; A1v blank; A2r title; A2v blank; A3r–A4v The Preface; B1r–M8v text (pp. 1–176); N1r–N3v Index; N4r advertisements; N4v blank.',
+ platesNote:'2 engraved plates, not included in the formula.',
+ plates:[{subject:'Portrait of the author',position:'frontispiece, facing A2r',process:'engraving',size:'152 × 92',signed:'[i]J. Ashby sculp.[/i]',note:''},
+         {subject:'A printing press, with its parts lettered',position:'facing p. 64 (E8v)',process:'engraving',size:'178 × 240',signed:'',note:'folding'}],
+ leafH:'187',leafW:'115',edges:'trimmed',twenty:'82',typePage:'150 × 88',measuredOn:'C4r (p. 23)',lines:'36',typeface:'roman text; italic for headings and quotations',
+ paperKind:'laid',paperQuality:'white, of moderate weight',
+ stocks:[{gatherings:'A–M',chain:'vertical',interval:'25',mark:'fleur-de-lys on a crowned shield, at the head of the gutter',counter:'none',ref:''},
+         {gatherings:'N',chain:'vertical',interval:'23',mark:'none seen',counter:'',ref:'thinner, greyer stock'}],
+ paperCopy:'',
+ prov:[{kind:'inscription',where:'title, upper margin',text:'"Tho: Ridley his Book 1712"',date:'1712',ident:'not identified'},
+       {kind:'bookplate',where:'front pastedown',text:'armorial bookplate of the Netherby family',date:'19th century',ident:'arms not yet traced'}],
+ orn:[{kind:'headpiece',where:'A3r',size:'22 × 86',desc:'woodcut band of acanthus with a central mask',ref:'crack through the mask'},
+      {kind:'decorated initial',where:'B1r',size:'24 × 24',desc:'factotum with floral border, T inset',ref:''},
+      {kind:'tailpiece',where:'M8v',size:'30 × 40',desc:'woodcut basket of fruit',ref:''}],
+ rt:[{pages:'pp. 1–176',verso:'[i]The Art[/i]',recto:'[i]of Printing.[/i]',note:'"Priuting" on p. 105 (H5r)'}],
+ rtNotes:'Two skeleton formes alternate, told apart by a damaged italic A in "Art". No press figures.',
+ edBinding:false,bDate:'contemporary English binding',bCover:'sprinkled calf',bBoards:'pasteboard',bCovers:'blind double fillet border and panel',bSpine:'five raised bands; red morocco label lettered in gilt',bEdges:'sprinkled red',bEnds:'plain white endleaves',bSewing:'sewn on five cords, laced into the boards',bFittings:'none',bBinder:'unsigned',bCondition:'upper joint cracked; corners worn',
+ edNotes:'The printer is not named. The headpiece on A3r is the best starting point for identifying him. The advertisement on N4r gives the price as 3s. bound.',
+ edVariants:'Two states of the title page are known: in the earlier, the date is printed in black.',
+ estc:'T000000 (invented)',refs:'',copies:'Practice example: no copies exist.',copyLoc:'Private collection',copyShelf:'',imperfections:'title soiled; small tear in E3 without loss',otherNotes:''
+};
+
+/* ---------- events ---------- */
+const form=$('#form');
+form.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.li){const [id,i,k]=t.dataset.li.split(':');D[id][+i][k]=t.value;}
+  else if(t.name){D[t.name]=t.type==='checkbox'?t.checked:t.value;}
+  else return;
+  save();renderAll();
+});
+form.addEventListener('change',e=>{if(e.target.dataset.li||e.target.name){save();renderAll();}});
+form.addEventListener('click',e=>{
+  const t=e.target.closest('[data-add],[data-del],[data-up],[data-ins],[data-wrap],[data-tpview]');if(!t)return;
+  if(t.dataset.add){const id=t.dataset.add;D[id].push({});renderList(id);save();renderAll();const items=$('#list-'+id).querySelectorAll('.item');const last=items[items.length-1];if(last){const f=last.querySelector('input,select');if(f)f.focus();}}
+  else if(t.dataset.del){const [id,i]=t.dataset.del.split(':');D[id].splice(+i,1);renderList(id);save();renderAll();}
+  else if(t.dataset.up){const [id,i]=t.dataset.up.split(':');const a=D[id],k=+i;[a[k-1],a[k]]=[a[k],a[k-1]];renderList(id);save();renderAll();}
+  else if(t.dataset.tpview){tpView=t.dataset.tpview;$$('[data-tpview]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tpview===tpView));renderChecks();}
+  else{
+    const ta=$('#tp'),s=ta.selectionStart,en=ta.selectionEnd,v=ta.value;let ins,caret;
+    if(t.dataset.ins){const x=t.dataset.ins,pad=x==='|'||x.startsWith('[')?' ':'';ins=(pad&&s>0&&v[s-1]!==' '?' ':'')+x+(pad?' ':'');caret=s+ins.length;}
+    else{const tag=t.dataset.wrap,sel=v.slice(s,en);ins=`[${tag}]${sel}[/${tag}]`;caret=sel?s+ins.length:s+tag.length+2;}
+    ta.value=v.slice(0,s)+ins+v.slice(en);D.tp=ta.value;ta.focus();ta.setSelectionRange(caret,caret);save();renderAll();
+  }
+});
+$$('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;save();renderAll();}));
+const say=m=>{$('#exMsg').textContent=m;};
+function confirmBox(text,yes,onYes){
+  const c=$('#confirmBox');c.innerHTML=`<div class="confirm"><span>${text}</span><button class="btn small warn" id="cfYes">${yes}</button><button class="btn small" id="cfNo">Cancel</button></div>`;
+  $('#cfYes').onclick=()=>{c.innerHTML='';onYes();};$('#cfNo').onclick=()=>{c.innerHTML='';};
+}
+const isEmpty=()=>!Object.keys(D).some(k=>Array.isArray(D[k])?D[k].length:(D[k]!==''&&D[k]!=null&&D[k]!==false));
+$('#btnExample').addEventListener('click',()=>{
+  const go=()=>{D=Object.assign(blank(),JSON.parse(JSON.stringify(EXAMPLE)));mode='full';fillForm();save();renderAll();say('Practice example loaded. Everything in it is invented.');};
+  if(isEmpty())go();else confirmBox('Loading the example replaces what you have entered.','Replace with the example',go);
+});
+$('#btnClear').addEventListener('click',()=>confirmBox('Clear every field? Save a file first if you want to keep this description.','Clear everything',()=>{D=blank();fillForm();save();renderAll();say('Cleared.');}));
+function slug(){return ((D.shortTitle||'description').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,50)||'description');}
+function download(name,type,content){
+  try{const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);say(`Downloaded ${name}.`);}
+  catch(e){say('This browser blocked the download. Use Copy text instead.');}
+}
+$('#btnCopy').addEventListener('click',()=>{
+  const txt=plainText();
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');say('Copied.');}catch(e){say('Select the preview text and copy it.');}ta.remove();};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(()=>say('Copied as plain text. Transcription tags such as [i]…[/i] are kept.'),fallback);else fallback();
+});
+$('#btnTxt').addEventListener('click',()=>download(slug()+'.txt','text/plain;charset=utf-8',plainText()));
+$('#btnHtml').addEventListener('click',()=>{
+  const title=esc(D.shortTitle||'Bibliographical description');
+  const doc=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{font:16px/1.6 Georgia,serif;max-width:46em;margin:2em auto;padding:0 1em;color:#1e1e1e}.hd{font-weight:700;font-size:1.1em}.lbl{font-variant:small-caps;letter-spacing:.04em;font-weight:700;margin-right:.35em}.sect{border-top:1px solid #ccc;margin-top:1em;padding-top:.6em;font:600 .8rem system-ui,sans-serif;text-transform:uppercase;letter-spacing:.07em}.sc{font-variant:small-caps}.bl{font-family:'UnifrakturMaguntia','Old English Text MT',serif;font-weight:700}.red{color:#b22222}.brk{color:#555}.vs{color:#999;margin:0 .15em}.muted{color:#666}.missing{display:none}div{margin:.45em 0}sup{font-size:.68em;line-height:0}</style></head><body>${$('#desc').innerHTML}</body></html>`;
+  download(slug()+'.html','text/html;charset=utf-8',doc);
+});
+$('#btnSave').addEventListener('click',()=>download(slug()+'.json','application/json',JSON.stringify({app:'bibdesc-workbench',version:1,D,mode},null,2)));
+$('#fileOpen').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.D)throw 0;D=Object.assign(blank(),o.D);mode=o.mode||'ideal';fillForm();save();renderAll();say(`Opened ${f.name}.`);}catch(err){say('That file is not a saved description from this workbench.');}};
+  r.readAsText(f);e.target.value='';
+});
+
+let fresh=true;try{fresh=!localStorage.getItem(KEY);}catch(e){}
+load();
+if(fresh){D=Object.assign(blank(),JSON.parse(JSON.stringify(EXAMPLE)));mode='full';}
+fillForm();renderAll();
+if(fresh)say('Showing the practice example, which is invented. Use Clear everything to start your own description.');
+})();
+</script>
+</body>
+</html>
