@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Paper Mill</title>
+<style>
+:root{
+  --bg:#f1f1ef; --panel:#ffffff; --line:#d8d8d4; --line-2:#bcbcb6; --text:#1e1e1e; --muted:#62625e;
+  --accent:#2f5f8f; --soft:#edf1f5; --ok:#3d7a3d; --warn:#8a5600; --warn-bg:#fdf6e7;
+  --pulp:#e9e2cf; --water:#9fbcc8; --wood:#9a7445; --wire:#a4824f;
+  --serif:Georgia,'Times New Roman',Times,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--sans);
+  padding:20px max(16px,env(safe-area-inset-right,0px)) 56px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font:600 1.65rem/1.2 var(--serif);margin:0}
+h2{font:600 1.15rem/1.3 var(--serif);margin:0}
+h3{font:600 .95rem/1.3 var(--sans);margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+header{display:flex;flex-direction:column;gap:8px}
+header p{max-width:80ch}
+.hero{position:relative;overflow:hidden;background:transparent;padding:20px 4px 16px}
+.hero>*:not(.wm){position:relative}
+.hero .wm{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;-webkit-mask-image:radial-gradient(ellipse 62% 64% at 55% 50%,#000 35%,transparent 100%);mask-image:radial-gradient(ellipse 62% 64% at 55% 50%,#000 35%,transparent 100%)}
+.hero h1{font-size:clamp(1.9rem,4.5vw,2.6rem);letter-spacing:.02em}
+.hero .muted{color:var(--muted)}
+.orn{display:flex;align-items:center;gap:10px;max-width:320px;color:#8a6b3c}
+.orn span{flex:1;border-top:1px solid #b9a77f;border-bottom:1px solid #b9a77f;height:4px}
+.orn i{font-style:normal;font-size:18px;line-height:1}
+.hero nav.jump a{background:rgba(255,255,255,.85)}
+nav.jump{display:flex;flex-wrap:wrap;gap:6px}
+nav.jump a{font-size:.88rem;color:var(--text);text-decoration:none;border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:4px 10px}
+nav.jump a:hover{border-color:#777}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0;scroll-margin-top:12px}
+.intro{max-width:80ch}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.between{justify-content:space-between}
+select{font:inherit;color:var(--text);padding:5px 8px;border:1px solid var(--line-2);border-radius:4px;background:#fff}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line-2);background:#fff;border-radius:4px;padding:6px 12px}
+.btn:hover:not(:disabled){border-color:#777}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover:not(:disabled){background:#264e76}
+.btn.small{padding:3px 9px;font-size:.84rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn[aria-pressed="true"],.btn[aria-selected="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+svg text{font-family:var(--sans)}
+.figure{border:1px solid var(--line);border-radius:5px;background:#fbfbfa;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.figure svg,.figure canvas{width:100%;height:auto;display:block}
+.cap{font-size:.82rem;color:var(--muted)}
+.box{border:1px solid var(--line);border-radius:5px;padding:10px 12px;background:#fafaf9;font-size:.92rem}
+.box ul{margin:6px 0 0;padding-left:1.15em}
+.box li+li{margin-top:3px}
+.note{font-size:.88rem;border-radius:5px;padding:8px 12px;background:#f6f6f4;border:1px solid var(--line)}
+.note.ok{background:#eef6ee;border-color:#c4dcc4;color:#2f5d2f}
+.note.bad{background:var(--warn-bg);border-color:#ecd7a8;color:#5b3d00}
+
+/* timeline */
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.tlscroll{max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:5px;background:#fcfcfb;padding:4px 14px 4px 4px;overscroll-behavior:contain}
+.tl{display:flex;flex-direction:column;gap:0;border-left:2px solid var(--line-2);margin-left:6.5em}
+.ev{position:relative;padding:8px 0 10px 18px}
+.ev::before{content:"";position:absolute;left:-7px;top:14px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid var(--c,#888)}
+.ev .yr{position:absolute;left:-7.4em;width:6.4em;text-align:right;top:9px;font:600 .86rem var(--serif);font-variant-numeric:tabular-nums;color:var(--c,#555)}
+.ev h3{font:600 1rem var(--serif)}
+.ev p{font-size:.9rem;max-width:78ch;margin-top:2px}
+.ev .src{font-size:.78rem;color:var(--muted);margin-top:3px}
+.ev .kind{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--c,#888)}
+@media(max-width:560px){.tl{margin-left:0;border-left:0}.ev{padding-left:0}.ev::before{display:none}.ev .yr{position:static;text-align:left;display:block}}
+
+/* mould */
+.mouldgrid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:860px){.mouldgrid{grid-template-columns:minmax(0,1fr)}}
+.parts{display:flex;flex-direction:column;gap:6px}
+.parts button{text-align:left;border:1px solid var(--line);background:#fafaf9;border-radius:5px;padding:7px 10px;font-size:.9rem}
+.parts button b{display:block;font-weight:600}
+.parts button span{color:var(--muted);font-size:.86rem}
+.parts button[aria-pressed="true"]{border-color:var(--accent);background:var(--soft)}
+.hl{opacity:0;transition:opacity .2s}
+.hl.on{opacity:1}
+
+/* mill */
+.millgrid{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:860px){.millgrid{grid-template-columns:minmax(0,1fr)}}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:3px}
+ol.steps li button{width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:4px;padding:5px 8px 5px 2.3em;position:relative;font-size:.9rem;color:var(--muted)}
+ol.steps li button::before{counter-increment:s;content:counter(s);position:absolute;left:6px;top:5px;width:1.45em;height:1.45em;border-radius:50%;background:#e4e4e0;color:var(--text);font-size:.76rem;text-align:center;line-height:1.45em;font-weight:600}
+ol.steps li button.done{color:var(--text)}
+ol.steps li button.done::before{background:#cfe0cf;content:"✓"}
+ol.steps li button[aria-current="step"]{border-color:var(--accent);background:var(--soft);color:var(--accent);font-weight:600}
+ol.steps li button[aria-current="step"]::before{background:var(--accent);color:#fff;content:counter(s)}
+.stage{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:700px){.stage{grid-template-columns:minmax(0,1fr)}}
+.stage .txt{display:flex;flex-direction:column;gap:10px}
+.stage .txt h3{font:600 1.05rem var(--serif)}
+.meter{height:10px;border-radius:5px;background:#e6e6e2;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);transition:width .35s}
+.meter.water i{background:#5f93ad}
+.readout{font-size:.86rem;font-variant-numeric:tabular-nums;color:var(--muted)}
+.sheetbox{display:flex;flex-direction:column;gap:6px}
+
+/* machine */
+.flow{stroke-dasharray:10 8;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-18}}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 3s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.shakeX{animation:shakeX .5s ease-in-out 2}
+@keyframes shakeX{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.shakeY{animation:shakeY .5s ease-in-out 2}
+@keyframes shakeY{25%{transform:translateY(-5px) scaleY(.96)}75%{transform:translateY(3px) scaleY(1.03)}}
+.hammer{transform-box:fill-box;transform-origin:50% 0;animation:hammer .7s ease-in infinite}
+@keyframes hammer{0%,100%{transform:translateY(-14px)}50%{transform:translateY(0)}}
+.drip{animation:drip 1s linear infinite}
+@keyframes drip{from{transform:translateY(0);opacity:1}to{transform:translateY(26px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.flow,.spin,.hammer,.drip,.shakeX,.shakeY{animation:none}}
+
+/* compare */
+.cmpgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media(max-width:860px){.cmpgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cmp h3{font:600 .98rem var(--serif)}
+.cmp ul{margin:4px 0 0;padding-left:1.1em;font-size:.84rem}
+.quiz{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:700px){.quiz{grid-template-columns:minmax(0,1fr)}}
+
+/* evidence */
+.evgrid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:860px){.evgrid{grid-template-columns:minmax(0,1fr)}}
+.srcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 28px;align-items:start}
+@media(max-width:980px){.srcs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.srcs{grid-template-columns:minmax(0,1fr)}}
+.scol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.srcs ul{margin:6px 0 0;padding-left:1.1em;font-size:.9rem}
+.srcs li+li{margin-top:5px}
+.srcs a{color:var(--accent)}
+footer{font-size:.84rem;color:var(--muted);max-width:95ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <svg class="wm" aria-hidden="true" focusable="false">
+    <defs>
+      <pattern id="hdrLaid" width="8" height="3" patternUnits="userSpaceOnUse"><line x1="0" y1="1.5" x2="8" y2="1.5" stroke="#e4e4de" stroke-width=".7"/></pattern>
+      <pattern id="hdrChain" width="46" height="10" patternUnits="userSpaceOnUse"><rect x="17" y="0" width="12" height="10" fill="#e8e8e2" opacity=".8"/><line x1="23" y1="0" x2="23" y2="10" stroke="#fbfbf9" stroke-width="1.6"/></pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#hdrChain)"/>
+    <rect width="100%" height="100%" fill="url(#hdrLaid)"/>
+    <svg x="62%" y="-6%" width="40%" height="116%" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <g stroke="#dfdfd8" stroke-width="6" opacity=".7">
+          <path d="M58 76 H142 V116 Q140 146 100 160 Q60 146 58 116 Z"/>
+          <path d="M62 74 L66 52 L83 66 L100 44 L117 66 L134 52 L138 74"/>
+          <path d="M100 84 V140 M100 104 C92 86 70 96 80 114 M100 104 C108 86 130 96 120 114 M86 122 H114"/>
+        </g>
+        <g stroke="#fdfdfb" stroke-width="2.6">
+          <path d="M58 76 H142 V116 Q140 146 100 160 Q60 146 58 116 Z"/>
+          <path d="M62 74 L66 52 L83 66 L100 44 L117 66 L134 52 L138 74"/>
+          <path d="M100 84 V140 M100 104 C92 86 70 96 80 114 M100 104 C108 86 130 96 120 114 M86 122 H114"/>
+          <circle cx="100" cy="38" r="4"/><circle cx="66" cy="48" r="3"/><circle cx="134" cy="48" r="3"/>
+        </g>
+      </g>
+    </svg>
+  </svg>
+  <h1>The Paper Mill</h1>
+  <div class="orn" aria-hidden="true"><span></span><i>❦</i><span></span></div>
+  <p class="muted">How the materials of the book were made, from papyrus and parchment to the paper machine. Follow paper from its arrival in thirteenth-century Italy to the Fourdrinier and the dandy roll. Make a sheet by hand, then learn to read the evidence it leaves in a printed book.</p>
+  <nav class="jump" aria-label="Sections">
+    <a href="#timeline">1. Substrates and paper through time</a><a href="#mould">2. The mould</a><a href="#mill">3. Make a sheet by hand</a><a href="#machine">4. The paper machine</a><a href="#compare">5. Laid, wove, hand, machine</a><a href="#evidence">6. Paper as evidence</a><a href="#sources">Sources</a>
+  </nav>
+</header>
+
+<section class="panel" id="timeline">
+  <h2>1. Substrates and paper through time</h2>
+  <p class="intro small">From papyrus and parchment to the paper machine. Filter the timeline by subject. Each entry names the work in the source list where it is treated most fully.</p>
+  <div class="filters" id="tlFilters" role="radiogroup" aria-label="Show"></div>
+  <div class="tlscroll" tabindex="0" role="region" aria-label="Timeline entries (scrolls)"><div class="tl" id="tl"></div></div>
+  <p class="small muted" id="tlCount"></p>
+</section>
+
+<section class="panel" id="mould">
+  <h2>2. The mould</h2>
+  <p class="intro small">Paper is made by lifting fibres suspended in water onto a screen. The European hand mould, developed in Italy, is a rigid wooden frame covered with wires. Everything you see in a sheet held up to the light comes from it. Choose a mould, then select a part to find it on the drawing.</p>
+  <div class="row" id="mouldTabs" role="tablist" aria-label="Mould"></div>
+  <div class="mouldgrid">
+    <div class="figure"><div id="mouldFig"></div><span class="cap" id="mouldCap"></span></div>
+    <div class="parts" id="mouldParts"></div>
+  </div>
+</section>
+
+<section class="panel" id="mill">
+  <h2>3. Make a sheet by hand</h2>
+  <p class="intro small">The process as it was carried out in a European mill of the seventeenth and eighteenth centuries, as Lalande described it in 1761. Work through each stage; some stages ask you to do the work.</p>
+  <div class="millgrid">
+    <ol class="steps" id="millSteps"></ol>
+    <div id="millStage"></div>
+  </div>
+</section>
+
+<section class="panel" id="machine">
+  <h2>4. The paper machine</h2>
+  <p class="intro small">Nicolas-Louis Robert patented a machine for making paper in a continuous web in France in 1799. Developed in England with the backing of the stationers Henry and Sealy Fourdrinier and built by Bryan Donkin, it was working at Frogmore Mill in Hertfordshire by 1803. Watch the web form, and change the dandy roll to see how machine-made laid and wove paper differ.</p>
+  <div class="row" id="dandyTabs" role="radiogroup" aria-label="Dandy roll"></div>
+  <div class="figure"><div id="machineFig"></div><span class="cap">A Fourdrinier machine in side view, not to scale. The web runs from left to right.</span></div>
+  <div class="mouldgrid">
+    <div class="box" id="machineText"></div>
+    <div class="figure"><canvas id="machineSheet" width="360" height="260" aria-label="The paper the machine is making"></canvas><span class="cap" id="machineSheetCap"></span></div>
+  </div>
+</section>
+
+<section class="panel" id="compare">
+  <h2>5. Laid, wove, hand, machine</h2>
+  <p class="intro small">Four kinds of paper, each held up to the light. Switch the light to see how much is hidden in reflected light.</p>
+  <div class="row" id="lightTabs" role="radiogroup" aria-label="Light"></div>
+  <div class="cmpgrid" id="cmpGrid"></div>
+  <h3 style="margin-top:6px">Test yourself</h3>
+  <div class="quiz">
+    <div class="figure"><canvas id="quizCanvas" width="320" height="240" aria-label="A sheet to identify, held to the light"></canvas></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <p class="small">What kind of paper is this? Look for chain lines and their shadows, the regularity of the laid lines, and the edges.</p>
+      <div class="row" id="quizBtns"></div>
+      <div class="note" id="quizFeedback" role="status">Choose an answer.</div>
+      <div><button class="btn small" id="quizNext">Another sheet</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="evidence">
+  <h2>6. Paper as evidence</h2>
+  <p class="intro small">Because the chain lines and watermark sit in fixed places on the sheet, folding moves them in predictable ways. This is the standard way of finding the format of a hand-press book, as set out in Gaskell. Choose a format to see where the evidence falls on a single leaf.</p>
+  <div class="row" id="fmtTabs" role="radiogroup" aria-label="Format"></div>
+  <div class="evgrid">
+    <div class="figure"><canvas id="evSheet" width="520" height="380" aria-label="The whole sheet, with the chosen leaf outlined"></canvas><span class="cap">The whole sheet held to the light, with fold lines dashed. The outlined leaf is shown on the right as it sits in the book.</span></div>
+    <div class="figure"><canvas id="evLeaf" width="300" height="380" aria-label="One leaf, upright as in the book"></canvas><span class="cap" id="evCap"></span></div>
+  </div>
+  <div class="box" id="evText"></div>
+  <div class="box">
+    <h3>Dating by watermarks</h3>
+    <ul>
+      <li>Moulds were made and used in pairs (twins), one being couched while the vatman formed a sheet on the other. A stock of paper therefore carries two near-identical marks, which can be told apart by small differences in the wire.</li>
+      <li>Moulds wore out after a few years of hard use. Paper made on the same pair of moulds was therefore made within a short span. Allan Stevenson showed that matching twin marks in an undated book against dated documents can date it closely. His case study is <i>The Problem of the Missale Speciale</i> (London: Bibliographical Society, 1967). The undated Missale speciale, or Constance Missal, had been claimed as older than the Gutenberg Bible; by tracing its watermarks to paper in dated documents, he placed its printing in the early 1470s.</li>
+      <li>Marks are identified by tracing or photographing them and comparing them with the repertories: Briquet (to 1600), Piccard (now searchable online as Piccard-Online), Churchill and Heawood (seventeenth and eighteenth centuries). A similar mark gives only an approximate date; an identical one, from the same mould, a close one.</li>
+      <li>From the 1790s many English papers carry a date in the watermark. It gives the earliest possible date of printing, not the date itself, because paper could lie in stock for years.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="panel" id="sources">
+  <h2>Sources</h2>
+  <div class="srcs">
+    <div class="scol"><div class="sg"><h3>Papermaking</h3>
+      <ul>
+        <li>Dard Hunter, <i>Papermaking: The History and Technique of an Ancient Craft</i> (1943; 2nd ed. 1947). The classic starting point; dated in places but still indispensable.</li>
+        <li>Jérôme de Lalande, <i>L'art de faire le papier</i> (1761), in the French Academy's <i>Descriptions des arts et métiers</i>. The key primary source.</li>
+        <li>Timothy Barrett, <i>European Hand Papermaking: Traditions, Tools, and Techniques</i> (2018). The modern standard, informed by his research on historical paper chemistry.</li>
+        <li>Sylvia Rodgers Albro, <i>Fabriano: City of Medieval and Renaissance Papermaking</i> (2016).</li>
+        <li>Orietta Da Rold, <i>Paper in Medieval England</i> (2020).</li>
+        <li>Leonard Rosenband, <i>Papermaking in Eighteenth-Century France</i> (2000). Labour and the trade, centred on the Montgolfier mill.</li>
+      </ul></div><div class="sg"><h3>National industry histories</h3>
+      <ul>
+        <li>A. H. Shorter, <i>Paper Mills and Paper Makers in England, 1495–1800</i> (1957).</li>
+        <li>D. C. Coleman, <i>The British Paper Industry, 1495–1860</i> (1958).</li>
+        <li>Richard L. Hills, <i>Papermaking in Britain, 1488–1988</i> (1988).</li>
+        <li>John Bidwell, <i>American Paper Mills, 1690–1832</i> (2013).</li>
+      </ul></div></div>
+    <div class="scol"><div class="sg"><h3>Mechanisation and wood pulp</h3>
+      <ul>
+        <li>R. H. Clapperton, <i>The Paper-making Machine</i> (1967). The Fourdrinier and cylinder machines.</li>
+        <li>Judith McGaw, <i>Most Wonderful Machine</i> (1987). Mechanisation and social change in the Berkshire paper industry.</li>
+        <li>Cathleen Baker, <i>From the Hand to the Machine: Nineteenth-Century American Paper and Mediums</i> (2010).</li>
+      </ul></div><div class="sg"><h3>Paper as evidence in printed books</h3>
+      <ul>
+        <li>Philip Gaskell, <i>A New Introduction to Bibliography</i> (1972). Its paper chapter is the standard account of how paper relates to printing practice.</li>
+        <li>Allan Stevenson, "Paper as Bibliographical Evidence", <i>The Library</i> (1962), and <i>The Problem of the Missale Speciale</i> (1967). These established watermark analysis as a dating method.</li>
+      </ul></div><div class="sg"><h3>Watermark repertories</h3>
+      <ul>
+        <li>C. M. Briquet, <i>Les Filigranes</i> (1907). Roughly 1282–1600.</li>
+        <li>W. A. Churchill, <i>Watermarks in Paper</i> (1935). The seventeenth and eighteenth centuries.</li>
+        <li>Edward Heawood, <i>Watermarks, Mainly of the 17th and 18th Centuries</i> (1950).</li>
+        <li>Gerhard Piccard, <i>Findbücher</i>; now searchable online as Piccard-Online.</li>
+      </ul></div></div>
+    <div class="scol"><div class="sg"><h3>Papyrus and parchment</h3>
+      <ul>
+        <li>Naphtali Lewis, <i>Papyrus in Classical Antiquity</i> (1974).</li>
+        <li>Ronald Reed, <i>Ancient Skins, Parchments and Leathers</i> (1972) and <i>The Nature and Making of Parchment</i> (1975).</li>
+        <li>Peter Rück (ed.), <i>Pergament: Geschichte, Struktur, Restaurierung, Herstellung</i> (1991).</li>
+        <li>Christopher de Hamel, <i>Scribes and Illuminators</i> (1992).</li>
+        <li>Bruce Holsinger, <i>On Parchment: Animals, Archives, and the Making of Culture</i> (2022).</li>
+        <li>Sarah Fiddyment et al., "Animal origin of 13th-century uterine vellum revealed using noninvasive peptide fingerprinting", <i>PNAS</i> (2015).</li>
+      </ul></div><div class="sg"><h3>Paper beyond Europe, and its culture</h3>
+      <ul>
+        <li>Tsien Tsuen-hsuin, <i>Paper and Printing</i> (1985), in Needham's <i>Science and Civilisation in China</i>.</li>
+        <li>Jonathan Bloom, <i>Paper Before Print: The History and Impact of Paper in the Islamic World</i> (2001).</li>
+        <li>Helen Loveday, <i>Islamic Paper: A Study of the Ancient Craft</i> (2001).</li>
+        <li>Timothy Barrett, <i>Japanese Papermaking</i> (1983).</li>
+        <li>Lothar Müller, <i>White Magic: The Age of Paper</i> (English trans. 2014).</li>
+      </ul></div></div>
+  </div>
+</section>
+<footer>All drawings are teaching schematics, and the sheets are generated rather than photographed: line spacing and texture are exaggerated so that they can be seen on screen. Water content and pressing figures in the mill are illustrative. Check dates against the sources for any particular paper.</footer>
+</div>
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const rng=seed=>()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* =========================================================
+   TIMELINE
+   ========================================================= */
+const KINDS={papyrus:{n:'Papyrus',c:'#8a7a2e'},parchment:{n:'Parchment',c:'#9a5b3a'},east:{n:'Paper in Asia and Islam',c:'#3e7a6a'},europe:{n:'Hand papermaking in Europe',c:'#2f5f8f'},machine:{n:'Machines and new fibres',c:'#6a4f8a'}};
+const EVENTS=[
+ {y:'c. 3000 BC',k:'papyrus',t:'Papyrus in Egypt',d:'Strips of pith from the papyrus plant were laid side by side in two layers at right angles, pressed and dried into sheets, which were pasted end to end into rolls. Papyrus remained in use through antiquity and, in the papal chancery, into the eleventh century.',s:'Lewis'},
+ {y:'Antiquity',k:'parchment',t:'Parchment',d:'Skins of calf, sheep or goat are soaked in lime, dehaired, stretched on a frame, scraped with a crescent-shaped knife and dried under tension. Parchment is not tanned, so it stays stiff and takes ink on both sides. The parchment codex became the usual form of the book from the fourth century.',s:'Reed; de Hamel; Rück'},
+ {y:'2nd c. BC–AD 105',k:'east',t:'Paper in China',d:'Paper made from plant fibres survives from the Western Han dynasty. Tradition credits Cai Lun with presenting improved paper to the emperor in AD 105. Chinese papermakers used bark, hemp and rags, and formed sheets on flexible screens.',s:'Tsien'},
+ {y:'8th century',k:'east',t:'Paper reaches the Islamic world',d:'The story that Chinese prisoners taught papermaking at Samarkand after 751 is a later legend. Paper was certainly made in Baghdad by the 790s, and it soon replaced papyrus and parchment in Islamic administration and book production.',s:'Bloom; Loveday'},
+ {y:'12th century',k:'east',t:'Paper in Spain',d:'Under Muslim rule Xàtiva, near Valencia, became a centre of papermaking praised by the geographer al-Idrisi in the mid-twelfth century. Paper reached Christian Europe from Spain and from trade with the Islamic Mediterranean.',s:'Bloom; Hunter'},
+ {y:'13th century',k:'parchment',t:'"Uterine vellum"',d:'The very thin parchment of thirteenth-century pocket Bibles was long said to come from unborn animals. Protein analysis by Fiddyment and colleagues (2015) showed it came from ordinary calf, goat and sheep skins, split and scraped very thin.',s:'Fiddyment et al.; Holsinger'},
+ {y:'Later 13th century',k:'europe',t:'Fabriano',d:'Papermakers at Fabriano in the Marche changed the craft. They beat rags with water-powered stamping mills of many hammers, formed sheets on a rigid mould of metal wire, sized paper with gelatine instead of starch, and added the watermark.',s:'Albro; Barrett; Hunter'},
+ {y:'1282',k:'europe',t:'The earliest watermarks',d:'The earliest known watermarks appear in Italian paper of the 1280s. Briquet’s repertory begins with a mark of 1282.',s:'Briquet'},
+ {y:'14th century',k:'europe',t:'Paper spreads north',d:'Mills were established in France in the fourteenth century, and in 1390 Ulman Stromer founded a mill at Nuremberg. England relied on imported paper, chiefly from Italy and France, which was used for documents and books from the fourteenth century.',s:'Hunter; Da Rold'},
+ {y:'1450s',k:'europe',t:'Printing',d:'The printing press multiplied the demand for paper. Printing paper was usually unsized or only lightly sized, since it was dampened before printing; supplies of rags became a constant concern for the trade.',s:'Gaskell; Müller'},
+ {y:'c. 1495',k:'europe',t:'The first English mill',d:'John Tate’s mill at Hertford made the paper for Wynkyn de Worde’s 1495 edition of Bartholomaeus Anglicus, which says so in its colophon. Domestic production stayed small; John Spilman’s mill at Dartford (1588) made white paper for a time.',s:'Shorter; Coleman; Hills'},
+ {y:'c. 1680',k:'europe',t:'The Hollander beater',d:'Dutch papermakers developed a beater in which a roll with metal bars circulated the rags in an oval tub. It was far faster than the stamping mill, but cut the fibres shorter and generally made weaker paper.',s:'Hunter; Barrett'},
+ {y:'1690',k:'europe',t:'Paper in British America',d:'William Rittenhouse and partners built the first paper mill in British America at Germantown, near Philadelphia.',s:'Bidwell'},
+ {y:'c. 1756–57',k:'europe',t:'Wove paper',d:'James Whatman made paper on a mould covered with woven wire cloth, giving a sheet without chain or laid lines. The first 28 sheets of Baskerville’s Virgil (Birmingham, 1757) are printed on it; the rest of the book is on laid paper.',s:'Gaskell; Hills'},
+ {y:'1761',k:'europe',t:'Lalande’s description',d:'Jérôme de Lalande’s L’art de faire le papier, in the Academy’s Descriptions des arts et métiers, describes and illustrates every stage of French and Dutch practice. In the following decades French mills, notably the Montgolfiers’ at Annonay, reorganised their work and adopted Dutch methods.',s:'Lalande; Rosenband'},
+ {y:'1790s',k:'europe',t:'Chlorine bleaching',d:'Chlorine bleaching let mills whiten coloured and poorer rags, easing the shortage of white linen; badly controlled, it weakened the paper.',s:'Hunter; Hills'},
+ {y:'1799',k:'machine',t:'Robert’s machine',d:'Nicolas-Louis Robert, working at the Didot mill at Essonnes, patented a machine that formed paper on an endless moving wire.',s:'Clapperton'},
+ {y:'1803–07',k:'machine',t:'The Fourdrinier',d:'Developed in England with the backing of Henry and Sealy Fourdrinier and engineered by Bryan Donkin, the machine was working at Frogmore Mill, Hertfordshire, by 1803. It produced a continuous web of paper.',s:'Clapperton; Hills'},
+ {y:'1807',k:'machine',t:'Engine sizing',d:'Moritz Illig published a method of sizing paper in the beater with rosin and alum. It suited machine production, but the acidity it introduced is the main reason much nineteenth-century paper is now brittle.',s:'Baker; Hunter'},
+ {y:'1809',k:'machine',t:'The cylinder machine',d:'John Dickinson patented a machine in which a wire-covered cylinder revolves in the vat and picks up the fibres.',s:'Clapperton'},
+ {y:'1820s',k:'machine',t:'Drying cylinders and the dandy roll',d:'Steam-heated cylinders dried the web continuously. In 1826 John Marshall introduced the dandy roll, a wire-covered roller riding on the wet web, which impressed laid lines and watermarks into machine-made paper.',s:'Clapperton; Hills'},
+ {y:'1840s–1880s',k:'machine',t:'Wood pulp and new fibres',d:'Friedrich Keller’s mechanical wood pulp (1840s), esparto grass in Britain, and chemical wood pulps (soda, sulphite and sulphate) freed the industry from rags. They made paper cheap and plentiful, and much of it short-lived.',s:'Baker; McGaw; Hills'},
+ {y:'1861',k:'machine',t:'The end of the British paper duty',d:'The excise duty on paper, levied since the reign of Anne, was repealed, contributing to the boom in cheap newspapers and books.',s:'Coleman'}
+];
+
+/* =========================================================
+   MOULDS
+   ========================================================= */
+const MOULDS={
+ laid:{n:'Laid mould (Europe, from the 13th century)',cap:'A laid mould seen from above, with its deckle lifted off, and a section across the ribs below.',parts:[
+  ['frame','Frame','A rigid frame of wood, made to stay flat when repeatedly plunged into warm water.'],
+  ['ribs','Ribs','Thin wooden bars across the frame, under the chain wires. Pulp gathers over them, leaving darker shadows beside the chain lines.'],
+  ['chain','Chain wires','Wires running over the ribs and twisted round the laid wires to hold them. They leave the widely spaced chain lines.'],
+  ['laid','Laid wires','Fine wires set very close together across the frame. They leave the dense laid lines.'],
+  ['tranche','Tranchefiles','Extra wires close to the frame at each end, parallel to the chain wires, which support the edge of the sheet.'],
+  ['mark','Watermark','A design in wire sewn onto the laid wires. The pulp is thinner over it, so it shows light against the light.'],
+  ['counter','Countermark','A second, smaller mark, often the maker’s initials, in the other half of the mould. Common from the seventeenth century.'],
+  ['deckle','Deckle','A separate removable frame laid on the mould. It holds the pulp in place and leaves the feathered deckle edges.']]},
+ wove:{n:'Wove mould (from c. 1756)',cap:'A wove mould: the same frame and ribs, covered with woven wire cloth.',parts:[
+  ['frame','Frame','The same wooden frame as the laid mould.'],
+  ['ribs','Ribs','Ribs still support the covering, but a backing layer under the woven face keeps their shadows out of the sheet.'],
+  ['cloth','Woven wire cloth','Brass wire woven like fabric, sometimes laid over a coarser backing cloth. It leaves an even surface with no chain or laid lines.'],
+  ['mark','Watermark','Watermarks can still be sewn onto the cloth, though many wove papers have none.'],
+  ['deckle','Deckle','The deckle works exactly as on a laid mould.']]},
+ flex:{n:'Flexible screen (China and Japan)',cap:'A flexible screen of split bamboo resting on a separate frame. Such screens also leave laid and chain lines.',parts:[
+  ['frame','Supporting frame','A wooden frame on which the flexible screen rests while the sheet is formed.'],
+  ['laid','Bamboo or grass strips','Fine split bamboo or grass stems, laid side by side. They make laid lines, often less regular than wire.'],
+  ['chain','Binding threads','Threads (often silk or horsehair) that tie the strips together, leaving chain lines.'],
+  ['deckle','Deckle sticks','Bars or a frame that hold the screen down and the pulp in.']]}
+};
+const MOULD_ORDER=['laid','wove','flex'];
+
+/* =========================================================
+   SHEET RENDERER (canvas): hand laid, hand wove, machine laid, machine wove
+   ========================================================= */
+function edgePath(r,x,y,w,h,deckles){
+  /* deckles: which sides are deckled: {t,r,b,l} */
+  const pts=[],J=(on)=>on?(r()-.5)*4:0,N=40;
+  for(let i=0;i<=N;i++)pts.push([x+w*i/N,y+J(deckles.t)]);
+  for(let i=1;i<=N;i++)pts.push([x+w+J(deckles.r),y+h*i/N]);
+  for(let i=N-1;i>=0;i--)pts.push([x+w*i/N,y+h+J(deckles.b)]);
+  for(let i=N-1;i>0;i--)pts.push([x+J(deckles.l),y+h*i/N]);
+  return pts;
+}
+function drawFleur(ctx,cx,cy,s){
+  /* crowned shield with a fleur-de-lys: a common mark, drawn as wire */
+  ctx.beginPath();
+  ctx.moveTo(cx-s*.42,cy-s*.28);ctx.lineTo(cx+s*.42,cy-s*.28);ctx.lineTo(cx+s*.42,cy+s*.12);
+  ctx.quadraticCurveTo(cx+s*.4,cy+s*.42,cx,cy+s*.56);ctx.quadraticCurveTo(cx-s*.4,cy+s*.42,cx-s*.42,cy+s*.12);ctx.closePath();
+  ctx.moveTo(cx,cy-s*.18);ctx.lineTo(cx,cy+s*.38);
+  ctx.moveTo(cx,cy+s*.02);ctx.bezierCurveTo(cx-s*.08,cy-s*.16,cx-s*.3,cy-s*.06,cx-s*.2,cy+s*.12);
+  ctx.moveTo(cx,cy+s*.02);ctx.bezierCurveTo(cx+s*.08,cy-s*.16,cx+s*.3,cy-s*.06,cx+s*.2,cy+s*.12);
+  ctx.moveTo(cx-s*.14,cy+s*.2);ctx.lineTo(cx+s*.14,cy+s*.2);
+  ctx.moveTo(cx-s*.38,cy-s*.3);ctx.lineTo(cx-s*.34,cy-s*.52);ctx.lineTo(cx-s*.17,cy-s*.38);ctx.lineTo(cx,cy-s*.58);ctx.lineTo(cx+s*.17,cy-s*.38);ctx.lineTo(cx+s*.34,cy-s*.52);ctx.lineTo(cx+s*.38,cy-s*.3);
+  ctx.stroke();
+}
+function drawInitials(ctx,cx,cy,s,txt){
+  ctx.save();ctx.font=`${Math.round(s)}px Georgia,serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeText(txt,cx,cy);ctx.restore();
+}
+function drawSheet(cv,o){
+  /* o: kind hl|hw|ml|mw, light trans|refl, seed, quality 0..1, wet, mark (bool), pad */
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,r=rng(o.seed||7),q=o.quality==null?0.85:o.quality;
+  const trans=o.light!=='refl',hand=o.kind[0]==='h',laid=o.kind[1]==='l';
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=trans?'#2b2a26':'#e9e9e4';ctx.fillRect(0,0,W,H);
+  const pad=o.pad==null?14:o.pad,x=pad,y=pad,w=W-2*pad,h=H-2*pad;
+  const deck=hand?{t:1,r:1,b:1,l:1}:(o.deckles||{t:0,r:1,b:0,l:1});
+  const pts=edgePath(r,x,y,w,h,deck);
+  ctx.save();ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+  if(!trans){ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=6;ctx.shadowOffsetY=2;}
+  ctx.fillStyle=o.wet?'#d3d8d2':trans?'#f1dfb0':'#f1ead8';ctx.fill();ctx.shadowColor='transparent';ctx.clip();
+  /* thickness: cloudiness, stronger in hand paper and in a badly formed sheet */
+  const cloud=(hand?0.09:0.04)+(1-q)*0.22,nB=hand?60:40;
+  for(let i=0;i<nB;i++){
+    const bx=x+r()*w,by=y+r()*h,br=10+r()*(hand?42:30)*(1.2-q*0.4),g=ctx.createRadialGradient(bx,by,0,bx,by,br);
+    const a=cloud*(0.4+r()*0.8),dark=r()<0.55;
+    g.addColorStop(0,trans?(dark?`rgba(110,75,25,${a})`:`rgba(255,250,230,${a*1.3})`):(dark?`rgba(150,130,90,${a*0.45})`:`rgba(255,255,255,${a*0.5})`));
+    g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(bx-br,by-br,br*2,br*2);
+  }
+  /* fibres */
+  ctx.lineWidth=0.7;
+  for(let i=0;i<(hand?520:620);i++){
+    const fx=x+r()*w,fy=y+r()*h,len=4+r()*10,ang=hand?r()*Math.PI:(Math.PI/2+(r()-.5)*0.7);
+    ctx.strokeStyle=trans?`rgba(120,85,35,${0.08+r()*0.12})`:`rgba(150,130,95,${0.08+r()*0.12})`;
+    ctx.beginPath();ctx.moveTo(fx,fy);ctx.quadraticCurveTo(fx+Math.cos(ang)*len*.5+(r()-.5)*3,fy+Math.sin(ang)*len*.5+(r()-.5)*3,fx+Math.cos(ang)*len,fy+Math.sin(ang)*len);ctx.stroke();
+  }
+  const light=a=>trans?`rgba(255,251,236,${a})`:`rgba(255,255,255,${a*0.28})`;
+  if(laid){
+    /* laid lines */
+    const sp=2.7;ctx.lineWidth=0.8;ctx.strokeStyle=light(0.42);
+    for(let yy=y+1;yy<y+h;yy+=sp+(hand?(r()-.5)*0.5:0)){
+      ctx.beginPath();ctx.moveTo(x,yy);
+      if(hand){for(let xx=x;xx<=x+w;xx+=w/8)ctx.lineTo(xx,yy+(r()-.5)*0.6);}else ctx.lineTo(x+w,yy);
+      ctx.stroke();
+    }
+    /* chain lines, with rib shadows on hand-made paper */
+    const n=Math.round(w/(hand?27:26)),cs=w/n;
+    for(let i=1;i<n;i++){
+      const cx=x+i*cs+(hand?(r()-.5)*3:0);
+      if(hand&&trans){const g=ctx.createLinearGradient(cx-8,0,cx+8,0);g.addColorStop(0,'rgba(110,75,25,0)');g.addColorStop(.5,'rgba(110,75,25,.2)');g.addColorStop(1,'rgba(110,75,25,0)');ctx.fillStyle=g;ctx.fillRect(cx-8,y,16,h);}
+      ctx.strokeStyle=light(0.75);ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(cx+(hand?(r()-.5)*2:0),y+h);ctx.stroke();
+    }
+    if(hand){ctx.strokeStyle=light(0.6);ctx.lineWidth=1.1;[x+7,x+w-7].forEach(tx=>{ctx.beginPath();ctx.moveTo(tx,y);ctx.lineTo(tx,y+h);ctx.stroke();});}
+  } else {
+    /* wove: faint woven texture */
+    ctx.strokeStyle=trans?'rgba(255,250,235,.07)':'rgba(255,255,255,.05)';ctx.lineWidth=.6;
+    for(let yy=y;yy<y+h;yy+=2.2){ctx.beginPath();ctx.moveTo(x,yy);ctx.lineTo(x+w,yy);ctx.stroke();}
+    for(let xx=x;xx<x+w;xx+=2.2){ctx.beginPath();ctx.moveTo(xx,y);ctx.lineTo(xx,y+h);ctx.stroke();}
+  }
+  /* watermark and countermark */
+  if(o.mark!==false){
+    const ms=Math.min(w*.32,h*.62);
+    ctx.lineCap='round';ctx.lineJoin='round';
+    const pass=(fn)=>{if(trans){ctx.strokeStyle='rgba(110,75,25,.14)';ctx.lineWidth=4.5;fn();}ctx.strokeStyle=light(trans?0.9:0.9);ctx.lineWidth=trans?1.8:1.4;fn();};
+    if(o.kind==='hl'||o.kind==='hw'){
+      pass(()=>drawFleur(ctx,x+w*.25,y+h*.5,ms));
+      if(o.kind==='hl')pass(()=>drawInitials(ctx,x+w*.75,y+h*.5,ms*.32,'I V'));
+    } else if(o.kind==='ml'||o.dandyMark){
+      pass(()=>drawInitials(ctx,x+w*.5,y+h*.5,ms*.3,'1845'));
+    }
+  }
+  if(o.wet){ctx.fillStyle='rgba(120,150,170,.18)';ctx.fillRect(x-4,y-4,w+8,h+8);}
+  ctx.restore();
+}
+
+/* =========================================================
+   1. TIMELINE
+   ========================================================= */
+let tlKind='';
+function renderTimeline(){
+  $('#tlFilters').innerHTML=[['','Everything'],...Object.entries(KINDS).map(([k,v])=>[k,v.n])].map(([k,n])=>`<button class="btn small" role="radio" data-tl="${k}" aria-pressed="${tlKind===k}" aria-checked="${tlKind===k}">${n}</button>`).join('');
+  const nEv=EVENTS.filter(e=>!tlKind||e.k===tlKind).length;$('#tlCount').textContent=`${nEv} entr${nEv===1?'y':'ies'}${nEv>3?'. Scroll inside the box to see them all.':'.'}`;
+  $('#tl').innerHTML=EVENTS.filter(e=>!tlKind||e.k===tlKind).map(e=>{const K=KINDS[e.k];return `<div class="ev" style="--c:${K.c}"><span class="yr">${e.y}</span><span class="kind">${K.n}</span><h3>${e.t}</h3><p>${e.d}</p><p class="src">See ${e.s}.</p></div>`;}).join('');
+}
+
+/* =========================================================
+   2. THE MOULD
+   ========================================================= */
+let mouldType='laid',mouldPart='';
+function fleurPath(cx,cy,s){
+  return `M${cx-s*.42} ${cy-s*.28} H${cx+s*.42} V${cy+s*.12} Q${cx+s*.4} ${cy+s*.42} ${cx} ${cy+s*.56} Q${cx-s*.4} ${cy+s*.42} ${cx-s*.42} ${cy+s*.12} Z M${cx} ${cy-s*.18} V${cy+s*.38} M${cx} ${cy+s*.02} C${cx-s*.08} ${cy-s*.16} ${cx-s*.3} ${cy-s*.06} ${cx-s*.2} ${cy+s*.12} M${cx} ${cy+s*.02} C${cx+s*.08} ${cy-s*.16} ${cx+s*.3} ${cy-s*.06} ${cx+s*.2} ${cy+s*.12} M${cx-s*.14} ${cy+s*.2} H${cx+s*.14} M${cx-s*.38} ${cy-s*.3} L${cx-s*.34} ${cy-s*.52} L${cx-s*.17} ${cy-s*.38} L${cx} ${cy-s*.58} L${cx+s*.17} ${cy-s*.38} L${cx+s*.34} ${cy-s*.52} L${cx+s*.38} ${cy-s*.3}`;
+}
+function mouldSVG(type){
+  const FX=56,FY=46,FW=408,FH=248,HL='#2f5f8f';
+  let g='',hl={};
+  const chainXs=[];for(let i=1;i<12;i++)chainXs.push(FX+i*FW/12);
+  if(type==='flex'){
+    g+=`<rect x="40" y="30" width="440" height="280" rx="4" fill="#a8835a" stroke="#6e5130" stroke-width="2"/><rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" fill="#5c4630"/>`;
+    for(let y=FY+2;y<FY+FH;y+=3.2)g+=`<line x1="${FX}" x2="${FX+FW}" y1="${y}" y2="${y}" stroke="#d9c58f" stroke-width="2.2"/>`;
+    chainXs.forEach(x=>{g+=`<line x1="${x}" x2="${x}" y1="${FY}" y2="${FY+FH}" stroke="#f3ead2" stroke-width="1.4"/>`;});
+    g+=`<rect x="${FX-6}" y="${FY-6}" width="14" height="${FH+12}" fill="#c9a676" stroke="#6e5130"/><rect x="${FX+FW-8}" y="${FY-6}" width="14" height="${FH+12}" fill="#c9a676" stroke="#6e5130"/>`;
+    hl.frame=`<rect x="40" y="30" width="440" height="280" rx="4" fill="none" stroke="${HL}" stroke-width="5"/>`;
+    hl.laid=`<rect x="${FX}" y="${FY+80}" width="${FW}" height="40" fill="${HL}" opacity=".35"/>`;
+    hl.chain=chainXs.map(x=>`<line x1="${x}" x2="${x}" y1="${FY}" y2="${FY+FH}" stroke="${HL}" stroke-width="4"/>`).join('');
+    hl.deckle=`<rect x="${FX-8}" y="${FY-8}" width="18" height="${FH+16}" fill="none" stroke="${HL}" stroke-width="4"/><rect x="${FX+FW-10}" y="${FY-8}" width="18" height="${FH+16}" fill="none" stroke="${HL}" stroke-width="4"/>`;
+    g+=`<text x="260" y="340" text-anchor="middle" font-size="12" fill="#62625e">The screen lifts off the frame with the wet sheet on it</text>`;
+  } else {
+    /* deckle, lifted off and shown above the mould */
+    g+=`<rect x="22" y="12" width="476" height="316" rx="6" fill="none" stroke="#c9a676" stroke-width="12" opacity=".55"/>`;
+    g+=`<rect x="40" y="30" width="440" height="280" rx="3" fill="#9a7445" stroke="#6e5130" stroke-width="2"/>`;
+    g+=`<rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" fill="#3a2e22"/>`;
+    /* ribs, seen faintly through the wires */
+    chainXs.forEach(x=>{g+=`<rect x="${x-3}" y="${FY}" width="6" height="${FH}" fill="#7a5a32"/>`;});
+    if(type==='laid'){
+      for(let y=FY+1.5;y<FY+FH;y+=2.6)g+=`<line x1="${FX}" x2="${FX+FW}" y1="${y}" y2="${y}" stroke="#c9a978" stroke-width=".7"/>`;
+      chainXs.forEach(x=>{g+=`<line x1="${x}" x2="${x}" y1="${FY}" y2="${FY+FH}" stroke="#e2c48e" stroke-width="1.8"/>`;});
+      [FX+6,FX+FW-6].forEach(x=>{g+=`<line x1="${x}" x2="${x}" y1="${FY}" y2="${FY+FH}" stroke="#e2c48e" stroke-width="1.6"/>`;});
+      g+=`<path d="${fleurPath(FX+FW*.25,FY+FH*.5,120)}" fill="none" stroke="#f0d9a6" stroke-width="2.6" stroke-linejoin="round"/>`;
+      g+=`<text x="${FX+FW*.75}" y="${FY+FH*.5+14}" text-anchor="middle" font-size="40" font-family="Georgia,serif" fill="none" stroke="#f0d9a6" stroke-width="1.6">I V</text>`;
+    } else {
+      g+=`<defs><pattern id="weave" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1 H4 M1 0 V4" stroke="#c9a978" stroke-width=".8"/><path d="M0 3 H4 M3 0 V4" stroke="#a88a5c" stroke-width=".6"/></pattern></defs><rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" fill="url(#weave)"/>`;
+      g+=`<path d="${fleurPath(FX+FW*.25,FY+FH*.5,120)}" fill="none" stroke="#f0d9a6" stroke-width="2.6" stroke-linejoin="round"/>`;
+    }
+    /* section across the ribs */
+    g+=`<text x="40" y="350" font-size="11" fill="#62625e">Section across the mould</text>`;
+    g+=`<rect x="40" y="360" width="440" height="8" fill="#9a7445"/>`;
+    chainXs.forEach(x=>{g+=`<path d="M${x-5} 362 L${x} 400 L${x+5} 362 Z" fill="#7a5a32"/>`;});
+    g+=`<rect x="40" y="356" width="440" height="4" fill="${type==='laid'?'#c9a978':'#b8996a'}"/>`;
+    if(type==='laid')chainXs.forEach(x=>{g+=`<circle cx="${x}" cy="356" r="2.4" fill="#e2c48e" stroke="#7a5a32" stroke-width=".6"/>`;});
+    else g+=`<rect x="40" y="352" width="440" height="3" fill="#e2c48e"/>`;
+    hl.frame=`<rect x="40" y="30" width="440" height="280" rx="3" fill="none" stroke="${HL}" stroke-width="5"/>`;
+    hl.ribs=chainXs.map(x=>`<path d="M${x-5} 362 L${x} 400 L${x+5} 362 Z" fill="${HL}"/><rect x="${x-3}" y="${FY}" width="6" height="${FH}" fill="${HL}" opacity=".45"/>`).join('');
+    hl.chain=chainXs.map(x=>`<line x1="${x}" x2="${x}" y1="${FY}" y2="${FY+FH}" stroke="${HL}" stroke-width="3.5"/><circle cx="${x}" cy="356" r="3" fill="${HL}"/>`).join('');
+    hl.laid=`<rect x="${FX}" y="${FY+100}" width="${FW}" height="30" fill="${HL}" opacity=".4"/><rect x="40" y="355" width="440" height="6" fill="${HL}" opacity=".6"/>`;
+    hl.tranche=[FX+6,FX+FW-6].map(x=>`<line x1="${x}" x2="${x}" y1="${FY}" y2="${FY+FH}" stroke="${HL}" stroke-width="4"/>`).join('');
+    hl.mark=`<path d="${fleurPath(FX+FW*.25,FY+FH*.5,120)}" fill="none" stroke="${HL}" stroke-width="5" stroke-linejoin="round"/>`;
+    hl.counter=`<text x="${FX+FW*.75}" y="${FY+FH*.5+14}" text-anchor="middle" font-size="40" font-family="Georgia,serif" fill="none" stroke="${HL}" stroke-width="4">I V</text>`;
+    hl.deckle=`<rect x="22" y="12" width="476" height="316" rx="6" fill="none" stroke="${HL}" stroke-width="6"/>`;
+    hl.cloth=`<rect x="${FX}" y="${FY}" width="${FW}" height="${FH}" fill="${HL}" opacity=".35"/><rect x="40" y="351" width="440" height="5" fill="${HL}"/>`;
+  }
+  const hls=Object.entries(hl).map(([k,v])=>`<g class="hl ${mouldPart===k?'on':''}" data-hl="${k}">${v}</g>`).join('');
+  return `<svg viewBox="0 0 520 ${type==='flex'?350:410}" role="img" aria-label="${MOULDS[type].n}">${g}${hls}</svg>`;
+}
+function renderMould(){
+  $('#mouldTabs').innerHTML=MOULD_ORDER.map(k=>`<button class="btn small" role="tab" data-mould="${k}" aria-selected="${k===mouldType}">${MOULDS[k].n}</button>`).join('');
+  $('#mouldFig').innerHTML=mouldSVG(mouldType);
+  $('#mouldCap').textContent=MOULDS[mouldType].cap;
+  $('#mouldParts').innerHTML=MOULDS[mouldType].parts.map(([k,n,d])=>`<button data-part="${k}" aria-pressed="${mouldPart===k}"><b>${n}</b><span>${d}</span></button>`).join('');
+}
+
+/* =========================================================
+   3. THE MILL: make a sheet by hand
+   ========================================================= */
+const M={step:0,rags:0,sorted:false,beater:'stamp',beat:0,mould:'laid',vat:'idle',s1:0,s2:0,quality:0,seed:11,couched:0,pulls:0,parted:false,packs:0,dried:0,sized:false,inked:'',done:new Set(),light:'trans'};
+function resetMill(){Object.assign(M,{step:0,rags:0,sorted:false,beater:'stamp',beat:0,mould:'laid',vat:'idle',s1:0,s2:0,quality:0,couched:0,pulls:0,parted:false,packs:0,hung:false,dried:0,sized:false,inked:'',light:'trans',done:new Set()});}
+const MILL=[
+ {id:'rags',t:'Sort and ferment the rags'},
+ {id:'beat',t:'Beat the rags to pulp'},
+ {id:'vat',t:'Form a sheet at the vat'},
+ {id:'couch',t:'Couch onto felts'},
+ {id:'press',t:'Press the post'},
+ {id:'part',t:'Part and press again'},
+ {id:'dry',t:'Dry in the loft'},
+ {id:'size',t:'Size the paper'},
+ {id:'finish',t:'Finish and count'}
+];
+const meter=(v,cls)=>`<div class="meter ${cls||''}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(v)}"><i style="width:${Math.max(0,Math.min(100,v))}%"></i></div>`;
+function qualityWords(q){return q>=0.85?'even and well formed':q>=0.65?'acceptable, a little cloudy':q>=0.45?'cloudy and uneven':'badly formed: thick and thin patches throughout';}
+function millStageHTML(){
+  const s=MILL[M.step].id;let fig='',txt='';
+  if(s==='rags'){
+    fig=`<svg viewBox="0 0 320 200" role="img" aria-label="A heap of rags">${Array.from({length:26},(_,i)=>{const r=rng(i+3);const c=M.sorted?['#f2efe6','#ebe6d8','#e4dfcf'][i%3]:['#f2efe6','#b9a98a','#8e9fb2','#c98f7a','#e4dfcf'][i%5];return `<ellipse cx="${60+r()*200}" cy="${110+r()*55}" rx="${18+r()*16}" ry="${8+r()*7}" transform="rotate(${(r()-.5)*40} 160 140)" fill="${c}" stroke="#8f8676" stroke-width=".6"/>`;}).join('')}
+      ${M.rags>0?`<rect x="20" y="20" width="280" height="${Math.min(4,M.rags)*10}" fill="#c9b98e" opacity=".35"/>`:''}<text x="160" y="190" text-anchor="middle" font-size="11" fill="#62625e">${M.sorted?'white linen rags, sorted':'mixed rags as they arrive'}</text></svg>`;
+    txt=`<p>The raw material of European paper until the nineteenth century was rags of linen and hemp, collected by rag merchants. Women in the mill sorted them by quality and colour, since white rags made white paper, and cut them small.</p>
+      <p>The rags were then dampened and left in heaps or vats to ferment for some weeks. Rotting loosened the fibres before beating.</p>
+      <div class="row"><button class="btn primary" data-act="sort" ${M.sorted?'disabled':''}>Sort and cut the rags</button><button class="btn" data-act="ferment" ${!M.sorted||M.rags>=4?'disabled':''}>Leave them a week</button></div>
+      ${meter(M.rags*25)}<span class="readout">${M.rags} of 4 weeks of fermenting</span>`;
+  }
+  if(s==='beat'){
+    const anim=M._beating;
+    fig=M.beater==='stamp'
+      ?`<svg viewBox="0 0 320 200" role="img" aria-label="Stamping mill"><rect x="20" y="140" width="280" height="40" fill="#8a6b3c"/>${[60,120,180,240].map((x,i)=>`<rect x="${x-18}" y="120" width="36" height="22" fill="#d9d2bf" stroke="#6e5130"/><g class="${anim?'hammer':''}" style="animation-delay:${i*0.17}s"><rect x="${x-9}" y="40" width="18" height="70" fill="#9a7445" stroke="#6e5130"/><rect x="${x-12}" y="104" width="24" height="12" fill="#5c5c5c"/></g>`).join('')}<rect x="20" y="28" width="280" height="10" fill="#6e5130"/><text x="160" y="196" text-anchor="middle" font-size="11" fill="#62625e">water-driven hammers pound the rags in troughs</text></svg>`
+      :`<svg viewBox="0 0 320 200" role="img" aria-label="Hollander beater"><ellipse cx="160" cy="110" rx="140" ry="60" fill="#d9d2bf" stroke="#6e5130" stroke-width="2"/><rect x="80" y="104" width="160" height="12" fill="#8a6b3c"/><g class="${anim?'spin':''}"><circle cx="200" cy="90" r="28" fill="#7f7f7f" stroke="#444"/>${Array.from({length:10},(_,i)=>`<line x1="200" y1="90" x2="${200+28*Math.cos(i*Math.PI/5)}" y2="${90+28*Math.sin(i*Math.PI/5)}" stroke="#bbb" stroke-width="2"/>`).join('')}</g><text x="160" y="196" text-anchor="middle" font-size="11" fill="#62625e">a roll set with metal bars circulates the rags</text></svg>`;
+    const need=M.beater==='stamp'?6:2,pct=Math.min(100,M.beat/need*100);
+    txt=`<p>The fermented rags were washed and beaten in water until the fibres separated and frayed. Choose a beater:</p>
+      <div class="row" role="radiogroup" aria-label="Beater"><button class="btn small" data-act="stamp" aria-pressed="${M.beater==='stamp'}">Stamping mill</button><button class="btn small" data-act="holl" aria-pressed="${M.beater==='holl'}">Hollander (from c. 1680)</button></div>
+      <p class="small">${M.beater==='stamp'?'The stamping mill took a day or more for each batch; its pounding drew the fibres out long and frayed, which made strong paper.':'The Hollander does the work in hours rather than days, but its metal bars cut the fibres shorter, which generally makes weaker paper.'}</p>
+      <div class="row"><button class="btn primary" data-act="beat" ${pct>=100?'disabled':''}>${M.beater==='stamp'?'Run the hammers':'Run the beater'}</button></div>
+      ${meter(pct)}<span class="readout">${pct>=100?'The pulp is ready: fibres separated and suspended in water.':`Beating: ${Math.round(pct)}%`}</span>`;
+    fig+=`<canvas id="fibreCv" width="320" height="110" aria-label="Fibres seen under magnification"></canvas><span class="cap">The fibres under magnification</span>`;
+  }
+  if(s==='vat'){
+    const v=M.vat,depth=v==='dipped'?78:0,hasPulp=v!=='idle'&&v!=='dipped';
+    fig=`<svg viewBox="0 0 320 210" role="img" aria-label="The vat and the mould"><rect x="30" y="100" width="260" height="90" rx="6" fill="#8a6b3c"/><rect x="40" y="108" width="240" height="74" fill="#d9dccf"/><rect x="40" y="108" width="240" height="6" fill="#c7cdc0"/>
+      <g id="mouldG" class="${M._shake==='x'?'shakeX':M._shake==='y'?'shakeY':''}" style="transform:translateY(${depth}px);transition:transform .6s">
+        <rect x="70" y="${v==='couch'?50:40}" width="180" height="10" fill="#9a7445" stroke="#6e5130"/>
+        ${v!=='off'&&v!=='ready'?'<rect x="64" y="32" width="192" height="8" fill="#c9a676" stroke="#6e5130"/>':''}
+        ${hasPulp?'<rect x="74" y="36" width="172" height="5" fill="#ece6d2"/>':''}
+        ${hasPulp&&v==='lifted'?'<g fill="#7fa6b8"><circle class="drip" cx="110" cy="54" r="2"/><circle class="drip" cx="160" cy="54" r="2" style="animation-delay:.3s"/><circle class="drip" cx="210" cy="54" r="2" style="animation-delay:.6s"/></g>':''}
+      </g>
+      <text x="160" y="205" text-anchor="middle" font-size="11" fill="#62625e">the vat of warm pulp, with the vatman's mould and deckle</text></svg>`;
+    if(hasPulp)fig+=`<canvas id="wetCv" width="320" height="220" aria-label="The sheet on the mould, held to the light"></canvas><span class="cap">The newly formed sheet on the mould, held to the light</span>`;
+    const tips={idle:'Choose a mould, then dip it into the vat.',dipped:'The mould is under the surface. Lift it out level, bringing up a layer of pulp.',lifted:'Water drains through the wires. Before the fibres settle, shake the mould: side to side and back to front. Both are needed: shaking crosses the fibres and spreads them evenly.',shaken:'The fibres have settled. Lift off the deckle.',off:'The deckle is off. The sheet is ready to be passed to the coucher.'};
+    const st=v==='lifted'&&(M.s1||M.s2)?'shaken':v;
+    txt=`<p>The vatman dips the mould, with the deckle on top, into a vat of warm pulp: about one part fibre to many parts water. He lifts it out level and gives it the vatman's shake. The water drains through the wires and the fibres mat together into a sheet.</p>
+      <div class="row" role="radiogroup" aria-label="Mould"><button class="btn small" data-act="mlaid" aria-pressed="${M.mould==='laid'}" ${v!=='idle'?'disabled':''}>Laid mould</button><button class="btn small" data-act="mwove" aria-pressed="${M.mould==='wove'}" ${v!=='idle'?'disabled':''}>Wove mould (from c. 1756)</button></div>
+      <div class="row">
+        <button class="btn primary" data-act="dip" ${v!=='idle'?'disabled':''}>Dip the mould</button>
+        <button class="btn" data-act="lift" ${v!=='dipped'?'disabled':''}>Lift it out</button>
+        <button class="btn" data-act="shx" ${v!=='lifted'?'disabled':''}>Shake side to side</button>
+        <button class="btn" data-act="shy" ${v!=='lifted'?'disabled':''}>Shake back to front</button>
+        <button class="btn" data-act="deckle" ${v!=='lifted'||!(M.s1||M.s2)?'disabled':''}>Lift off the deckle</button>
+        <button class="btn small" data-act="again" ${v==='idle'?'disabled':''}>Tip it back and try again</button>
+      </div>
+      <p class="note ${v==='off'?(M.quality>=0.65?'ok':'bad'):''}" role="status">${v==='off'?`Your sheet is ${qualityWords(M.quality)}. ${M.quality<0.65?'A vatman would tip a sheet like this back into the vat. Try again with one or two shakes each way.':'Pass it to the coucher.'}`:tips[st]}${v==='lifted'?` <span class="readout">(shaken ${M.s1} side to side, ${M.s2} back to front)</span>`:''}</p>`;
+  }
+  if(s==='couch'){
+    const n=M.couched,layers=Math.min(16,n?2+Math.ceil(n/12):0);
+    fig=`<svg viewBox="0 0 320 200" role="img" aria-label="The post of felts and sheets"><rect x="60" y="170" width="200" height="12" fill="#8a6b3c"/>${Array.from({length:layers},(_,i)=>`<rect x="70" y="${164-i*7}" width="180" height="3.5" fill="#cfc7b3"/><rect x="72" y="${167.5-i*7}" width="176" height="2.5" fill="#f2ecdc"/>`).join('')}<text x="160" y="196" text-anchor="middle" font-size="11" fill="#62625e">${n?`a post of ${n} sheet${n===1?'':'s'} between felts`:'a felt laid on the couching board'}</text></svg>`;
+    txt=`<p>The coucher takes the mould and presses it face down onto a woollen felt, rolling it so that the wet sheet transfers. He lays another felt on top and hands the empty mould back. Working with a pair of moulds, vatman and coucher keep a steady rhythm.</p>
+      <p>Sheets and felts build up into a post, traditionally of 144 sheets (six quires).</p>
+      <div class="row"><button class="btn primary" data-act="couch" ${n>=1?'disabled':''}>Couch your sheet</button><button class="btn" data-act="post" ${n<1||n>=144?'disabled':''}>Make the rest of the post</button></div>
+      <span class="readout">${n} of 144 sheets in the post</span>`;
+  }
+  if(s==='press'){
+    const water=Math.max(0,100-M.pulls*16),squeeze=M.pulls*5;
+    fig=`<svg viewBox="0 0 320 210" role="img" aria-label="The screw press"><rect x="50" y="20" width="18" height="170" fill="#8a6b3c"/><rect x="252" y="20" width="18" height="170" fill="#8a6b3c"/><rect x="40" y="14" width="240" height="18" fill="#6e5130"/><rect x="152" y="32" width="16" height="${36+squeeze}" fill="#5c5c5c"/>
+      <rect x="80" y="${68+squeeze}" width="160" height="14" fill="#9a7445" stroke="#6e5130"/>
+      <rect x="90" y="${82+squeeze}" width="140" height="${88-squeeze}" fill="#e7e0cc" stroke="#cfc7b3"/>${Array.from({length:10},(_,i)=>`<line x1="90" x2="230" y1="${86+squeeze+i*(84-squeeze)/10}" y2="${86+squeeze+i*(84-squeeze)/10}" stroke="#cfc7b3"/>`).join('')}
+      <rect x="70" y="170" width="180" height="12" fill="#6e5130"/>
+      ${M.pulls>0&&water>20?`<g fill="#7fa6b8"><circle class="drip" cx="95" cy="176" r="2.2"/><circle class="drip" cx="160" cy="176" r="2.2" style="animation-delay:.4s"/><circle class="drip" cx="225" cy="176" r="2.2" style="animation-delay:.2s"/></g>`:''}
+      <line x1="160" y1="44" x2="${M.pulls%2?250:70}" y2="44" stroke="#9a7445" stroke-width="6" stroke-linecap="round"/><text x="160" y="205" text-anchor="middle" font-size="11" fill="#62625e">the post in the great screw press</text></svg>`;
+    txt=`<p>The whole post is run into a screw press. Several men heave on a long bar to tighten it, and water pours from the felts. Pressing consolidates the sheets as well as drying them.</p>
+      <div class="row"><button class="btn primary" data-act="pull" ${M.pulls>=5?'disabled':''}>Heave on the bar</button></div>
+      <span class="readout">Water left in the post (illustrative)</span>${meter(water,'water')}
+      <p class="small muted">${M.pulls>=5?'The press is as tight as the men can make it. The sheets are now firm enough to handle.':`${5-M.pulls} more heave${5-M.pulls===1?'':'s'} to bring the press tight.`}</p>`;
+  }
+  if(s==='part'){
+    fig=`<svg viewBox="0 0 320 200" role="img" aria-label="Parting the sheets"><rect x="40" y="150" width="110" height="${M.parted?6:30}" fill="#cfc7b3"/><rect x="170" y="${M.parted?110:150}" width="110" height="${M.parted?40+M.packs*0:6}" fill="#f2ecdc" stroke="#d6cdb5"/>${M.parted?Array.from({length:8},(_,i)=>`<line x1="170" x2="280" y1="${115+i*5}" y2="${115+i*5}" stroke="#ddd3bb"/>`).join(''):''}<text x="95" y="196" text-anchor="middle" font-size="11" fill="#62625e">felts</text><text x="225" y="196" text-anchor="middle" font-size="11" fill="#62625e">pack of sheets</text></svg>`;
+    txt=`<p>The layman lifts each sheet from its felt and builds them into a pack, and the felts go back to the coucher. The pack is pressed again without felts, and in better mills it was parted and repressed several times. This exchanging smoothed the surface and removed felt marks.</p>
+      <div class="row"><button class="btn primary" data-act="parting" ${M.parted?'disabled':''}>Part the sheets from the felts</button><button class="btn" data-act="pack" ${!M.parted||M.packs>=2?'disabled':''}>Press the pack</button></div>
+      <span class="readout">Pack pressed ${M.packs} of 2 times</span>`;
+  }
+  if(s==='dry'){
+    const hung=!!M.hung;
+    fig=`<svg viewBox="0 0 320 200" role="img" aria-label="The drying loft"><rect x="10" y="10" width="300" height="170" fill="#efe9dc"/>${[40,80,120].map(y=>`<line x1="20" x2="300" y1="${y}" y2="${y}" stroke="#8a6b3c" stroke-width="2"/>`).join('')}${hung?[40,80,120].map(y=>Array.from({length:6},(_,i)=>`<path d="M${34+i*45} ${y} h30 l-2 ${26} h-26 z" fill="#f7f3e8" stroke="#cfc6ae" opacity="${0.7+M.dried*0.075}"/>`).join('')).join(''):''}${Array.from({length:7},(_,i)=>`<rect x="${20+i*42}" y="150" width="20" height="30" fill="#c9b892" opacity=".7"/>`).join('')}<text x="160" y="195" text-anchor="middle" font-size="11" fill="#62625e">louvred shutters control the air</text></svg>`;
+    txt=`<p>Sheets were hung in spurs of a few sheets together over ropes of cow-hair or horsehair in the drying loft. Louvred shutters were opened or closed to control the air: drying too fast or too slowly spoiled the paper.</p>
+      <div class="row"><button class="btn primary" data-act="hang" ${hung?'disabled':''}>Hang the spurs</button><button class="btn" data-act="wait" ${!hung||M.dried>=4?'disabled':''}>Leave them a day</button></div>
+      ${meter(M.dried*25)}<span class="readout">${M.dried>=4?'Dry. At this stage the paper is unsized waterleaf.':`Drying: ${M.dried} of 4 days`}</span>`;
+  }
+  if(s==='size'){
+    const blot=M.inked;
+    fig=`<svg viewBox="0 0 320 200" role="img" aria-label="Ink on the paper"><rect x="30" y="20" width="260" height="150" fill="#f7f2e4" stroke="#d6cdb5"/>${blot?(blot==='water'?`<g fill="#3b4a6b"><ellipse cx="110" cy="95" rx="40" ry="26" opacity=".35"/><ellipse cx="110" cy="95" rx="26" ry="16" opacity=".5"/><path d="M80 95 q30 -30 60 0" stroke="#2c3550" stroke-width="5" fill="none" opacity=".6"/></g>`:`<path d="M80 95 q30 -30 60 0 M150 95 q15 -20 30 0 q15 20 30 0" stroke="#22263a" stroke-width="2.2" fill="none"/>`):''}<text x="160" y="190" text-anchor="middle" font-size="11" fill="#62625e">${blot==='water'?'ink feathers into unsized waterleaf':blot==='sized'?'ink stays crisp on sized paper':'a sheet ready for testing'}</text></svg>`;
+    txt=`<p>Unsized paper (waterleaf) soaks up ink like blotting paper. For writing, sheets were dipped in a warm size of gelatine, boiled from hide and parchment scraps, then pressed and dried again.</p>
+      <p>Printing paper was often left unsized or only lightly sized, because it was dampened before printing and printer's ink is oily rather than watery.</p>
+      <div class="row"><button class="btn" data-act="inkW" ${M.sized?'disabled':''}>Write on the waterleaf</button><button class="btn primary" data-act="sizeit" ${M.sized?'disabled':''}>Dip in size and dry again</button><button class="btn" data-act="inkS" ${!M.sized?'disabled':''}>Write on the sized sheet</button></div>`;
+  }
+  if(s==='finish'){
+    fig=`<canvas id="finalCv" width="360" height="260" aria-label="Your finished sheet"></canvas><div class="row"><button class="btn small" data-act="lt" aria-pressed="${M.light==='trans'}">Held to the light</button><button class="btn small" data-act="lr" aria-pressed="${M.light==='refl'}">In ordinary light</button></div>`;
+    txt=`<p>In the finishing room, women sorted the sheets, removed knots and faults with a knife, and set aside defective sheets. Paper might be smoothed by pressing, by hammering or by burnishing with a stone. It was then folded, counted into quires of 24 or 25 sheets and reams of 20 quires, and wrapped for sale. The outside quires of a ream were often of damaged sheets.</p>
+      <div class="note">${M.done.has('vat')?`Your sheet: ${M.mould} paper, ${qualityWords(M.quality)}${M.sized?', sized for writing':', unsized'}. Hold it to the light to see ${M.mould==='laid'?'the chain lines with their rib shadows, the laid lines, the watermark and the countermark':'the even wove surface and the watermark'}.`:'Form a sheet at the vat (stage 3) to see it here.'}</div>`;
+  }
+  return `<div class="stage"><div class="figure sheetbox">${fig}</div><div class="txt"><h3>${MILL[M.step].t}</h3>${txt}<div class="row"><button class="btn small" data-act="prev" ${M.step===0?'disabled':''}>Previous stage</button><button class="btn small" data-act="next" ${M.step===MILL.length-1?'disabled':''}>Next stage</button><button class="btn small" data-act="reset" ${M.step===0&&!M.done.size&&!M.sorted?'disabled':''}>Start again from the rags</button></div></div></div>`;
+}
+function drawFibres(){
+  const cv=$('#fibreCv');if(!cv)return;
+  const ctx=cv.getContext('2d'),r=rng(5),need=M.beater==='stamp'?6:2,p=Math.min(1,M.beat/need);
+  ctx.fillStyle='#e6ecee';ctx.fillRect(0,0,cv.width,cv.height);
+  const n=Math.round(14+p*90),len=M.beater==='stamp'?(120-p*60):(110-p*80);
+  ctx.lineCap='round';
+  for(let i=0;i<n;i++){
+    const x=r()*cv.width,y=r()*cv.height,a=r()*Math.PI,l=len*(0.5+r()*0.6);
+    ctx.strokeStyle=`rgba(120,105,80,${0.35+r()*0.3})`;ctx.lineWidth=p<0.3?3.2:1.4+r();
+    ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+Math.cos(a)*l*.5+(r()-.5)*14,y+Math.sin(a)*l*.5+(r()-.5)*14,x+Math.cos(a)*l,y+Math.sin(a)*l);ctx.stroke();
+    if(p>0.4&&M.beater==='stamp'){for(let k=0;k<3;k++){const t=r();const fx=x+Math.cos(a)*l*t,fy=y+Math.sin(a)*l*t;ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(fx,fy);ctx.lineTo(fx+(r()-.5)*12,fy+(r()-.5)*12);ctx.stroke();}}
+  }
+}
+function renderMill(){
+  $('#millSteps').innerHTML=MILL.map((x,i)=>`<li><button data-mstep="${i}" class="${M.done.has(x.id)&&i!==M.step?'done':''}" ${i===M.step?'aria-current="step"':''}>${x.t}</button></li>`).join('');
+  $('#millStage').innerHTML=millStageHTML();
+  drawFibres();
+  const wet=$('#wetCv');if(wet)drawSheet(wet,{kind:M.mould==='laid'?'hl':'hw',light:'trans',seed:M.seed,quality:M.vat==='lifted'&&!(M.s1||M.s2)?0.25:M.quality,wet:true});
+  const fin=$('#finalCv');if(fin)drawSheet(fin,{kind:M.mould==='laid'?'hl':'hw',light:M.light,seed:M.seed,quality:M.done.has('vat')?M.quality:0.85});
+}
+function shakeQuality(){const d=a=>a===0?0.45:Math.max(0,Math.abs(a-2)-0)*0.14;return Math.max(0.2,Math.min(1,1-d(M.s1)-d(M.s2)));}
+function millAct(a){
+  if(a==='reset'){resetMill();renderMill();$('#mill').scrollIntoView({block:'start'});return;}
+  const s=MILL[M.step].id;M._shake='';M._beating=false;
+  const done=id=>M.done.add(id);
+  switch(a){
+    case 'prev':M.step=Math.max(0,M.step-1);break;
+    case 'next':M.step=Math.min(MILL.length-1,M.step+1);break;
+    case 'sort':M.sorted=true;break;
+    case 'ferment':M.rags=Math.min(4,M.rags+1);if(M.rags>=4)done('rags');break;
+    case 'stamp':M.beater='stamp';M.beat=0;break;
+    case 'holl':M.beater='holl';M.beat=0;break;
+    case 'beat':M.beat++;M._beating=true;if(M.beat>=(M.beater==='stamp'?6:2))done('beat');break;
+    case 'mlaid':M.mould='laid';break;
+    case 'mwove':M.mould='wove';break;
+    case 'dip':M.vat='dipped';M.s1=0;M.s2=0;M.seed=Math.floor(Math.random()*1e6);break;
+    case 'lift':M.vat='lifted';break;
+    case 'shx':M.s1++;M._shake='x';M.quality=shakeQuality();break;
+    case 'shy':M.s2++;M._shake='y';M.quality=shakeQuality();break;
+    case 'deckle':M.vat='off';M.quality=shakeQuality();done('vat');break;
+    case 'again':M.vat='idle';M.s1=0;M.s2=0;break;
+    case 'couch':M.couched=1;break;
+    case 'post':M.couched=144;done('couch');break;
+    case 'pull':M.pulls=Math.min(5,M.pulls+1);if(M.pulls>=5)done('press');break;
+    case 'parting':M.parted=true;break;
+    case 'pack':M.packs=Math.min(2,M.packs+1);if(M.packs>=2)done('part');break;
+    case 'hang':M.hung=true;break;
+    case 'wait':M.dried=Math.min(4,M.dried+1);if(M.dried>=4)done('dry');break;
+    case 'inkW':M.inked='water';break;
+    case 'sizeit':M.sized=true;M.inked='';break;
+    case 'inkS':M.inked='sized';done('size');break;
+    case 'lt':M.light='trans';break;
+    case 'lr':M.light='refl';break;
+  }
+  if(s==='finish')done('finish');
+  renderMill();
+  if(a==='shx'||a==='shy'){const g=document.getElementById('mouldG');if(g){g.classList.remove('shakeX','shakeY');void g.getBoundingClientRect();g.classList.add(a==='shx'?'shakeX':'shakeY');}}
+}
+
+/* =========================================================
+   4. THE PAPER MACHINE
+   ========================================================= */
+let dandy='laid';
+const DANDY={
+ none:{n:'No dandy roll',kind:'mw',mark:false,t:'Without a dandy roll the Fourdrinier makes machine wove paper: an even sheet marked only faintly by the moving wire, with no watermark. The shake of the wire, and the flow of the stuff onto it, line up many fibres in the machine direction. This is the grain of the paper, which makes machine-made paper fold and tear more easily one way than the other. Plain machine wove became the ordinary printing paper of the nineteenth century.'},
+ wove:{n:'Wove dandy with a watermark',kind:'mw',mark:true,t:'A dandy roll covered with woven wire rides on the wet web, closing up its upper surface. Wire devices or lettering sewn onto the roll impress a watermark, which repeats down the web at the roll’s circumference. Dandy-roll watermarks are often softer at the edges than marks from a hand mould.'},
+ laid:{n:'Laid dandy (from 1826)',kind:'ml',mark:true,t:'A dandy roll covered with laid and chain wires presses a laid pattern into the wet web. The result imitates hand-made laid paper, but its lines are perfectly regular and there are no rib shadows, because the roll has no ribs. Its deckles, if any, run only along the two edges of the web.'}
+};
+function machineSVG(){
+  const roll=(x,y,r,fill)=>`<g><circle cx="${x}" cy="${y}" r="${r}" fill="${fill||'#9a9a96'}" stroke="#555"/><g class="spin">${[0,60,120].map(a=>`<line x1="${x-r*Math.cos(a*Math.PI/180)}" y1="${y-r*Math.sin(a*Math.PI/180)}" x2="${x+r*Math.cos(a*Math.PI/180)}" y2="${y+r*Math.sin(a*Math.PI/180)}" stroke="#666" stroke-width="1.2"/>`).join('')}</g></g>`;
+  const lab=(x,y,t)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="12" fill="#62625e">${t}</text>`;
+  let d='';
+  if(dandy==='none')d=`<circle cx="430" cy="146" r="20" fill="none" stroke="#bbb" stroke-dasharray="4 3"/>`;
+  else if(dandy==='laid')d=`<defs><clipPath id="dc"><circle cx="430" cy="146" r="20"/></clipPath></defs><circle cx="430" cy="146" r="20" fill="#c9a978" stroke="#6e5130"/><g clip-path="url(#dc)" stroke="#7a5a32" stroke-width=".8">${Array.from({length:14},(_,i)=>`<line x1="410" x2="450" y1="${127+i*3}" y2="${127+i*3}"/>`).join('')}${[418,430,442].map(x=>`<line x1="${x}" x2="${x}" y1="126" y2="166" stroke-width="1.6"/>`).join('')}</g>`;
+  else d=`<defs><pattern id="dw" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 1 H4 M1 0 V4" stroke="#7a5a32" stroke-width=".7"/></pattern></defs><circle cx="430" cy="146" r="20" fill="#c9a978" stroke="#6e5130"/><circle cx="430" cy="146" r="20" fill="url(#dw)"/><rect x="424" y="125" width="12" height="6" fill="#f0d9a6" stroke="#6e5130"/>`;
+  return `<svg viewBox="0 0 1060 280" role="img" aria-label="Fourdrinier paper machine">
+   <rect x="16" y="112" width="86" height="120" rx="4" fill="#d9dccf" stroke="#6e5130"/><rect x="16" y="140" width="86" height="92" fill="#c7cdc0"/>${lab(59,252,'stuff chest')}
+   <path d="M102 150 H130 V128 H160 V168 H140" fill="#d9dccf" stroke="#6e5130"/>${lab(146,116,'flow box')}
+   <rect x="146" y="164" width="432" height="34" rx="17" fill="none" stroke="#8a8a86" stroke-width="3"/>
+   ${Array.from({length:9},(_,i)=>`<circle cx="${200+i*40}" cy="174" r="5" fill="#bdbdb8" stroke="#777"/>`).join('')}
+   ${roll(163,181,15)}
+   <text x="240" y="222" font-size="12" fill="#62625e">endless wire, shaken from side to side</text>
+   <path d="M215 232 h-14 l5 -4 m-5 4 l5 4 M215 232 h14 l-5 -4 m5 4 l-5 4" stroke="#62625e" fill="none"/>
+   ${d}${lab(430,114,dandy==='none'?'(no dandy roll)':'dandy roll')}
+   ${roll(570,152,16)}${roll(570,192,16)}${lab(570,236,'couch rolls')}
+   <path d="M600 140 C640 110 690 110 700 140 M600 200 C640 230 690 230 700 200" fill="none" stroke="#a7a091" stroke-width="3"/>
+   ${roll(660,152,18)}${roll(660,190,18)}${lab(660,244,'press rolls and felt')}
+   ${roll(752,126,24,'#b9b9b4')}${roll(800,196,24,'#b9b9b4')}${roll(848,126,24,'#b9b9b4')}${roll(896,196,24,'#b9b9b4')}${lab(824,256,'steam-heated drying cylinders')}
+   ${roll(950,150,11)}${roll(950,172,11)}${roll(950,194,11)}${lab(950,226,'calender')}
+   ${roll(1020,172,22,'#efe8d6')}${lab(1020,212,'reel')}
+   <path id="web" d="M140 166 H570 L660 171 L728 126 A24 24 0 0 1 776 126 L776 196 A24 24 0 0 0 824 196 L824 126 A24 24 0 0 1 872 126 L872 196 A24 24 0 0 0 920 196 L939 172 L998 172" fill="none" stroke="#f3ecd9" stroke-width="5"/>
+   <path d="M140 166 H570 L660 171 L728 126 A24 24 0 0 1 776 126 L776 196 A24 24 0 0 0 824 196 L824 126 A24 24 0 0 1 872 126 L872 196 A24 24 0 0 0 920 196 L939 172 L998 172" fill="none" stroke="#c9b98e" stroke-width="2" class="flow"/>
+   ${lab(330,150,'wet web on the wire')}
+  </svg>`;
+}
+function renderMachine(){
+  $('#dandyTabs').innerHTML=Object.entries(DANDY).map(([k,v])=>`<button class="btn small" role="radio" data-dandy="${k}" aria-pressed="${k===dandy}" aria-checked="${k===dandy}">${v.n}</button>`).join('');
+  $('#machineFig').innerHTML=machineSVG();
+  const D=DANDY[dandy];
+  $('#machineText').innerHTML=`<h3>${D.n}</h3><p style="margin-top:6px">${D.t}</p><p class="small muted" style="margin-top:8px">John Dickinson’s cylinder machine (1809) formed the sheet on a wire-covered cylinder turning in the vat, and was long used for thinner papers and boards. Later "mould-made" papers, made on cylinder machines, imitate deckle edges and hand-made laid lines more closely.</p>`;
+  drawSheet($('#machineSheet'),{kind:D.kind,light:'trans',seed:41,quality:0.95,dandyMark:D.mark&&D.kind==='mw',mark:D.mark});
+  $('#machineSheetCap').textContent=`${D.kind==='ml'?'Machine-made laid':'Machine-made wove'} paper, held to the light. The machine direction runs from top to bottom.`;
+}
+
+/* =========================================================
+   5. COMPARE AND QUIZ
+   ========================================================= */
+const PAPERS={
+ hl:{n:'Hand-made laid',f:['Chain lines about 20–30 mm apart, with darker rib shadows beside them','Laid lines close together, slightly irregular','Tranchefiles near the ends of the sheet','Deckle edges on all four sides of an untrimmed sheet','A sharp watermark, and often a countermark']},
+ hw:{n:'Hand-made wove',f:['No chain or laid lines','An even, faint mesh texture','Deckle edges on all four sides','May carry a watermark','From about 1756 (Whatman)']},
+ ml:{n:'Machine-made laid',f:['Laid and chain lines from a dandy roll (from 1826)','Lines perfectly regular, with no rib shadows','Deckles, if any, only along the two edges of the web','A grain: fibres aligned in the machine direction','Watermark from the dandy roll, often softer']},
+ mw:{n:'Machine-made wove',f:['No chain or laid lines','Very even texture with a grain direction','No deckles except along the web edges','Usually no watermark','The ordinary printing paper of the 19th century']}
+};
+let cmpLight='trans',quiz={kind:'hl',seed:3,answered:false};
+function renderCompare(){
+  $('#lightTabs').innerHTML=[['trans','Held to the light'],['refl','In ordinary light']].map(([k,n])=>`<button class="btn small" role="radio" data-light="${k}" aria-pressed="${k===cmpLight}" aria-checked="${k===cmpLight}">${n}</button>`).join('');
+  $('#cmpGrid').innerHTML=Object.entries(PAPERS).map(([k,v])=>`<div class="cmp figure"><canvas width="260" height="190" data-cmp="${k}" aria-label="${v.n} paper"></canvas><h3>${v.n}</h3><ul>${v.f.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');
+  $$('[data-cmp]').forEach((cv,i)=>drawSheet(cv,{kind:cv.dataset.cmp,light:cmpLight,seed:100+i,quality:0.85}));
+}
+function newQuiz(){const ks=Object.keys(PAPERS);quiz={kind:ks[Math.floor(Math.random()*ks.length)],seed:Math.floor(Math.random()*1e6),answered:false};renderQuiz();}
+function renderQuiz(){
+  drawSheet($('#quizCanvas'),{kind:quiz.kind,light:'trans',seed:quiz.seed,quality:0.8,deckles:Math.random()<0.5?{t:0,r:1,b:0,l:1}:{t:0,r:0,b:0,l:0}});
+  $('#quizBtns').innerHTML=Object.entries(PAPERS).map(([k,v])=>`<button class="btn small" data-quiz="${k}">${v.n}</button>`).join('');
+  if(!quiz.answered){$('#quizFeedback').className='note';$('#quizFeedback').textContent='Choose an answer.';}
+}
+function answerQuiz(k){
+  const ok=k===quiz.kind,P=PAPERS[quiz.kind];quiz.answered=true;
+  const fb=$('#quizFeedback');fb.className='note '+(ok?'ok':'bad');
+  fb.textContent=(ok?'Right. ':`Not quite: this is ${P.n.toLowerCase()} paper. `)+'Look for: '+P.f.slice(0,3).join('; ').toLowerCase()+'.';
+}
+
+/* =========================================================
+   6. PAPER AS EVIDENCE: where chain lines and watermark fall
+   ========================================================= */
+let fmt='4';
+const FMTS={
+ '2':{n:'Folio (2°)',t:'One fold. Each leaf is half the sheet. Chain lines run vertically on the page, and the watermark sits in the middle of one leaf of each pair of conjugates; the other leaf carries the countermark or nothing.',cap:'A folio leaf: vertical chain lines, watermark in the middle.'},
+ '4':{n:'Quarto (4°)',t:'Two folds. Chain lines run horizontally on the page. The watermark falls on a fold, so it appears in the gutter, half on each of two conjugate leaves. Its partner, the countermark, is in the gutter of the other pair. In a quarto in 8s these rules still hold, which is how it is told from an octavo.',cap:'A quarto leaf: horizontal chain lines, half the watermark in the gutter.'},
+ '8':{n:'Octavo (8°)',t:'Three folds. Chain lines run vertically again. The watermark falls where two folds cross, so it is divided among four leaves and shows as a fragment at the top of the gutter. Small formats are often trimmed so close that only a corner of the mark survives.',cap:'An octavo leaf: vertical chain lines, a corner of the watermark at the top of the gutter.'}
+};
+function renderEvidence(){
+  $('#fmtTabs').innerHTML=Object.entries(FMTS).map(([k,v])=>`<button class="btn small" role="radio" data-fmt="${k}" aria-pressed="${k===fmt}" aria-checked="${k===fmt}">${v.n}</button>`).join('');
+  const cv=$('#evSheet'),ctx=cv.getContext('2d'),off=document.createElement('canvas');
+  const SW=480,SH=340;off.width=SW;off.height=SH;
+  drawSheet(off,{kind:'hl',light:'trans',seed:77,quality:0.9,pad:0});
+  ctx.fillStyle='#2b2a26';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(off,20,20);
+  ctx.save();ctx.setLineDash([7,5]);ctx.strokeStyle='rgba(120,200,255,.9)';ctx.lineWidth=1.6;
+  const line=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(20+x1,20+y1);ctx.lineTo(20+x2,20+y2);ctx.stroke();};
+  line(SW/2,0,SW/2,SH);
+  if(fmt!=='2')line(0,SH/2,SW,SH/2);
+  if(fmt==='8'){line(SW/4,0,SW/4,SH);line(SW*3/4,0,SW*3/4,SH);}
+  ctx.restore();
+  const R=fmt==='2'?[0,0,SW/2,SH]:fmt==='4'?[0,0,SW/2,SH/2]:[0,0,SW/4,SH/2];
+  ctx.strokeStyle='#f0a62a';ctx.lineWidth=3;ctx.strokeRect(20+R[0]+1.5,20+R[1]+1.5,R[2]-3,R[3]-3);
+  /* the leaf, upright as it sits in the book */
+  const lv=$('#evLeaf'),lc=lv.getContext('2d');lc.fillStyle='#2b2a26';lc.fillRect(0,0,lv.width,lv.height);
+  const rot=fmt==='4'?90:fmt==='8'?180:0;
+  const lw=rot===90?R[3]:R[2],lh=rot===90?R[2]:R[3];
+  const sc=Math.min((lv.width-30)/lw,(lv.height-30)/lh),dw=lw*sc,dh=lh*sc;
+  lc.save();lc.translate(lv.width/2,lv.height/2);lc.rotate(rot*Math.PI/180);
+  const ww=R[2]*sc,hh=R[3]*sc;lc.drawImage(off,R[0],R[1],R[2],R[3],-ww/2,-hh/2,ww,hh);lc.restore();
+  lc.fillStyle='rgba(255,255,255,.7)';lc.font='11px system-ui,sans-serif';lc.textAlign='center';
+  lc.fillText(fmt==='2'?'':'gutter ←',lv.width/2-dw/2+24,lv.height/2+dh/2+12>lv.height?lv.height-4:lv.height/2+dh/2+12);
+  $('#evCap').textContent=FMTS[fmt].cap;
+  $('#evText').innerHTML=`<h3>${FMTS[fmt].n}</h3><p style="margin-top:6px">${FMTS[fmt].t}</p><p class="small muted" style="margin-top:8px">Duodecimo varies with the imposition: the chain lines usually run horizontally, but the position of the watermark depends on how the sheet was cut and folded.</p>`;
+}
+
+/* =========================================================
+   EVENTS AND START
+   ========================================================= */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tl],[data-mould],[data-part],[data-mstep],[data-act],[data-dandy],[data-light],[data-quiz],[data-fmt]');if(!t)return;
+  const d=t.dataset;
+  if(d.tl!==undefined){tlKind=d.tl;renderTimeline();}
+  else if(d.mould){mouldType=d.mould;mouldPart='';renderMould();}
+  else if(d.part){mouldPart=mouldPart===d.part?'':d.part;$$('[data-part]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.part===mouldPart));$$('#mouldFig [data-hl]').forEach(g=>g.classList.toggle('on',g.dataset.hl===mouldPart));}
+  else if(d.mstep!==undefined){M.step=+d.mstep;renderMill();}
+  else if(d.act){millAct(d.act);}
+  else if(d.dandy){dandy=d.dandy;renderMachine();}
+  else if(d.light){cmpLight=d.light;renderCompare();}
+  else if(d.quiz){answerQuiz(d.quiz);}
+  else if(d.fmt){fmt=d.fmt;renderEvidence();}
+});
+$('#quizNext').addEventListener('click',newQuiz);
+
+renderTimeline();renderMould();renderMill();renderMachine();renderCompare();newQuiz();renderEvidence();
+})();
+</script>
+</body>
+</html>
